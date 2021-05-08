@@ -3,7 +3,7 @@
 ## About
 
 Quantum++ Examples are examples of Quantum Computing in C++ using the [Quantum++](https://github.com/softwareQinc/qpp)
-library. Most examples illustrates the equations, examples and exercises from
+library. Most examples illustrate the equations, examples and exercises from
 Nielsen, M., & Chuang, I. (2010). *Quantum Computation and Quantum Information: 10th Anniversary Edition*. Cambridge: Cambridge University Press.
 [doi:10.1017/CBO9780511976667](https://doi.org/10.1017/CBO9780511976667)
 
