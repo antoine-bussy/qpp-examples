@@ -93,18 +93,12 @@ TEST(chapter1_2, simple_two_qubits_measure_on_first_qubit)
     using namespace qpp::literals;
     auto const state = (00_ket + 01_ket).normalized().eval();
 
-    auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.Id2, { 0 });
+    auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.Id2, { 0 }, 2, false);
 
     EXPECT_EQ(result, 0);
     EXPECT_MATRIX_CLOSE(Eigen::Vector2d::Map(probabilities.data()), Eigen::Vector2d::UnitX(), 1e-12);
-    EXPECT_MATRIX_EQ(resulting_state[0], Eigen::Vector2cd(1, 1).normalized());
-    EXPECT_MATRIX_EQ(resulting_state[1], Eigen::Vector2cd::Zero());
-
-    auto const resulting_state_0_4 = Eigen::Vector4cd(resulting_state[0](0, 0), resulting_state[0](1, 0), 0, 0).eval();
-    EXPECT_MATRIX_CLOSE(resulting_state_0_4, Eigen::Vector4cd(state[0], state[1], 0, 0).normalized(), 1e-12);
-
-    auto const resulting_state_1_4 = Eigen::Vector4cd(0, 0, resulting_state[1](0, 0), resulting_state[1](1, 0)).eval();
-    EXPECT_MATRIX_CLOSE(resulting_state_1_4, Eigen::Vector4cd(0, 0, state[2], state[3]).normalized(), 1e-12);
+    EXPECT_MATRIX_EQ(resulting_state[0], Eigen::Vector4cd(1, 1, 0, 0).normalized());
+    EXPECT_MATRIX_EQ(resulting_state[1], Eigen::Vector4cd::Zero());
 
     if constexpr (print_text)
     {
@@ -124,18 +118,12 @@ TEST(chapter1_2, simple_two_qubits_measure_on_first_qubit_2)
     using namespace qpp::literals;
     auto const state = (00_ket + 01_ket).normalized().eval();
 
-    auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.Id2, { 1 });
+    auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.Id2, { 1 }, 2, false);
 
     EXPECT_THAT((std::array{ 0, 1 }), testing::Contains(result));
     EXPECT_MATRIX_CLOSE(Eigen::Vector2d::Map(probabilities.data()), Eigen::Vector2d::Constant(0.5), 1e-12);
-    EXPECT_MATRIX_EQ(resulting_state[0], Eigen::Vector2cd::UnitX());
-    EXPECT_MATRIX_EQ(resulting_state[1], Eigen::Vector2cd::UnitX());
-
-    auto const resulting_state_0_4 = Eigen::Vector4cd(resulting_state[0](0, 0), 0, resulting_state[0](1, 0), 0).eval();
-    EXPECT_MATRIX_CLOSE(resulting_state_0_4, Eigen::Vector4cd(state[0], 0, state[2], 0).normalized(), 1e-12);
-
-    auto const resulting_state_1_4 = Eigen::Vector4cd(0, resulting_state[1](0, 0), resulting_state[1](1, 0), 0).eval();
-    EXPECT_MATRIX_CLOSE(resulting_state_1_4, Eigen::Vector4cd(0, state[1], 0, state[3]).normalized(), 1e-12);
+    EXPECT_MATRIX_EQ(resulting_state[0], Eigen::Vector4cd::UnitX());
+    EXPECT_MATRIX_EQ(resulting_state[1], Eigen::Vector4cd::UnitY());
 
     if constexpr (print_text)
     {
@@ -155,19 +143,13 @@ TEST(chapter1_2, two_qubits_measure_on_first_qubit)
     using namespace qpp::literals;
     auto const state = qpp::randket(4).eval();
 
-    auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.Id2, { 0 });
+    auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.Id2, { 0 }, 2, false);
 
     EXPECT_THAT((std::array{ 0, 1 }), testing::Contains(result));
     EXPECT_MATRIX_CLOSE(Eigen::Vector2d::Map(probabilities.data()), Eigen::Vector2d(state.head<2>().squaredNorm(), state.tail<2>().squaredNorm()), 1e-12);
 
-    EXPECT_MATRIX_CLOSE(resulting_state[0], state.head<2>().normalized(), 1e-12);
-    EXPECT_MATRIX_CLOSE(resulting_state[1], state.tail<2>().normalized(), 1e-12);
-
-    auto const resulting_state_0_4 = Eigen::Vector4cd(resulting_state[0](0, 0), resulting_state[0](1, 0), 0, 0).eval();
-    EXPECT_MATRIX_CLOSE(resulting_state_0_4, Eigen::Vector4cd(state[0], state[1], 0, 0).normalized(), 1e-12);
-
-    auto const resulting_state_1_4 = Eigen::Vector4cd(0, 0, resulting_state[1](0, 0), resulting_state[1](1, 0)).eval();
-    EXPECT_MATRIX_CLOSE(resulting_state_1_4, Eigen::Vector4cd(0, 0, state[2], state[3]).normalized(), 1e-12);
+    EXPECT_MATRIX_CLOSE(resulting_state[0], Eigen::Vector4cd(state[0], state[1], 0, 0).normalized(), 1e-12);
+    EXPECT_MATRIX_CLOSE(resulting_state[1], Eigen::Vector4cd(0, 0, state[2], state[3]).normalized(), 1e-12);
 
     if constexpr (print_text)
     {
