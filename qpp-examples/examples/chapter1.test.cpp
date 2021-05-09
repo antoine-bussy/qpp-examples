@@ -191,3 +191,44 @@ TEST(chapter1, bell_state)
     if constexpr (print_text)
         std::cerr << ">> State:\n" << qpp::disp(bell_state) << '\n';
 }
+
+//! @brief Correlated measure of Equation 1.7
+TEST(chapter1, bell_state_repeated_measure)
+{
+    using namespace qpp::literals;
+    auto const bell_state = (00_ket + 11_ket).normalized().eval();
+
+    auto const [result_0, probabilities_0, resulting_state_0] = qpp::measure(bell_state, qpp::gt.Id2, { 0 });
+
+    if constexpr (print_text)
+    {
+        std::cerr << "Measure on first qubit\n";
+        std::cerr << ">> State:\n" << qpp::disp(bell_state) << '\n';
+        std::cerr << ">> Measurement result: " << result_0 << '\n';
+        std::cerr << ">> Probabilities: ";
+        std::cerr << qpp::disp(probabilities_0, ", ") << '\n';
+        std::cerr << ">> Resulting states:\n";
+        for (auto&& it : resulting_state_0)
+            std::cerr << qpp::disp(it) << "\n\n";
+    }
+
+    auto const [result_1, probabilities_1, resulting_state_1] = qpp::measure(resulting_state_0[result_0], qpp::gt.Id2);
+
+    EXPECT_EQ(result_0, result_1);
+    ASSERT_THAT((std::array{ 0, 1 }), testing::Contains(result_1));
+    EXPECT_EQ(probabilities_1[result_1], 1);
+    EXPECT_MATRIX_EQ(resulting_state_1[result_1], Eigen::Vector2cd::Unit(result_1));
+    EXPECT_MATRIX_EQ(resulting_state_1[1-result_1], Eigen::Vector2cd::Zero());
+
+    if constexpr (print_text)
+    {
+        std::cerr << "Measure on second qubit\n";
+        std::cerr << ">> State:\n" << qpp::disp(resulting_state_0[result_0]) << '\n';
+        std::cerr << ">> Measurement result: " << result_1 << '\n';
+        std::cerr << ">> Probabilities: ";
+        std::cerr << qpp::disp(probabilities_1, ", ") << '\n';
+        std::cerr << ">> Resulting states:\n";
+        for (auto&& it : resulting_state_1)
+            std::cerr << qpp::disp(it) << "\n\n";
+    }
+}
