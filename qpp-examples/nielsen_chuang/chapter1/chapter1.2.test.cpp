@@ -12,7 +12,7 @@ namespace
 }
 
 //! @brief Equations 1.1 and 1.2
-TEST(chapter1, superposition)
+TEST(chapter1_2, superposition)
 {
     using namespace qpp::literals;
     auto const state = (0_ket + 1_ket).normalized().eval();
@@ -20,7 +20,7 @@ TEST(chapter1, superposition)
 }
 
 //! @brief Measure of equation 1.2
-TEST(chapter1, measure)
+TEST(chapter1_2, measure)
 {
     using namespace qpp::literals;
     auto const state = (0_ket + 1_ket).normalized().eval();
@@ -43,7 +43,7 @@ TEST(chapter1, measure)
 }
 
 //! @brief Equation 1.5
-TEST(chapter1, two_qubits)
+TEST(chapter1_2, two_qubits)
 {
     using namespace qpp::literals;
     auto const state = (00_ket + 01_ket + 10_ket + 11_ket).normalized().eval();
@@ -63,7 +63,7 @@ TEST(chapter1, two_qubits)
 }
 
 //! @brief Measure of equation 1.5
-TEST(chapter1, two_qubits_measure)
+TEST(chapter1_2, two_qubits_measure)
 {
     using namespace qpp::literals;
     auto const state = qpp::randket(4).normalized().eval();
@@ -88,7 +88,7 @@ TEST(chapter1, two_qubits_measure)
 }
 
 //! @brief Equation 1.6
-TEST(chapter1, simple_two_qubits_measure_on_first_qubit)
+TEST(chapter1_2, simple_two_qubits_measure_on_first_qubit)
 {
     using namespace qpp::literals;
     auto const state = (00_ket + 01_ket).normalized().eval();
@@ -119,7 +119,7 @@ TEST(chapter1, simple_two_qubits_measure_on_first_qubit)
 }
 
 //! @brief Equation 1.6
-TEST(chapter1, simple_two_qubits_measure_on_first_qubit_2)
+TEST(chapter1_2, simple_two_qubits_measure_on_first_qubit_2)
 {
     using namespace qpp::literals;
     auto const state = (00_ket + 01_ket).normalized().eval();
@@ -150,7 +150,7 @@ TEST(chapter1, simple_two_qubits_measure_on_first_qubit_2)
 }
 
 //! @brief Equation 1.6
-TEST(chapter1, two_qubits_measure_on_first_qubit)
+TEST(chapter1_2, two_qubits_measure_on_first_qubit)
 {
     using namespace qpp::literals;
     auto const state = qpp::randket(4).normalized().eval();
@@ -182,7 +182,7 @@ TEST(chapter1, two_qubits_measure_on_first_qubit)
 }
 
 //! @brief Equation 1.7
-TEST(chapter1, bell_state)
+TEST(chapter1_2, bell_state)
 {
     using namespace qpp::literals;
     auto const bell_state = (00_ket + 11_ket).normalized().eval();
@@ -193,7 +193,7 @@ TEST(chapter1, bell_state)
 }
 
 //! @brief Correlated measure of Equation 1.7
-TEST(chapter1, bell_state_repeated_measure)
+TEST(chapter1_2, bell_state_repeated_measure)
 {
     using namespace qpp::literals;
     auto const bell_state = (00_ket + 11_ket).normalized().eval();
