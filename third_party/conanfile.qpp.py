@@ -13,7 +13,7 @@ class QppConan(ConanFile):
     no_copy_source = True
 
     def requirements(self):
-        self.requires("eigen/3.3.9@")
+        self.requires("eigen/3.4-rc1@local/rc")
 
     def source(self):
         git = tools.Git()
