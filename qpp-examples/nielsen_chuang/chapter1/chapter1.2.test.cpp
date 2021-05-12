@@ -65,7 +65,6 @@ TEST(chapter1_2, two_qubits)
 //! @brief Measure of equation 1.5
 TEST(chapter1_2, two_qubits_measure)
 {
-    using namespace qpp::literals;
     auto const state = qpp::randket(4).eval();
 
     auto const [result, probabilities, resulting_state] = qpp::measure(state, Eigen::Matrix4cd::Identity());
@@ -140,7 +139,6 @@ TEST(chapter1_2, simple_two_qubits_measure_on_first_qubit_2)
 //! @brief Equation 1.6
 TEST(chapter1_2, two_qubits_measure_on_first_qubit)
 {
-    using namespace qpp::literals;
     auto const state = qpp::randket(4).eval();
 
     auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.Id2, { 0 }, 2, false);

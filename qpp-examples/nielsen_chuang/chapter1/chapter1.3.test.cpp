@@ -14,7 +14,6 @@ namespace
 //! @brief Equations 1.8 through 1.12
 TEST(chapter1_3, not_gate)
 {
-    using namespace qpp::literals;
     auto const state = qpp::randket(2).eval();
     auto const not_state = (qpp::gt.X * state).eval();
 
@@ -32,7 +31,6 @@ TEST(chapter1_3, not_gate)
 //! @brief Equation 1.13
 TEST(chapter1_3, z_gate)
 {
-    using namespace qpp::literals;
     auto const state = qpp::randket(2).eval();
     auto const z_state = (qpp::gt.Z * state).eval();
 
@@ -51,7 +49,6 @@ TEST(chapter1_3, z_gate)
 //! @brief Equation 1.14
 TEST(chapter1_3, hadamard_gate)
 {
-    using namespace qpp::literals;
     auto const state = qpp::randket(2).eval();
     auto const h_state = (qpp::gt.H * state).eval();
 
@@ -71,8 +68,6 @@ TEST(chapter1_3, hadamard_gate)
 //! @brief Equations 1.15 and 1.16, and Block 1.1
 TEST(chapter1_3, general_single_qubit_gate)
 {
-    using namespace qpp::literals;
-
     auto constexpr alpha = 0.57;
     auto constexpr beta  = -1.3;
     auto constexpr gamma = -0.86;
