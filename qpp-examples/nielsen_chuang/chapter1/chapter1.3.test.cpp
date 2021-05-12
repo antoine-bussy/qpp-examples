@@ -74,20 +74,21 @@ TEST(chapter1_3, general_single_qubit_gate)
     auto constexpr delta = 1.02;
 
     auto const phase_shift = std::polar(1., alpha);
-    auto const rot_z_beta = Eigen::Vector2cd(std::polar(1., -beta), std::polar(1., beta)).asDiagonal().toDenseMatrix();
-    auto const rot_gamma = Eigen::Rotation2Dd(0.5 * gamma);
-    auto const rot_z_delta = Eigen::Vector2cd(std::polar(1., -delta), std::polar(1., delta)).asDiagonal().toDenseMatrix();
+    EXPECT_MATRIX_CLOSE(qpp::gt.RZ(beta), Eigen::Vector2cd(std::polar(1., -0.5 * beta), std::polar(1., 0.5 * beta)).asDiagonal().toDenseMatrix(), 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::gt.RY(gamma), Eigen::Rotation2Dd(0.5 * gamma).toRotationMatrix().cast<std::complex<double>>(), 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::gt.RZ(delta), Eigen::Vector2cd(std::polar(1., -0.5 * delta), std::polar(1., 0.5 * delta)).asDiagonal().toDenseMatrix(), 1e-12);
 
-    auto const U = (phase_shift * rot_z_beta * rot_gamma.cast<std::complex<double>>() * rot_z_delta).eval();
+    // Note: it looks like Euler angles
+    auto const U = (phase_shift *qpp::gt.RZ(beta) * qpp::gt.RY(gamma) * qpp::gt.RZ(delta)).eval();
     EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::Matrix2cd::Identity(), 1e-12);
 
     if constexpr (print_text)
     {
         std::cerr << ">> Phase shift:\n" << phase_shift << '\n';
-        std::cerr << ">> Rotation-Z Beta:\n" << rot_z_beta << '\n';
-        std::cerr << ">> Rotation Gamma:\n" << rot_gamma.toRotationMatrix() << '\n';
-        std::cerr << ">> Rotation-Z Delta:\n" << rot_z_delta << '\n';
-        std::cerr << ">> General single qubit gate:\n" << U << '\n';
+        std::cerr << ">> Rotation-Z Beta:\n" << qpp::disp(qpp::gt.RZ(beta)) << '\n';
+        std::cerr << ">> Rotation Gamma:\n" << qpp::disp(qpp::gt.RY(gamma)) << '\n';
+        std::cerr << ">> Rotation-Z Delta:\n" << qpp::disp(qpp::gt.RZ(delta)) << '\n';
+        std::cerr << ">> General single qubit gate:\n" << qpp::disp(U) << '\n';
     }
 }
 

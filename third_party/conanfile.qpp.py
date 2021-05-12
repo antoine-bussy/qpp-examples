@@ -6,6 +6,7 @@ class QppConan(ConanFile):
     name = "qpp"
     url = "https://github.com/softwareQinc/qpp"
     homepage = "https://github.com/softwareQinc/qpp"
+    fork = "https://github.com/antoine-bussy/qpp"
     description = "Quantum++ is a modern C++11 general purpose quantum computing library."
     license = ("MIT")
     topics = ("quantum computing")
@@ -17,7 +18,7 @@ class QppConan(ConanFile):
 
     def source(self):
         git = tools.Git()
-        git.clone(self.url, self.version)
+        git.clone(self.fork, self.version)
 
     def package(self):
         cmake = CMake(self)
