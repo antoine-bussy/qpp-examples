@@ -67,3 +67,31 @@ TEST(chapter1_3, hadamard_gate)
         std::cerr << ">> H State:\n" << qpp::disp(h_state) << '\n';
     }
 }
+
+//! @brief Equations 1.15 and 1.16, and Block 1.1
+TEST(chapter1_3, general_single_qubit_gate)
+{
+    using namespace qpp::literals;
+
+    auto constexpr alpha = 0.57;
+    auto constexpr beta  = -1.3;
+    auto constexpr gamma = -0.86;
+    auto constexpr delta = 1.02;
+
+    auto const phase_shift = std::polar(1., alpha);
+    auto const rot_z_beta = Eigen::Vector2cd(std::polar(1., -beta), std::polar(1., beta)).asDiagonal().toDenseMatrix();
+    auto const rot_gamma = Eigen::Rotation2Dd(0.5 * gamma);
+    auto const rot_z_delta = Eigen::Vector2cd(std::polar(1., -delta), std::polar(1., delta)).asDiagonal().toDenseMatrix();
+
+    auto const U = (phase_shift * rot_z_beta * rot_gamma.cast<std::complex<double>>() * rot_z_delta).eval();
+    EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::Matrix2cd::Identity(), 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> Phase shift:\n" << phase_shift << '\n';
+        std::cerr << ">> Rotation-Z Beta:\n" << rot_z_beta << '\n';
+        std::cerr << ">> Rotation Gamma:\n" << rot_gamma.toRotationMatrix() << '\n';
+        std::cerr << ">> Rotation-Z Delta:\n" << rot_z_delta << '\n';
+        std::cerr << ">> General single qubit gate:\n" << U << '\n';
+    }
+}
