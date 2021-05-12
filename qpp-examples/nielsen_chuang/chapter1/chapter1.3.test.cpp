@@ -90,3 +90,27 @@ TEST(chapter1_3, general_single_qubit_gate)
         std::cerr << ">> General single qubit gate:\n" << U << '\n';
     }
 }
+
+//! @brief Equation 1.18 and Figure 1.6
+TEST(chapter1_3, cnot_gate)
+{
+    using namespace qpp::literals;
+
+    auto cnot_matrix = Eigen::Matrix4cd::Zero().eval();
+    cnot_matrix(0, 0) = 1.;
+    cnot_matrix(1, 1) = 1.;
+    cnot_matrix(2, 3) = 1.;
+    cnot_matrix(3, 2) = 1.;
+
+    EXPECT_MATRIX_EQ(qpp::gt.CNOT, cnot_matrix);
+
+    EXPECT_MATRIX_EQ(qpp::gt.CNOT * 00_ket, 00_ket);
+    EXPECT_MATRIX_EQ(qpp::gt.CNOT * 01_ket, 01_ket);
+    EXPECT_MATRIX_EQ(qpp::gt.CNOT * 10_ket, 11_ket);
+    EXPECT_MATRIX_EQ(qpp::gt.CNOT * 11_ket, 10_ket);
+
+    EXPECT_MATRIX_EQ(qpp::gt.CNOT * qpp::gt.CNOT.adjoint(), Eigen::Matrix4cd::Identity());
+
+    if constexpr (print_text)
+        std::cerr << ">> CNOT Gate:\n" << qpp::disp(qpp::gt.CNOT) << '\n';
+}
