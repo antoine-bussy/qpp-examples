@@ -79,7 +79,7 @@ TEST(chapter1_3, general_single_qubit_gate)
     EXPECT_MATRIX_CLOSE(qpp::gt.RZ(delta), Eigen::Vector2cd(std::polar(1., -0.5 * delta), std::polar(1., 0.5 * delta)).asDiagonal().toDenseMatrix(), 1e-12);
 
     // Note: it looks like Euler angles
-    auto const U = (phase_shift *qpp::gt.RZ(beta) * qpp::gt.RY(gamma) * qpp::gt.RZ(delta)).eval();
+    auto const U = (phase_shift * qpp::gt.RZ(beta) * qpp::gt.RY(gamma) * qpp::gt.RZ(delta)).eval();
     EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::Matrix2cd::Identity(), 1e-12);
 
     if constexpr (print_text)
@@ -135,5 +135,38 @@ TEST(chapter1_3, plus_minus_states)
     {
         std::cerr << ">> |+> State:\n" << qpp::disp(plus_ket) << '\n';
         std::cerr << ">> |-> State:\n" << qpp::disp(minus_ket) << '\n';
+    }
+}
+
+//! @brief Equation 1.19
+TEST(chapter1_3, plus_minus_states_measure)
+{
+    using namespace qpp::literals;
+    auto const plus_minus_basis = (Eigen::Matrix2cd() << qpp::st.plus(), qpp::st.minus()).finished();
+    EXPECT_MATRIX_EQ(plus_minus_basis, qpp::gt.H);
+
+    auto const state = qpp::randket().eval();
+    auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.H);
+
+    EXPECT_THAT((std::array{ 0, 1 }), testing::Contains(result));
+
+    auto constexpr collinear2D = [](auto&& actual, auto&& expected, auto&& precision)
+    {
+        using complex_t = std::complex<double>;
+        auto const det = (Eigen::Matrix2<complex_t>() << actual.template cast<complex_t>(), expected.template cast<complex_t>()).finished().determinant();
+        return std::norm(det) < precision * precision;
+    };
+    EXPECT_PRED3(collinear2D, resulting_state[0], qpp::st.plus(), 1e-12);
+    EXPECT_PRED3(collinear2D, resulting_state[1], qpp::st.minus(), 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
+        std::cerr << ">> Measurement result: " << result << '\n';
+        std::cerr << ">> Probabilities: ";
+        std::cerr << qpp::disp(probabilities, ", ") << '\n';
+        std::cerr << ">> Resulting states:\n";
+        for (auto&& it : resulting_state)
+            std::cerr << qpp::disp(it) << "\n\n";
     }
 }
