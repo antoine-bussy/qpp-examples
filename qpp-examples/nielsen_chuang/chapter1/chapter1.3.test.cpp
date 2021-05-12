@@ -114,3 +114,25 @@ TEST(chapter1_3, cnot_gate)
     if constexpr (print_text)
         std::cerr << ">> CNOT Gate:\n" << qpp::disp(qpp::gt.CNOT) << '\n';
 }
+
+//! @brief Equation 1.19
+TEST(chapter1_3, plus_minus_states)
+{
+    using namespace qpp::literals;
+
+    auto const plus_ket = qpp::st.plus();
+    auto const minus_ket = qpp::st.minus();
+
+    EXPECT_MATRIX_CLOSE(plus_ket, (0_ket + 1_ket).normalized(), 1e-12);
+    EXPECT_MATRIX_CLOSE(minus_ket, (0_ket - 1_ket).normalized(), 1e-12);
+
+    auto const state = qpp::randket().eval();
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+    EXPECT_MATRIX_CLOSE(state, ((state[0] + state[1]) * plus_ket + (state[0] - state[1]) * minus_ket) * inv_sqrt2, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> |+> State:\n" << qpp::disp(plus_ket) << '\n';
+        std::cerr << ">> |-> State:\n" << qpp::disp(minus_ket) << '\n';
+    }
+}
