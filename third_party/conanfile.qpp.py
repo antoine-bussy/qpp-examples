@@ -22,6 +22,7 @@ class QppConan(ConanFile):
 
     def package(self):
         cmake = CMake(self)
+        cmake.definitions["EIGEN3_INSTALL_DIR"] = self.deps_cpp_info["eigen"].rootpath
         cmake.configure()
         cmake.install()
 
