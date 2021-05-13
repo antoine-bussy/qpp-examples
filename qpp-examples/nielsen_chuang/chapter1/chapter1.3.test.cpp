@@ -149,15 +149,8 @@ TEST(chapter1_3, plus_minus_states_measure)
     auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.H);
 
     EXPECT_THAT((std::array{ 0, 1 }), testing::Contains(result));
-
-    auto constexpr collinear2D = [](auto&& actual, auto&& expected, auto&& precision)
-    {
-        using complex_t = std::complex<double>;
-        auto const det = (Eigen::Matrix2<complex_t>() << actual.template cast<complex_t>(), expected.template cast<complex_t>()).finished().determinant();
-        return std::norm(det) < precision * precision;
-    };
-    EXPECT_PRED3(collinear2D, resulting_state[0], qpp::st.plus(), 1e-12);
-    EXPECT_PRED3(collinear2D, resulting_state[1], qpp::st.minus(), 1e-12);
+    EXPECT_COLLINEAR(resulting_state[0], qpp::st.plus(), 1e-12);
+    EXPECT_COLLINEAR(resulting_state[1], qpp::st.minus(), 1e-12);
 
     if constexpr (print_text)
     {

@@ -30,8 +30,16 @@ namespace qpp_e::maths
     template < ComplexNumber Actual, ComplexNumber Expected, RealNumber Precision >
     auto complex_close(Actual const& actual, Expected const& expected, Precision const& precision)
     {
-        return std::norm(actual - expected) <= std::pow(precision, 2) * std::min(std::norm(actual), std::norm(expected));
+        return std::norm(actual - expected) <= precision * std::min(std::norm(actual), std::norm(expected));
     }
     auto constexpr complex_close_l = [](auto const& actual, auto const& expected, auto const& precision) { return complex_close(actual, expected, precision); };
+
+    template < Matrix Actual, Matrix Expected, RealNumber Precision >
+    auto collinear(Actual const& actual, Expected const& expected, Precision const& precision)
+    {
+        auto const n2 = actual.squaredNorm() * expected.squaredNorm();
+        return n2 - std::norm(actual.dot(expected)) < precision * n2;
+    }
+    auto constexpr collinear_l = [](auto&& actual, auto&& expected, auto&& precision) { return collinear(actual, expected, precision); };
 
 } /* namespace qpp_e::maths */
