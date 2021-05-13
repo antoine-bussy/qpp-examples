@@ -139,7 +139,7 @@ TEST(chapter1_3, plus_minus_states)
 }
 
 //! @brief Equation 1.19
-TEST(chapter1_3, plus_minus_states_measure)
+TEST(chapter1_3, plus_minus_basis_measure)
 {
     using namespace qpp::literals;
     auto const plus_minus_basis = (Eigen::Matrix2cd() << qpp::st.plus(), qpp::st.minus()).finished();
@@ -149,8 +149,50 @@ TEST(chapter1_3, plus_minus_states_measure)
     auto const [result, probabilities, resulting_state] = qpp::measure(state, qpp::gt.H);
 
     EXPECT_THAT((std::array{ 0, 1 }), testing::Contains(result));
+    EXPECT_NEAR(probabilities[0], 0.5 * std::norm(state[0] + state[1]), 1e-12);
+    EXPECT_NEAR(probabilities[1], 0.5 * std::norm(state[0] - state[1]), 1e-12);
     EXPECT_COLLINEAR(resulting_state[0], qpp::st.plus(), 1e-12);
     EXPECT_COLLINEAR(resulting_state[1], qpp::st.minus(), 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
+        std::cerr << ">> Measurement result: " << result << '\n';
+        std::cerr << ">> Probabilities: ";
+        std::cerr << qpp::disp(probabilities, ", ") << '\n';
+        std::cerr << ">> Resulting states:\n";
+        for (auto&& it : resulting_state)
+            std::cerr << qpp::disp(it) << "\n\n";
+    }
+}
+
+//! @brief Equation 1.19
+TEST(chapter1_3, general_basis_measure)
+{
+    using namespace qpp::literals;
+
+    auto const a = qpp::randket().eval();
+    auto const b = Eigen::Vector2cd(a[1], -a[0]).conjugate().eval();
+
+    EXPECT_NEAR(a.squaredNorm(), 1., 1e-12);
+    EXPECT_NEAR(b.squaredNorm(), 1., 1e-12);
+    EXPECT_NEAR(std::norm(a.dot(b)), 0., 1e-12);
+
+    auto const basis = (Eigen::Matrix2cd() << a, b).finished();
+    EXPECT_MATRIX_CLOSE(basis.adjoint() * basis, Eigen::Matrix2cd::Identity(), 1e-12);
+
+    auto const state = qpp::randket().eval();
+    auto const [result, probabilities, resulting_state] = qpp::measure(state, basis);
+
+    auto const alpha = a.dot(state);
+    auto const beta = b.dot(state);
+    EXPECT_MATRIX_CLOSE(alpha * a + beta * b, state, 1e-12);
+
+    EXPECT_THAT((std::array{ 0, 1 }), testing::Contains(result));
+    EXPECT_NEAR(probabilities[0], std::norm(alpha), 1e-12);
+    EXPECT_NEAR(probabilities[1], std::norm(beta), 1e-12);
+    EXPECT_COLLINEAR(resulting_state[0], a, 1e-12);
+    EXPECT_COLLINEAR(resulting_state[1], b, 1e-12);
 
     if constexpr (print_text)
     {
