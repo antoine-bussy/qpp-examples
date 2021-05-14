@@ -207,7 +207,7 @@ TEST(chapter1_3, general_basis_measure)
 }
 
 //! @brief Equation 1.20 and Figure 1.7
-TEST(chapter1_3, swap)
+TEST(chapter1_3, swap_gate)
 {
     using namespace qpp::literals;
 
@@ -221,4 +221,23 @@ TEST(chapter1_3, swap)
 
     if constexpr (print_text)
         std::cerr << ">> SWAP:\n" << qpp::disp(qpp::gt.SWAP) << '\n';
+}
+
+//! @brief Equation 1.20 and Figure 1.7
+TEST(chapter1_3, swap_circuit)
+{
+    using namespace qpp::literals;
+
+    auto constexpr circuit = [](auto const& s0)
+    {
+        auto const s1 = qpp::apply(s0, qpp::gt.CNOT, { 0, 1 });
+        auto const s2 = qpp::apply(s1, qpp::gt.CNOT, { 1, 0 });
+        auto const s3 = qpp::apply(s2, qpp::gt.CNOT, { 0, 1 });
+        return s3;
+    };
+
+    EXPECT_MATRIX_EQ(circuit(00_ket), 00_ket);
+    EXPECT_MATRIX_EQ(circuit(01_ket), 10_ket);
+    EXPECT_MATRIX_EQ(circuit(10_ket), 01_ket);
+    EXPECT_MATRIX_EQ(circuit(11_ket), 11_ket);
 }
