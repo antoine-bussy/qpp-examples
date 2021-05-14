@@ -241,3 +241,21 @@ TEST(chapter1_3, swap_circuit)
     EXPECT_MATRIX_EQ(circuit(10_ket), 01_ket);
     EXPECT_MATRIX_EQ(circuit(11_ket), 11_ket);
 }
+
+//! @brief Figure 1.9
+TEST(chapter1_3, controlled_u)
+{
+    using namespace qpp::literals;
+
+    auto const controlled_X = qpp::gt.CTRL(qpp::gt.X, { 0 }, { 1 }, 2);
+    EXPECT_MATRIX_EQ(controlled_X, qpp::gt.CNOT);
+
+    auto const controlled_Z = qpp::gt.CTRL(qpp::gt.Z, { 0 }, { 1 }, 2);
+    EXPECT_MATRIX_EQ(controlled_Z, Eigen::Vector4cd(1, 1, 1, -1).asDiagonal().toDenseMatrix());
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> Controlled-X:\n" << qpp::disp(controlled_X) << '\n';
+        std::cerr << ">> Controlled-Z:\n" << qpp::disp(controlled_Z) << '\n';
+    }
+}
