@@ -9,8 +9,7 @@ Matrix comparison functions.
 namespace qpp_e::maths
 {
 
-    template < Matrix Actual, Matrix Expected >
-    auto matrix_equal(Actual const& actual, Expected const& expected)
+    auto matrix_equal(Matrix auto const& actual, Matrix auto const& expected)
     {
         return actual.rows() == expected.rows()
             && actual.cols() == expected.cols()
@@ -18,8 +17,7 @@ namespace qpp_e::maths
     }
     auto constexpr matrix_equal_l = [](auto const& actual, auto const& expected) { return matrix_equal(actual, expected); };
 
-    template < Matrix Actual, Matrix Expected, RealNumber Precision >
-    auto matrix_close(Actual const& actual, Expected const& expected, Precision const& precision)
+    auto matrix_close(Matrix auto const& actual, Matrix auto const& expected, RealNumber auto const& precision)
     {
         return actual.rows() == expected.rows()
             && actual.cols() == expected.cols()
@@ -27,15 +25,13 @@ namespace qpp_e::maths
     }
     auto constexpr matrix_close_l = [](auto const& actual, auto const& expected, auto const& precision) { return matrix_close(actual, expected, precision); };
 
-    template < ComplexNumber Actual, ComplexNumber Expected, RealNumber Precision >
-    auto complex_close(Actual const& actual, Expected const& expected, Precision const& precision)
+    auto complex_close(ComplexNumber auto const& actual, ComplexNumber auto const& expected, RealNumber auto const& precision)
     {
         return std::norm(actual - expected) <= precision * std::min(std::norm(actual), std::norm(expected));
     }
     auto constexpr complex_close_l = [](auto const& actual, auto const& expected, auto const& precision) { return complex_close(actual, expected, precision); };
 
-    template < Matrix Actual, Matrix Expected, RealNumber Precision >
-    auto collinear(Actual const& actual, Expected const& expected, Precision const& precision)
+    auto collinear(Matrix auto const& actual, Matrix auto const& expected, RealNumber auto const& precision)
     {
         auto const n2 = actual.squaredNorm() * expected.squaredNorm();
         return n2 - std::norm(actual.dot(expected)) < precision * n2;
