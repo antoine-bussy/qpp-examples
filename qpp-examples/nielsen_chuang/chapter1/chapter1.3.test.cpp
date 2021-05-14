@@ -205,3 +205,20 @@ TEST(chapter1_3, general_basis_measure)
             std::cerr << qpp::disp(it) << "\n\n";
     }
 }
+
+//! @brief Equation 1.20 and Figure 1.7
+TEST(chapter1_3, swap)
+{
+    using namespace qpp::literals;
+
+    auto const U = (qpp::gt.CNOT * qpp::gt.CNOTba * qpp::gt.CNOT).eval();
+    EXPECT_MATRIX_CLOSE(U, qpp::gt.SWAP, 1e-12);
+
+    EXPECT_MATRIX_EQ(U * 00_ket, 00_ket);
+    EXPECT_MATRIX_EQ(U * 01_ket, 10_ket);
+    EXPECT_MATRIX_EQ(U * 10_ket, 01_ket);
+    EXPECT_MATRIX_EQ(U * 11_ket, 11_ket);
+
+    if constexpr (print_text)
+        std::cerr << ">> SWAP:\n" << qpp::disp(qpp::gt.SWAP) << '\n';
+}
