@@ -259,3 +259,37 @@ TEST(chapter1_3, controlled_u)
         std::cerr << ">> Controlled-Z:\n" << qpp::disp(controlled_Z) << '\n';
     }
 }
+
+//! @brief Equations 1.21 and 1.22, and Figure 1.11
+TEST(chapter1_3, qubit_copy)
+{
+    using namespace qpp::literals;
+
+    EXPECT_MATRIX_EQ(qpp::kron(0_ket, 0_ket), 00_ket);
+    EXPECT_MATRIX_EQ(qpp::kron(1_ket, 0_ket), 10_ket);
+
+    auto constexpr copy = [](auto const& state)
+    {
+        return (qpp::gt.CNOT * qpp::kron(state, 0_ket)).eval();
+    };
+
+    EXPECT_MATRIX_EQ(copy(0_ket), 00_ket);
+    EXPECT_MATRIX_EQ(copy(1_ket), 11_ket);
+
+    auto const state = qpp::randket().eval();
+
+    ASSERT_NE(state[0], 0.);
+    ASSERT_NE(state[1], 0.);
+    EXPECT_NE(copy(state), qpp::kron(state, state));
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> |0>|0>:\n" << qpp::disp(qpp::kron(0_ket, 0_ket)) << '\n';
+        std::cerr << ">> |1>|0>:\n" << qpp::disp(qpp::kron(1_ket, 0_ket)) << '\n';
+        std::cerr << ">> copy(|0>):\n" << qpp::disp(copy(0_ket)) << '\n';
+        std::cerr << ">> copy(|1>):\n" << qpp::disp(copy(1_ket)) << '\n';
+        std::cerr << ">> |psi>:\n" << qpp::disp(state) << '\n';
+        std::cerr << ">> copy(|psi>):\n" << qpp::disp(copy(state)) << '\n';
+        std::cerr << ">> |psi>|psi>:\n" << qpp::disp(qpp::kron(state, state)) << '\n';
+    }
+}
