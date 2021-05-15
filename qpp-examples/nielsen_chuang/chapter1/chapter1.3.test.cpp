@@ -293,3 +293,74 @@ TEST(chapter1_3, qubit_copy)
         std::cerr << ">> |psi>|psi>:\n" << qpp::disp(qpp::kron(state, state)) << '\n';
     }
 }
+
+//! @brief Equations 1.23 through 1.26, and Figure 1.12 left
+TEST(chapter1_3, bell_states)
+{
+    using namespace qpp::literals;
+
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    EXPECT_MATRIX_CLOSE(qpp::st.b00, (00_ket + 11_ket) * inv_sqrt2, 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::st.b01, (01_ket + 10_ket) * inv_sqrt2, 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::st.b10, (00_ket - 11_ket) * inv_sqrt2, 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::st.b11, (01_ket - 10_ket) * inv_sqrt2, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> b00:\n" << qpp::disp(qpp::st.b00) << '\n';
+        std::cerr << ">> b01:\n" << qpp::disp(qpp::st.b01) << '\n';
+        std::cerr << ">> b10:\n" << qpp::disp(qpp::st.b10) << '\n';
+        std::cerr << ">> b11:\n" << qpp::disp(qpp::st.b11) << '\n';
+    }
+}
+
+//! @brief Equation 1.27
+TEST(chapter1_3, bell_state_mnemonic)
+{
+    using namespace qpp::literals;
+
+    auto constexpr bell = [](auto&& x, auto&& y)
+    {
+        auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+        assert(std::set({0, 1}).contains(x));
+        assert(std::set({0, 1}).contains(y));
+        return ((qpp::kron(0_ket, Eigen::Vector2cd::Unit(y)) + std::pow(-1., x) * qpp::kron(1_ket, Eigen::Vector2cd::Unit(1 - y))) * inv_sqrt2).eval();
+    };
+
+    EXPECT_MATRIX_CLOSE(bell(0, 0), qpp::st.b00, 1e-12);
+    EXPECT_MATRIX_CLOSE(bell(0, 1), qpp::st.b01, 1e-12);
+    EXPECT_MATRIX_CLOSE(bell(1, 0), qpp::st.b10, 1e-12);
+    EXPECT_MATRIX_CLOSE(bell(1, 1), qpp::st.b11, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> b00:\n" << qpp::disp(bell(0, 0)) << '\n';
+        std::cerr << ">> b01:\n" << qpp::disp(bell(0, 1)) << '\n';
+        std::cerr << ">> b10:\n" << qpp::disp(bell(1, 0)) << '\n';
+        std::cerr << ">> b11:\n" << qpp::disp(bell(1, 1)) << '\n';
+    }
+}
+
+//! @brief Figure 1.12 right
+TEST(chapter1_3, bell_state_circuit)
+{
+    using namespace qpp::literals;
+
+    auto constexpr circuit = [](auto&& x, auto&& y)
+    {
+        return (qpp::gt.CNOT * qpp::kron(qpp::gt.H * x, y)).eval();
+    };
+    EXPECT_MATRIX_CLOSE(circuit(0_ket, 0_ket), qpp::st.b00, 1e-12);
+    EXPECT_MATRIX_CLOSE(circuit(0_ket, 1_ket), qpp::st.b01, 1e-12);
+    EXPECT_MATRIX_CLOSE(circuit(1_ket, 0_ket), qpp::st.b10, 1e-12);
+    EXPECT_MATRIX_CLOSE(circuit(1_ket, 1_ket), qpp::st.b11, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> b00:\n" << qpp::disp(circuit(0_ket, 0_ket)) << '\n';
+        std::cerr << ">> b01:\n" << qpp::disp(circuit(0_ket, 1_ket)) << '\n';
+        std::cerr << ">> b10:\n" << qpp::disp(circuit(1_ket, 0_ket)) << '\n';
+        std::cerr << ">> b11:\n" << qpp::disp(circuit(1_ket, 1_ket)) << '\n';
+    }
+}
