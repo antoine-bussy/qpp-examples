@@ -364,3 +364,58 @@ TEST(chapter1_3, bell_state_circuit)
         std::cerr << ">> b11:\n" << qpp::disp(circuit(1_ket, 1_ket)) << '\n';
     }
 }
+
+//! @brief Equations 1.28 through 1.36, and Figure 1.13
+TEST(chapter1_3, quantum_teleportation)
+{
+    using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    auto const psi = qpp::randket().eval();
+    auto const alpha = psi[0];
+    auto const beta = psi[1];
+
+    auto const psi0 = qpp::kron(psi, qpp::st.b00);
+    EXPECT_MATRIX_CLOSE(psi0, inv_sqrt2 * (alpha * (000_ket + 011_ket) + beta * (100_ket + 111_ket)), 1e-12);
+
+    auto const psi1 = qpp::apply(psi0, qpp::gt.CNOT, { 0, 1 });
+    EXPECT_MATRIX_CLOSE(psi1, inv_sqrt2 * (alpha * (000_ket + 011_ket) + beta * (110_ket + 101_ket)), 1e-12);
+
+    auto const psi2 = qpp::apply(psi1, qpp::gt.H, { 0 });
+    EXPECT_MATRIX_CLOSE(psi2, 0.5 * (alpha * qpp::kron(0_ket + 1_ket, 00_ket + 11_ket)  + beta * qpp::kron(0_ket - 1_ket, 10_ket + 01_ket)), 1e-12);
+    EXPECT_MATRIX_CLOSE(psi2, 0.5 * (qpp::kron(00_ket, alpha * 0_ket + beta * 1_ket)
+                                   + qpp::kron(01_ket, alpha * 1_ket + beta * 0_ket)
+                                   + qpp::kron(10_ket, alpha * 0_ket - beta * 1_ket)
+                                   + qpp::kron(11_ket, alpha * 1_ket - beta * 0_ket)), 1e-12);
+
+
+    auto const [alice_measure_ids, probabilities, psi3] = qpp::measure_seq(psi2, { 0, 1 });
+    auto const m1 = alice_measure_ids[0];
+    auto const m2 = alice_measure_ids[1];
+    auto const alice_measure = qpp::kron(Eigen::Vector2cd::Unit(m1), Eigen::Vector2cd::Unit(m2));
+
+    if (alice_measure == 00_ket)
+        EXPECT_MATRIX_CLOSE(psi3, alpha * 0_ket + beta * 1_ket, 1e-12);
+    else if (alice_measure == 01_ket)
+        EXPECT_MATRIX_CLOSE(psi3, alpha * 1_ket + beta * 0_ket, 1e-12);
+    else if (alice_measure == 10_ket)
+        EXPECT_MATRIX_CLOSE(psi3, alpha * 0_ket - beta * 1_ket, 1e-12);
+    else if (alice_measure == 11_ket)
+        EXPECT_MATRIX_CLOSE(psi3, alpha * 1_ket - beta * 0_ket, 1e-12);
+    else
+        EXPECT_FALSE("Impossible Alice's measure");
+
+    auto const psi4 = (qpp::powm(qpp::gt.Z, m1) * qpp::powm(qpp::gt.X, m2) * psi3).eval();
+    EXPECT_MATRIX_CLOSE(psi4, psi, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> psi:\n" << qpp::disp(psi) << '\n';
+        std::cerr << ">> psi0:\n" << qpp::disp(psi0) << '\n';
+        std::cerr << ">> psi1:\n" << qpp::disp(psi1) << '\n';
+        std::cerr << ">> psi2:\n" << qpp::disp(psi2) << '\n';
+        std::cerr << ">> Alice\'s measure: |" << m1 << m2 << ">\n" << qpp::disp(alice_measure) << '\n';
+        std::cerr << ">> psi3:\n" << qpp::disp(psi3) << '\n';
+        std::cerr << ">> psi4:\n" << qpp::disp(psi4) << '\n';
+    }
+}
