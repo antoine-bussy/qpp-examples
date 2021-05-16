@@ -419,3 +419,107 @@ TEST(chapter1_3, quantum_teleportation)
         std::cerr << ">> psi4:\n" << qpp::disp(psi4) << '\n';
     }
 }
+
+//! @brief Equations 1.28 through 1.36, and Figure 1.13
+TEST(chapter1_3, quantum_teleportation_circuit)
+{
+    using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    auto const psi = qpp::randket().eval();
+    auto const alpha = psi[0];
+    auto const beta = psi[1];
+
+    auto const psi_init = qpp::kron(psi, qpp::st.b00);
+
+    auto circuit = qpp::QCircuit{ 3, 2 };
+    auto engine = qpp::QEngine{ circuit };
+    engine.reset().set_psi(psi_init).execute();
+    auto const psi0 = engine.get_psi();
+    EXPECT_MATRIX_CLOSE(psi0, inv_sqrt2 * (alpha * (000_ket + 011_ket) + beta * (100_ket + 111_ket)), 1e-12);
+
+    circuit.gate_joint(qpp::gt.CNOT, { 0, 1 });
+    engine.reset().set_psi(psi_init).execute();
+    auto const psi1 = engine.get_psi();
+    EXPECT_MATRIX_CLOSE(psi1, inv_sqrt2 * (alpha * (000_ket + 011_ket) + beta * (110_ket + 101_ket)), 1e-12);
+
+    circuit.gate(qpp::gt.H, 0);
+    engine.reset().set_psi(psi_init).execute();
+    auto const psi2 = engine.get_psi();
+    EXPECT_MATRIX_CLOSE(psi2, 0.5 * (alpha * qpp::kron(0_ket + 1_ket, 00_ket + 11_ket)  + beta * qpp::kron(0_ket - 1_ket, 10_ket + 01_ket)), 1e-12);
+    EXPECT_MATRIX_CLOSE(psi2, 0.5 * (qpp::kron(00_ket, alpha * 0_ket + beta * 1_ket)
+                                   + qpp::kron(01_ket, alpha * 1_ket + beta * 0_ket)
+                                   + qpp::kron(10_ket, alpha * 0_ket - beta * 1_ket)
+                                   + qpp::kron(11_ket, alpha * 1_ket - beta * 0_ket)), 1e-12);
+
+    circuit.measureV(qpp::gt.Id2, 0, 0);
+    circuit.measureV(qpp::gt.Id2, 1, 1);
+    engine.reset().set_psi(psi_init).execute();
+    auto const psi3 = engine.get_psi();
+    auto const m1 = engine.get_dit(0);
+    auto const m2 = engine.get_dit(1);
+    auto const alice_measure = qpp::kron(Eigen::Vector2cd::Unit(m1), Eigen::Vector2cd::Unit(m2));
+
+    if (alice_measure == 00_ket)
+        EXPECT_MATRIX_CLOSE(psi3, alpha * 0_ket + beta * 1_ket, 1e-12);
+    else if (alice_measure == 01_ket)
+        EXPECT_MATRIX_CLOSE(psi3, alpha * 1_ket + beta * 0_ket, 1e-12);
+    else if (alice_measure == 10_ket)
+        EXPECT_MATRIX_CLOSE(psi3, alpha * 0_ket - beta * 1_ket, 1e-12);
+    else if (alice_measure == 11_ket)
+        EXPECT_MATRIX_CLOSE(psi3, alpha * 1_ket - beta * 0_ket, 1e-12);
+    else
+        EXPECT_FALSE("Impossible Alice's measure");
+
+    circuit.cCTRL(qpp::gt.X, 1, 2);
+    circuit.cCTRL(qpp::gt.Z, 0, 2);
+    engine.reset().set_psi(psi_init).execute();
+    auto const psi4 = engine.get_psi();
+    EXPECT_MATRIX_CLOSE(psi4, psi, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << circuit << "\n\n" << circuit.get_resources() << "\n\n";
+        std::cerr << engine << "\n\n";
+        std::cerr << ">> psi:\n" << qpp::disp(psi) << '\n';
+        std::cerr << ">> psi0:\n" << qpp::disp(psi0) << '\n';
+        std::cerr << ">> psi1:\n" << qpp::disp(psi1) << '\n';
+        std::cerr << ">> psi2:\n" << qpp::disp(psi2) << '\n';
+        std::cerr << ">> Alice\'s measure: |" << m1 << m2 << ">\n" << qpp::disp(alice_measure) << '\n';
+        std::cerr << ">> psi3:\n" << qpp::disp(psi3) << '\n';
+        std::cerr << ">> psi4:\n" << qpp::disp(psi4) << '\n';
+    }
+}
+
+//! @brief Equations 1.28 through 1.36, and Figure 1.13
+TEST(chapter1_3, quantum_teleportation_circuit_short)
+{
+    using namespace qpp::literals;
+
+    auto const psi = qpp::randket().eval();
+
+    auto circuit = qpp::QCircuit{ 3, 2 };
+    circuit.gate_joint(qpp::gt.CNOT, { 0, 1 });
+    circuit.gate(qpp::gt.H, 0);
+    circuit.measureV(qpp::gt.Id2, 0, 0);
+    circuit.measureV(qpp::gt.Id2, 1, 1);
+    circuit.cCTRL(qpp::gt.X, 1, 2);
+    circuit.cCTRL(qpp::gt.Z, 0, 2);
+
+    auto engine = qpp::QEngine{ circuit };
+    engine.set_psi(qpp::kron(psi, qpp::st.b00));
+    auto const psi_in = engine.get_psi();
+    engine.execute();
+
+    auto const psi_out = engine.get_psi();
+    EXPECT_MATRIX_CLOSE(psi_out, psi, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << circuit << "\n\n" << circuit.get_resources() << "\n\n";
+        std::cerr << engine << "\n\n";
+        std::cerr << ">> psi:\n" << qpp::disp(psi) << '\n';
+        std::cerr << ">> psi_in:\n" << qpp::disp(psi_in) << '\n';
+        std::cerr << ">> psi_out:\n" << qpp::disp(psi_out) << '\n';
+    }
+}
