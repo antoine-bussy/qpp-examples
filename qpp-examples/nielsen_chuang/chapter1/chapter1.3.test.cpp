@@ -494,8 +494,6 @@ TEST(chapter1_3, quantum_teleportation_circuit)
 //! @brief Equations 1.28 through 1.36, and Figure 1.13
 TEST(chapter1_3, quantum_teleportation_circuit_short)
 {
-    using namespace qpp::literals;
-
     auto const psi = qpp::randket().eval();
 
     auto circuit = qpp::QCircuit{ 3, 2 };
