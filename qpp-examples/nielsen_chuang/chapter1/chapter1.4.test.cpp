@@ -44,6 +44,14 @@ TEST(chapter1_4, toffoli_gate)
         for(auto&& b : { 0u, 1u })
             for(auto&& c : { 0u, 1u })
                 EXPECT_MATRIX_EQ(qpp::gt.TOF * qpp::mket({a, b, c}), qpp::mket({a, b, (c + a * b) % 2}));
+
+    auto toffoli_matrix = Eigen::Matrix<qpp::cplx, 8, 8>::Identity().eval();
+    toffoli_matrix(Eigen::lastN(2), Eigen::lastN(2)) = Eigen::Vector4cd{ 0, 1, 1, 0 }.reshaped(2,2);
+    EXPECT_MATRIX_EQ(qpp::gt.TOF, toffoli_matrix);
+    EXPECT_MATRIX_EQ(qpp::gt.TOF * qpp::gt.TOF.adjoint(), (Eigen::Matrix<qpp::cplx, 8, 8>::Identity()));
+
+    if constexpr (print_text)
+        std::cerr << ">> Toffoli gate:\n" << qpp::disp(qpp::gt.TOF) << '\n';
 }
 
 //! @brief Figure 1.15
