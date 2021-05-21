@@ -156,3 +156,44 @@ TEST(chapter1_4, function_parallelism)
         }
     }
 }
+
+//! @brief Equation 1.38 and figure 1.18
+TEST(chapter1_4, hadamard_transform_2d)
+{
+    using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    auto const x = ((0_ket + 1_ket) * inv_sqrt2).eval();
+    auto const hadamard_transform = (0.5 * (00_ket + 01_ket + 10_ket + 11_ket)).eval();
+    EXPECT_MATRIX_CLOSE(hadamard_transform, qpp::kron(x, x), 1e-12);
+
+    auto const H2 = qpp::kron(qpp::gt.H, qpp::gt.H);
+    EXPECT_MATRIX_CLOSE(hadamard_transform, H2 * 00_ket, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> Hadamard transform:\n" << qpp::disp(hadamard_transform) << '\n';
+        std::cerr << ">> H2 matrix:\n" << qpp::disp(H2) << '\n';
+    }
+}
+
+//! @brief Equation 1.39
+TEST(chapter1_4, hadamard_transform)
+{
+    for(auto&& n : { 3, 4, 5 })
+    {
+        auto const _2_pow_n = std::pow(2, n);
+        auto const inv_sqrt_2_pow_n = 1. / std::sqrt(_2_pow_n);
+        auto const hadamard_transform = (inv_sqrt_2_pow_n * Eigen::VectorXcd::Ones(_2_pow_n)).eval();
+        auto const Hn = qpp::kronpow(qpp::gt.H, n);
+        EXPECT_MATRIX_CLOSE(hadamard_transform, Hn * qpp::mket(std::vector<qpp::idx>(n, 0u)), 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << "-----------------------------\n";
+            std::cerr << ">> Number of Qubits:" << n << '\n';
+            std::cerr << ">> Hadamard transform:\n" << qpp::disp(hadamard_transform) << '\n';
+            std::cerr << ">> Hn matrix:\n" << qpp::disp(Hn) << '\n';
+        }
+    }
+}
