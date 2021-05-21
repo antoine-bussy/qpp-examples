@@ -4,6 +4,8 @@
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
 
+#include <numbers>
+
 namespace
 {
     auto constexpr print_text = false;
@@ -125,6 +127,31 @@ TEST(chapter1_4, function)
         {
             std::cerr << "-----------------------------\n";
             std::cerr << ">> F:\n" << qpp::disp(F) << '\n';
+            std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
+        }
+    }
+}
+
+//! @brief Figure 1.17 and equation 1.37
+TEST(chapter1_4, function_parallelism)
+{
+    using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    for(auto&& f : functions())
+    {
+        auto const Uf = matrixU(matrix(f));
+
+        auto const x = ((0_ket + 1_ket) * inv_sqrt2).eval();
+        auto const y = 0_ket;
+
+        auto const psi = (Uf * qpp::kron(x, y)).eval();
+        auto const expected_psi = ((qpp::mket({0u, f[0]}) + qpp::mket({1u, f[1]})) * inv_sqrt2).eval();
+        EXPECT_MATRIX_EQ(psi, expected_psi);
+
+        if constexpr (print_text)
+        {
+            std::cerr << "-----------------------------\n";
             std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
         }
     }
