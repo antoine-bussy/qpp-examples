@@ -68,3 +68,64 @@ TEST(chapter1_4, fanout)
     for(auto&& a : { 0u, 1u })
         EXPECT_MATRIX_EQ(qpp::gt.TOF * qpp::mket({1, a, 0}), qpp::mket({1, a, a}));
 }
+
+namespace
+{
+    auto consteval functions()
+    {
+        return std::array
+        {
+            std::array{ 0u, 0u },
+            std::array{ 0u, 1u },
+            std::array{ 1u, 0u },
+            std::array{ 1u, 1u },
+        };
+    }
+
+    auto matrix(auto const& f)
+    {
+        auto F = Eigen::Matrix2cd::Zero().eval();
+        F(f[0], 0) = F(f[1], 1) = 1;
+        return F;
+    }
+
+    auto matrixU(auto const& F)
+    {
+        using namespace qpp::literals;
+
+        auto Uf = Eigen::Matrix4cd::Zero().eval();
+        Uf.col(0) = qpp::kron(0_ket, F * 0_ket);
+        Uf.col(1) = qpp::kron(0_ket, qpp::gt.X * F * 0_ket);
+        Uf.col(2) = qpp::kron(1_ket, F * 1_ket);
+        Uf.col(3) = qpp::kron(1_ket, qpp::gt.X * F * 1_ket);
+        return Uf;
+    }
+}
+
+//! @brief Figure 1.17
+TEST(chapter1_4, function)
+{
+    using namespace qpp::literals;
+
+    for(auto&& f : functions())
+    {
+        auto const F = matrix(f);
+        EXPECT_MATRIX_EQ(F * 0_ket, qpp::mket({f[0]}));
+        EXPECT_MATRIX_EQ(F * 1_ket, qpp::mket({f[1]}));
+
+        auto const Uf = matrixU(F);
+        EXPECT_MATRIX_EQ(Uf * Uf.adjoint(), Eigen::Matrix4cd::Identity());
+
+        EXPECT_MATRIX_EQ(Uf * 00_ket, qpp::mket({0u, f[0]}));
+        EXPECT_MATRIX_EQ(Uf * 01_ket, qpp::mket({0u, (1u + f[0]) % 2u}));
+        EXPECT_MATRIX_EQ(Uf * 10_ket, qpp::mket({1u, f[1]}));
+        EXPECT_MATRIX_EQ(Uf * 11_ket, qpp::mket({1u, (1u + f[1]) % 2u}));
+
+        if constexpr (print_text)
+        {
+            std::cerr << "-----------------------------\n";
+            std::cerr << ">> F:\n" << qpp::disp(F) << '\n';
+            std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
+        }
+    }
+}
