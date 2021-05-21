@@ -197,3 +197,71 @@ TEST(chapter1_4, hadamard_transform)
         }
     }
 }
+
+namespace
+{
+    auto random_function(int n)
+    {
+        auto gen = std::default_random_engine{};
+        auto d = std::uniform_int_distribution<qpp::idx>{ 0u, 1u };
+        auto f = std::vector<qpp::idx>(std::pow(2, n));
+        for (auto& v : f)
+            v = d(gen);
+        return f;
+    }
+
+    auto matrix_n(auto const& f)
+    {
+        auto const _2_pow_n = f.size();
+        auto F = Eigen::MatrixXcd::Zero(2, _2_pow_n).eval();
+        for (auto&& i : std::views::iota(0u, _2_pow_n))
+            F(f[i], i) = 1;
+        return F;
+    }
+
+    auto matrixU_n(auto const& F)
+    {
+        auto const _2_pow_n = F.cols();
+        auto const non_F = (qpp::gt.X * F).eval();
+
+        auto Uf = Eigen::MatrixXcd::Zero(_2_pow_n * 2, _2_pow_n * 2).eval();
+        for (auto&& i : std::views::iota(0, _2_pow_n))
+        {
+            auto const x = Eigen::VectorXcd::Unit(_2_pow_n, i);
+            Uf.col(2*i) = qpp::kron(x, F * x);
+            Uf.col(2*i+1) = qpp::kron(x, non_F * x);
+        }
+        return Uf;
+    }
+}
+
+//! @brief Equation 1.40
+TEST(chapter1_4, function_5d)
+{
+    using namespace qpp::literals;
+
+    auto constexpr n = 5;
+    auto constexpr _2_pow_n = std::pow(2, n);
+    auto const f = random_function(n);
+
+    auto const F = matrix_n(f);
+    for (auto&& i : std::views::iota(0u, _2_pow_n))
+        EXPECT_MATRIX_EQ(F * Eigen::VectorXcd::Unit(_2_pow_n, i), qpp::mket({f[i]}));
+
+    auto const Uf = matrixU_n(F);
+    EXPECT_MATRIX_EQ(Uf * Uf.adjoint(), Eigen::MatrixXcd::Identity(2 * _2_pow_n, 2 * _2_pow_n));
+
+    for (auto&& i : std::views::iota(0u, _2_pow_n))
+    {
+        auto const x = Eigen::VectorXcd::Unit(_2_pow_n, i);
+        EXPECT_MATRIX_EQ(Uf * qpp::kron(x, 0_ket), qpp::kron(x, qpp::mket({f[i]})));
+        EXPECT_MATRIX_EQ(Uf * qpp::kron(x, 1_ket), qpp::kron(x, qpp::mket({1u - f[i]})));
+    }
+
+    if constexpr (print_text)
+    {
+        std::cerr << "-----------------------------\n";
+        std::cerr << ">> F:\n" << qpp::disp(F) << '\n';
+        std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
+    }
+}
