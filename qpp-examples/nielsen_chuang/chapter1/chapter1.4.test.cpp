@@ -6,7 +6,7 @@
 
 namespace
 {
-    auto constexpr print_text = true;
+    auto constexpr print_text = false;
 }
 
 //! @brief Test of Q++ mket function
@@ -44,4 +44,19 @@ TEST(chapter1_4, toffoli_gate)
         for(auto&& b : { 0u, 1u })
             for(auto&& c : { 0u, 1u })
                 EXPECT_MATRIX_EQ(qpp::gt.TOF * qpp::mket({a, b, c}), qpp::mket({a, b, (c + a * b) % 2}));
+}
+
+//! @brief Figure 1.15
+TEST(chapter1_4, nand)
+{
+    for(auto&& a : { 0u, 1u })
+        for(auto&& b : { 0u, 1u })
+            EXPECT_MATRIX_EQ(qpp::gt.TOF * qpp::mket({a, b, 1}), qpp::mket({a, b, !(a && b)}));
+}
+
+//! @brief Figure 1.16
+TEST(chapter1_4, fanout)
+{
+    for(auto&& a : { 0u, 1u })
+        EXPECT_MATRIX_EQ(qpp::gt.TOF * qpp::mket({1, a, 0}), qpp::mket({1, a, a}));
 }
