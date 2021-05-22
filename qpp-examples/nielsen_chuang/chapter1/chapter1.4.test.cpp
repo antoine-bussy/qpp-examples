@@ -5,6 +5,7 @@
 #include <qpp-examples/maths/gtest_macros.hpp>
 
 #include <numbers>
+#include <execution>
 
 namespace
 {
@@ -117,6 +118,7 @@ TEST(chapter1_4, function)
 
         auto const Uf = matrixU(F);
         EXPECT_MATRIX_EQ(Uf * Uf.adjoint(), Eigen::Matrix4cd::Identity());
+        EXPECT_MATRIX_EQ(Uf, Uf.adjoint());
 
         EXPECT_MATRIX_EQ(Uf * 00_ket, qpp::mket({0u, f[0]}));
         EXPECT_MATRIX_EQ(Uf * 01_ket, qpp::mket({0u, (1u + f[0]) % 2u}));
@@ -236,12 +238,14 @@ namespace
 }
 
 //! @brief Equation 1.40
-TEST(chapter1_4, function_5d)
+TEST(chapter1_4, function_7d)
 {
     using namespace qpp::literals;
 
-    auto constexpr n = 5;
-    auto constexpr _2_pow_n = std::pow(2, n);
+    auto constexpr n = 7;
+    auto constexpr _2_pow_n = static_cast<qpp::idx>(std::pow(2, n));
+    auto constexpr policy = std::execution::par;
+
     auto const f = random_function(n);
 
     auto const F = matrix_n(f);
@@ -250,18 +254,37 @@ TEST(chapter1_4, function_5d)
 
     auto const Uf = matrixU_n(F);
     EXPECT_MATRIX_EQ(Uf * Uf.adjoint(), Eigen::MatrixXcd::Identity(2 * _2_pow_n, 2 * _2_pow_n));
+    EXPECT_MATRIX_EQ(Uf, Uf.adjoint());
 
-    for (auto&& i : std::views::iota(0u, _2_pow_n))
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    static_assert(std::ranges::random_access_range<decltype(range)>);
+
+    std::for_each(policy, range.begin(), range.end(),
+        [&](auto&& i)
     {
         auto const x = Eigen::VectorXcd::Unit(_2_pow_n, i);
         EXPECT_MATRIX_EQ(Uf * qpp::kron(x, 0_ket), qpp::kron(x, qpp::mket({f[i]})));
         EXPECT_MATRIX_EQ(Uf * qpp::kron(x, 1_ket), qpp::kron(x, qpp::mket({1u - f[i]})));
-    }
+    });
+
+    auto const hadamard_state = qpp::kron(qpp::kronpow(qpp::gt.H, n) * qpp::mket(std::vector<qpp::idx>(n, 0u)), 0_ket);
+    auto const out_state = (Uf * hadamard_state).eval();
+    auto const expected_out_state = (std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::VectorXcd::Zero(2 * _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        auto const x = Eigen::VectorXcd::Unit(_2_pow_n, i);
+        return qpp::kron(x, qpp::mket({f[i]}));
+    }) / std::sqrt(_2_pow_n)).eval();
+    EXPECT_MATRIX_CLOSE(out_state, expected_out_state, 1e-12);
 
     if constexpr (print_text)
     {
         std::cerr << "-----------------------------\n";
         std::cerr << ">> F:\n" << qpp::disp(F) << '\n';
         std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
+        std::cerr << ">> Hadamard state:\n" << qpp::disp(hadamard_state) << '\n';
+        std::cerr << ">> Result state:\n" << qpp::disp(out_state) << '\n';
     }
 }

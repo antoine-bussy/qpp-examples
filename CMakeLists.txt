@@ -21,6 +21,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(qpp REQUIRED)
 find_package(GTest REQUIRED)
+find_package(TBB 2020.3 REQUIRED)
+find_package(OpenMP REQUIRED)
 
 enable_testing()
 

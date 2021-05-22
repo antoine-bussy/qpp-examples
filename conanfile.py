@@ -20,7 +20,7 @@ class QppExamplesConan(ConanFile):
     short_paths = True
 
     def requirements(self):
-        pass
+        self.requires("tbb/2020.3@")
 
     def build_requirements(self):
         self.build_requires("qpp/main@local/snapshot", force_host_context=True)
