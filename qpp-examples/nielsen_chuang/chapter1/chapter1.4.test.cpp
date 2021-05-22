@@ -288,3 +288,45 @@ TEST(chapter1_4, function_7d)
         std::cerr << ">> Result state:\n" << qpp::disp(out_state) << '\n';
     }
 }
+
+//! @brief Figure 1.19 and equations 1.41 through 1.45
+TEST(chapter1_4, deutsch_algorithm)
+{
+    using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    for(auto&& f : functions())
+    {
+        auto const Uf = matrixU(matrix(f));
+
+        auto const psi0 = 01_ket;
+
+        auto const psi1 = (qpp::kronpow(qpp::gt.H, 2) * psi0).eval();
+        EXPECT_MATRIX_CLOSE(psi1, 0.5 * qpp::kron(0_ket + 1_ket, 0_ket - 1_ket), 1e-12);
+
+        auto const psi2 = (Uf * psi1).eval();
+        if(f[0] == f[1])
+            EXPECT_MATRIX_CLOSE(psi2, std::pow(-1., f[0]) * 0.5 * qpp::kron(0_ket + 1_ket, 0_ket - 1_ket), 1e-12);
+        else
+            EXPECT_MATRIX_CLOSE(psi2, std::pow(-1., f[0]) * 0.5 * qpp::kron(0_ket - 1_ket, 0_ket - 1_ket), 1e-12);
+
+        auto const psi3 = qpp::apply(psi2, qpp::gt.H, { 0 });
+        if(f[0] == f[1])
+            EXPECT_MATRIX_CLOSE(psi3, std::pow(-1., f[0]) * inv_sqrt2 * qpp::kron(0_ket, 0_ket - 1_ket), 1e-12);
+        else
+            EXPECT_MATRIX_CLOSE(psi3, std::pow(-1., f[0]) * inv_sqrt2 * qpp::kron(1_ket, 0_ket - 1_ket), 1e-12);
+
+        EXPECT_MATRIX_CLOSE(psi3, std::pow(-1., f[0]) * inv_sqrt2 * qpp::kron(qpp::mket({ (f[0] + f[1]) % 2 }), 0_ket - 1_ket), 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << "-----------------------------\n";
+            std::cerr << ">> f(0) = " << f[0] << ", f(1) = " << f[1] << '\n';
+            std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
+            std::cerr << ">> psi0:\n" << qpp::disp(psi0) << '\n';
+            std::cerr << ">> psi1:\n" << qpp::disp(psi1) << '\n';
+            std::cerr << ">> psi2:\n" << qpp::disp(psi2) << '\n';
+            std::cerr << ">> psi3:\n" << qpp::disp(psi3) << '\n';
+        }
+    }
+}
