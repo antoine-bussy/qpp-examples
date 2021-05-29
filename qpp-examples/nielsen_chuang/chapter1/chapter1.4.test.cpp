@@ -16,7 +16,7 @@ namespace
 TEST(chapter1_4, mket)
 {
     using namespace qpp::literals;
-    
+
     EXPECT_MATRIX_EQ(qpp::mket({0, 0, 0}), 000_ket);
     EXPECT_MATRIX_EQ(qpp::mket({0, 0, 1}), 001_ket);
     EXPECT_MATRIX_EQ(qpp::mket({0, 1, 0}), 010_ket);
@@ -32,7 +32,7 @@ TEST(chapter1_4, mket)
 TEST(chapter1_4, toffoli_gate)
 {
     using namespace qpp::literals;
-    
+
     EXPECT_MATRIX_EQ(qpp::gt.TOF * 000_ket, 000_ket);
     EXPECT_MATRIX_EQ(qpp::gt.TOF * 001_ket, 001_ket);
     EXPECT_MATRIX_EQ(qpp::gt.TOF * 010_ket, 010_ket);
@@ -327,6 +327,151 @@ TEST(chapter1_4, deutsch_algorithm)
             std::cerr << ">> psi1:\n" << qpp::disp(psi1) << '\n';
             std::cerr << ">> psi2:\n" << qpp::disp(psi2) << '\n';
             std::cerr << ">> psi3:\n" << qpp::disp(psi3) << '\n';
+        }
+    }
+}
+
+namespace
+{
+    auto random_constant_function(int n)
+    {
+        auto const f = random_function(0);
+        return std::vector<qpp::idx>(std::pow(2, n), f[0]);
+    }
+    auto random_balanced_function(int n)
+    {
+        auto f = std::vector<qpp::idx>(std::pow(2, n), 0u);
+        std::fill(f.begin() + f.size() / 2, f.end(), 1u);
+        std::shuffle(f.begin(), f.end(), std::default_random_engine{});
+        return f;
+    }
+}
+
+//! @brief Test of bitwise inner product with std::popcount
+TEST(chapter1_4, bitwise_inner_product)
+{
+    auto constexpr n = 7u;
+    auto constexpr _2_pow_n = static_cast<qpp::idx>(std::pow(2, n));
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto const dims = std::vector<qpp::idx>(n, 2u);
+
+    for (auto&& x : range)
+    {
+        auto const x_vec = qpp::n2multiidx(x, dims);
+        auto const X = Eigen::VectorX<qpp::idx>::Map(x_vec.data(), x_vec.size());
+
+        for(auto&& z: range)
+        {
+            auto const z_vec = qpp::n2multiidx(z, dims);
+            auto const Z = Eigen::VectorX<qpp::idx>::Map(z_vec.data(), z_vec.size());
+
+            EXPECT_EQ(std::popcount(x & z), X.dot(Z));
+        }
+    }
+}
+
+//! @brief Figure 1.20 and equations 1.46 through 1.51
+TEST(chapter1_4, deutsch_jozsa_algorithm)
+{
+    using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    auto constexpr n = 7u;
+    auto constexpr _2_pow_n = static_cast<qpp::idx>(std::pow(2, n));
+    auto constexpr inv_sqrt_2_pow_n = 1. / std::sqrt(_2_pow_n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr policy = std::execution::par;
+    auto const functions = std::array{ random_constant_function(n), random_balanced_function(n) };
+
+    for(auto&& i : { 0, 1 })
+    {
+        auto const& f = functions[i];
+        auto const constant = (i == 0);
+        if (constant)
+        {
+            EXPECT_THAT((std::array{ 0u, 1u }), testing::Contains(f[0]));
+            EXPECT_TRUE(std::all_of(policy, f.cbegin(), f.cend(), [&](auto&& x){ return x == f[0]; }));
+        }
+        else
+        {
+            EXPECT_TRUE(std::all_of(policy, f.cbegin(), f.cend(), [&](auto&& x){ return (x == 0u) || (x == 1u); }));
+            EXPECT_EQ(std::reduce(policy, f.cbegin(), f.cend(), 0u, std::plus<>{}), f.size() / 2);
+        }
+
+        auto const Uf = matrixU_n(matrix_n(f));
+
+        EXPECT_MATRIX_EQ(Uf * Uf.adjoint(), Eigen::MatrixXcd::Identity(2 * _2_pow_n, 2 * _2_pow_n));
+        EXPECT_MATRIX_EQ(Uf, Uf.adjoint());
+
+        auto const psi0 = qpp::kron(qpp::kronpow(0_ket, n), 1_ket);
+
+        auto const psi1 = (qpp::kronpow(qpp::gt.H, n + 1) * psi0).eval();
+
+        auto const expected_psi1 = qpp::kron(std::transform_reduce(policy, range.begin(), range.end()
+            , Eigen::VectorXcd::Zero(_2_pow_n).eval()
+            , std::plus<>{}
+            , [&](auto&& i)
+        {
+            return Eigen::VectorXcd::Unit(_2_pow_n, i).eval();
+        }), inv_sqrt_2_pow_n * inv_sqrt2 * (0_ket - 1_ket));
+        EXPECT_MATRIX_CLOSE(psi1, expected_psi1, 1e-12);
+
+        auto const psi2 = (Uf * psi1).eval();
+        auto const expected_psi2 = qpp::kron(std::transform_reduce(policy, range.begin(), range.end()
+            , Eigen::VectorXcd::Zero(_2_pow_n).eval()
+            , std::plus<>{}
+            , [&](auto&& i)
+        {
+            return (std::pow(-1, f[i]) * Eigen::VectorXcd::Unit(_2_pow_n, i)).eval();
+        }), inv_sqrt_2_pow_n * inv_sqrt2 * (0_ket - 1_ket));
+        EXPECT_MATRIX_CLOSE(psi2, expected_psi2, 1e-12);
+
+        auto const dims = std::vector<qpp::idx>(n, 2u);
+        auto const psi3 = (qpp::kron(qpp::kronpow(qpp::gt.H, n), qpp::gt.Id2) * psi2).eval();
+        auto const expected_psi3 = qpp::kron(std::transform_reduce(policy, range.begin(), range.end()
+            , Eigen::VectorXcd::Zero(_2_pow_n).eval()
+            , std::plus<>{}
+            , [&](auto&& x)
+        {
+            return std::transform_reduce(std::execution::seq, range.begin(), range.end()
+                , Eigen::VectorXcd::Zero(_2_pow_n).eval()
+                , std::plus<>{}
+                , [&](auto&& z)
+            {
+                return (std::pow(-1, (std::popcount(x & z) + f[x]) % 2) * Eigen::VectorXcd::Unit(_2_pow_n, z)).eval();
+            });
+        }), 1. / _2_pow_n * inv_sqrt2 * (0_ket - 1_ket));
+        EXPECT_MATRIX_CLOSE(psi3, expected_psi3, 1e-12);
+
+        auto constexpr target = std::views::iota(0u, n) | std::views::common;
+        auto const [result, probabilities, resulting_state] = qpp::measure(psi3, qpp::gt.Id(_2_pow_n), { target.begin(), target.end() });
+
+        if (constant)
+        {
+            EXPECT_EQ(result, 0);
+            EXPECT_NEAR(probabilities[0], 1., 1e-12);
+        }
+        else
+        {
+            EXPECT_NE(result, 0);
+            EXPECT_NEAR(probabilities[0], 0., 1e-12);
+        }
+
+        if constexpr (print_text)
+        {
+            std::cerr << "-----------------------------\n";
+            std::cerr << ">> f:\n" << Eigen::VectorX<qpp::idx>::Map(f.data(), f.size()) << '\n';
+            std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
+            std::cerr << ">> psi0:\n" << qpp::disp(psi0) << '\n';
+            std::cerr << ">> psi1:\n" << qpp::disp(psi1) << '\n';
+            std::cerr << ">> psi2:\n" << qpp::disp(psi2) << '\n';
+            std::cerr << ">> psi3:\n" << qpp::disp(psi3) << '\n';
+            std::cerr << ">> Measurement result: " << result << '\n';
+            std::cerr << ">> Probabilities: ";
+            std::cerr << qpp::disp(probabilities, ", ") << '\n';
+            std::cerr << ">> Resulting states:\n";
+            for (auto&& it : resulting_state)
+                std::cerr << qpp::disp(it) << "\n\n";
         }
     }
 }
