@@ -3,6 +3,7 @@
 
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
+#include <qpp-examples/maths/arithmetic.hpp>
 
 #include <numbers>
 #include <execution>
@@ -184,7 +185,7 @@ TEST(chapter1_4, hadamard_transform)
 {
     for(auto&& n : { 3, 4, 5 })
     {
-        auto const _2_pow_n = std::pow(2, n);
+        auto const _2_pow_n = qpp_e::maths::pow(2u, n);
         auto const inv_sqrt_2_pow_n = 1. / std::sqrt(_2_pow_n);
         auto const hadamard_transform = (inv_sqrt_2_pow_n * Eigen::VectorXcd::Ones(_2_pow_n)).eval();
         auto const Hn = qpp::kronpow(qpp::gt.H, n);
@@ -206,7 +207,7 @@ namespace
     {
         auto gen = std::default_random_engine{};
         auto d = std::uniform_int_distribution<qpp::idx>{ 0u, 1u };
-        auto f = std::vector<qpp::idx>(std::pow(2, n));
+        auto f = std::vector<qpp::idx>(qpp_e::maths::pow(2, n));
         for (auto& v : f)
             v = d(gen);
         return f;
@@ -243,7 +244,7 @@ TEST(chapter1_4, function_7d)
     using namespace qpp::literals;
 
     auto constexpr n = 7;
-    auto constexpr _2_pow_n = static_cast<qpp::idx>(std::pow(2, n));
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
     auto constexpr policy = std::execution::par;
 
     auto const f = random_function(n);
@@ -306,17 +307,17 @@ TEST(chapter1_4, deutsch_algorithm)
 
         auto const psi2 = (Uf * psi1).eval();
         if(f[0] == f[1])
-            EXPECT_MATRIX_CLOSE(psi2, std::pow(-1., f[0]) * 0.5 * qpp::kron(0_ket + 1_ket, 0_ket - 1_ket), 1e-12);
+            EXPECT_MATRIX_CLOSE(psi2, qpp_e::maths::pow(-1, f[0]) * 0.5 * qpp::kron(0_ket + 1_ket, 0_ket - 1_ket), 1e-12);
         else
-            EXPECT_MATRIX_CLOSE(psi2, std::pow(-1., f[0]) * 0.5 * qpp::kron(0_ket - 1_ket, 0_ket - 1_ket), 1e-12);
+            EXPECT_MATRIX_CLOSE(psi2, qpp_e::maths::pow(-1, f[0]) * 0.5 * qpp::kron(0_ket - 1_ket, 0_ket - 1_ket), 1e-12);
 
         auto const psi3 = qpp::apply(psi2, qpp::gt.H, { 0 });
         if(f[0] == f[1])
-            EXPECT_MATRIX_CLOSE(psi3, std::pow(-1., f[0]) * inv_sqrt2 * qpp::kron(0_ket, 0_ket - 1_ket), 1e-12);
+            EXPECT_MATRIX_CLOSE(psi3, qpp_e::maths::pow(-1, f[0]) * inv_sqrt2 * qpp::kron(0_ket, 0_ket - 1_ket), 1e-12);
         else
-            EXPECT_MATRIX_CLOSE(psi3, std::pow(-1., f[0]) * inv_sqrt2 * qpp::kron(1_ket, 0_ket - 1_ket), 1e-12);
+            EXPECT_MATRIX_CLOSE(psi3, qpp_e::maths::pow(-1, f[0]) * inv_sqrt2 * qpp::kron(1_ket, 0_ket - 1_ket), 1e-12);
 
-        EXPECT_MATRIX_CLOSE(psi3, std::pow(-1., f[0]) * inv_sqrt2 * qpp::kron(qpp::mket({ (f[0] + f[1]) % 2 }), 0_ket - 1_ket), 1e-12);
+        EXPECT_MATRIX_CLOSE(psi3, qpp_e::maths::pow(-1, f[0]) * inv_sqrt2 * qpp::kron(qpp::mket({ (f[0] + f[1]) % 2 }), 0_ket - 1_ket), 1e-12);
 
         if constexpr (print_text)
         {
@@ -336,11 +337,11 @@ namespace
     auto random_constant_function(int n)
     {
         auto const f = random_function(0);
-        return std::vector<qpp::idx>(std::pow(2, n), f[0]);
+        return std::vector<qpp::idx>(qpp_e::maths::pow(2, n), f[0]);
     }
     auto random_balanced_function(int n)
     {
-        auto f = std::vector<qpp::idx>(std::pow(2, n), 0u);
+        auto f = std::vector<qpp::idx>(qpp_e::maths::pow(2, n), 0u);
         std::fill(f.begin() + f.size() / 2, f.end(), 1u);
         std::shuffle(f.begin(), f.end(), std::default_random_engine{});
         return f;
@@ -351,7 +352,7 @@ namespace
 TEST(chapter1_4, bitwise_inner_product)
 {
     auto constexpr n = 7u;
-    auto constexpr _2_pow_n = static_cast<qpp::idx>(std::pow(2, n));
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto const dims = std::vector<qpp::idx>(n, 2u);
 
@@ -377,7 +378,7 @@ TEST(chapter1_4, deutsch_jozsa_algorithm)
     auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
 
     auto constexpr n = 7u;
-    auto constexpr _2_pow_n = static_cast<qpp::idx>(std::pow(2, n));
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
     auto constexpr inv_sqrt_2_pow_n = 1. / std::sqrt(_2_pow_n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
@@ -422,7 +423,7 @@ TEST(chapter1_4, deutsch_jozsa_algorithm)
             , std::plus<>{}
             , [&](auto&& i)
         {
-            return (std::pow(-1, f[i]) * Eigen::VectorXcd::Unit(_2_pow_n, i)).eval();
+            return (qpp_e::maths::pow(-1, f[i]) * Eigen::VectorXcd::Unit(_2_pow_n, i)).eval();
         }), inv_sqrt_2_pow_n * inv_sqrt2 * (0_ket - 1_ket));
         EXPECT_MATRIX_CLOSE(psi2, expected_psi2, 1e-12);
 
@@ -438,7 +439,7 @@ TEST(chapter1_4, deutsch_jozsa_algorithm)
                 , std::plus<>{}
                 , [&](auto&& z)
             {
-                return (std::pow(-1, (std::popcount(x & z) + f[x]) % 2) * Eigen::VectorXcd::Unit(_2_pow_n, z)).eval();
+                return (qpp_e::maths::pow(-1, (std::popcount(x & z) + f[x]) % 2) * Eigen::VectorXcd::Unit(_2_pow_n, z)).eval();
             });
         }), 1. / _2_pow_n * inv_sqrt2 * (0_ket - 1_ket));
         EXPECT_MATRIX_CLOSE(psi3, expected_psi3, 1e-12);

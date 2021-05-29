@@ -3,6 +3,7 @@
 
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
+#include <qpp-examples/maths/arithmetic.hpp>
 
 #include <numbers>
 
@@ -325,7 +326,7 @@ TEST(chapter1_3, bell_state_mnemonic)
         auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
         assert(std::set({0, 1}).contains(x));
         assert(std::set({0, 1}).contains(y));
-        return ((qpp::kron(0_ket, Eigen::Vector2cd::Unit(y)) + std::pow(-1., x) * qpp::kron(1_ket, Eigen::Vector2cd::Unit(1 - y))) * inv_sqrt2).eval();
+        return ((qpp::kron(0_ket, Eigen::Vector2cd::Unit(y)) + qpp_e::maths::pow(-1, x) * qpp::kron(1_ket, Eigen::Vector2cd::Unit(1 - y))) * inv_sqrt2).eval();
     };
 
     EXPECT_MATRIX_CLOSE(bell(0, 0), qpp::st.b00, 1e-12);
