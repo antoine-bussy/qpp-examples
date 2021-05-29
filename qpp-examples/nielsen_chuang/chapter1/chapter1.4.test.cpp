@@ -476,3 +476,72 @@ TEST(chapter1_4, deutsch_jozsa_algorithm)
         }
     }
 }
+
+//! @brief Equation 1.53
+TEST(chapter1_4, fourier_transform_on_basis)
+{
+    auto constexpr n = 7u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr inv_sqrt_2_pow_n = 1. / std::sqrt(_2_pow_n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const QFT = qpp::gt.Fd(_2_pow_n);
+
+    std::for_each(policy, range.begin(), range.end(), [&](auto&& j)
+    {
+        auto const qft_j = (QFT * Eigen::VectorXcd::Unit(_2_pow_n, j)).eval();
+        auto const expected_qft_j = (std::transform_reduce(std::execution::seq, range.begin(), range.end()
+            , Eigen::VectorXcd::Zero(_2_pow_n).eval()
+            , std::plus<>{}
+            , [&](auto&& k)
+        {
+            auto const factor = std::polar(1., 2. * std::numbers::pi * j * k / _2_pow_n);
+            return (factor * Eigen::VectorXcd::Unit(_2_pow_n, k)).eval();
+        }) * inv_sqrt_2_pow_n).eval();
+        EXPECT_MATRIX_CLOSE(qft_j, expected_qft_j, 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> j: " << j << '\n';
+            std::cerr << ">> QFT(j):\n" << qpp::disp(qft_j) << '\n';
+        }
+    });
+}
+
+//! @brief Equation 1.54
+TEST(chapter1_4, fourier_transform)
+{
+    auto constexpr n = 7u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr inv_sqrt_2_pow_n = 1. / std::sqrt(_2_pow_n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const QFT = qpp::gt.Fd(_2_pow_n);
+    auto const x = qpp::randket(_2_pow_n).eval();
+
+    auto const qft_x = (QFT * x).eval();
+
+    auto const expected_qft_x = (std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::VectorXcd::Zero(_2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& k)
+    {
+        return (std::transform_reduce(std::execution::seq, range.begin(), range.end()
+            , std::complex(0., 0.)
+            , std::plus<>{}
+            , [&](auto&& j)
+        {
+            return std::polar(1., 2. * std::numbers::pi * j * k / _2_pow_n) * x[j];
+        }) * Eigen::VectorXcd::Unit(_2_pow_n, k)).eval();
+    }) * inv_sqrt_2_pow_n).eval();
+    EXPECT_MATRIX_CLOSE(qft_x, expected_qft_x, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> x:\n" << qpp::disp(x) << '\n';
+        std::cerr << ">> QFT:\n" << qpp::disp(QFT) << '\n';
+        std::cerr << ">> QFT(x):\n" << qpp::disp(qft_x) << '\n';
+    }
+}
