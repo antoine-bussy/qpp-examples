@@ -57,3 +57,55 @@ TEST(chapter2_2, measurement_operators)
             std::cerr << qpp::disp(st) << "\n\n";
     }
 }
+
+//! @brief Equations 2.96 through 2.98
+TEST(chapter2_2, measurement_operators_one_qubit)
+{
+    using namespace qpp::literals;
+
+    auto const state = qpp::randket().eval();
+
+    auto const M0 = 0_prj;
+    EXPECT_MATRIX_EQ(M0, 0_ket * (0_ket).adjoint());
+    EXPECT_MATRIX_EQ(M0 * M0, M0);
+    EXPECT_MATRIX_EQ(M0.adjoint(), M0);
+
+    auto const M1 = 1_prj;
+    EXPECT_MATRIX_EQ(M1, 1_ket * (1_ket).adjoint());
+    EXPECT_MATRIX_EQ(M1 * M1, M1);
+    EXPECT_MATRIX_EQ(M1.adjoint(), M1);
+
+    auto const completeness = (M0.adjoint() * M0 + M1.adjoint() * M1).eval();
+    EXPECT_MATRIX_EQ(completeness, Eigen::Matrix2cd::Identity());
+
+    auto const [result, probabilities, resulting_state] = qpp::measure(state, { M0, M1 });
+
+    auto const p0 = state.dot(M0.adjoint() * M0 * state);
+    EXPECT_NEAR(p0.real(), probabilities[0], 1e-12);
+    EXPECT_NEAR(p0.real(), std::norm(state[0]), 1e-12);
+    EXPECT_NEAR(p0.imag(), 0., 1e-12);
+    auto const post_measurement_state_0 = (M0 * state / std::abs(state[0])).eval();
+    EXPECT_MATRIX_CLOSE(post_measurement_state_0, resulting_state[0], 1e-12);
+    EXPECT_MATRIX_CLOSE(post_measurement_state_0, state[0] / std::abs(state[0]) * 0_ket, 1e-12);
+
+    auto const p1 = state.dot(M1.adjoint() * M1 * state);
+    EXPECT_NEAR(p1.real(), probabilities[1], 1e-12);
+    EXPECT_NEAR(p1.real(), std::norm(state[1]), 1e-12);
+    EXPECT_NEAR(p1.imag(), 0., 1e-12);
+    auto const post_measurement_state_1 = (M1 * state / std::abs(state[1])).eval();
+    EXPECT_MATRIX_CLOSE(post_measurement_state_1, resulting_state[1], 1e-12);
+    EXPECT_MATRIX_CLOSE(post_measurement_state_1, state[1] / std::abs(state[1]) * 1_ket, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
+        std::cerr << ">> M0:\n" << qpp::disp(M0) << "\n\n";
+        std::cerr << ">> M1:\n" << qpp::disp(M1) << "\n\n";
+        std::cerr << ">> Measurement result: " << result << '\n';
+        std::cerr << ">> Probabilities: ";
+        std::cerr << qpp::disp(probabilities, ", ") << '\n';
+        std::cerr << ">> Resulting states:\n";
+        for (auto&& st : resulting_state)
+            std::cerr << qpp::disp(st) << "\n\n";
+    }
+}
