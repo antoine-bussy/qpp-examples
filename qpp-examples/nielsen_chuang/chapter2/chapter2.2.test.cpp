@@ -109,3 +109,52 @@ TEST(chapter2_2, measurement_operators_one_qubit)
             std::cerr << qpp::disp(st) << "\n\n";
     }
 }
+
+//! @brief Exercise 2.57
+TEST(chapter2_2, cascade_measurement_operators)
+{
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const L = qpp::randkraus(_2_pow_n, _2_pow_n);
+    auto const M = qpp::randkraus(_2_pow_n, _2_pow_n);
+
+    auto const state = qpp::randket(_2_pow_n).eval();
+
+    auto const [result_L, probabilities_L, resulting_state_L] = qpp::measure(state, L);
+
+    auto ML = std::vector<qpp::cmat>(L.size() * M.size());
+    auto probabilities_ML = std::vector<double>(L.size() * M.size());
+    auto resulting_state_ML = std::vector<qpp::ket>(L.size() * M.size());
+
+    std::for_each(policy, range.begin(), range.end(), [&](auto&& l)
+    {
+        auto const [result_M, probabilities_M, resulting_state_M] = qpp::measure(resulting_state_L[l], M);
+        for (auto&& m : range)
+        {
+            auto const ml = l * _2_pow_n + m;
+            ML[ml] = M[m] * L[l];
+            probabilities_ML[ml] = probabilities_M[m] * probabilities_L[l];
+            resulting_state_ML[ml] = resulting_state_M[m];
+        }
+    });
+
+    auto const [result_ML_single, probabilities_ML_single, resulting_state_ML_single] = qpp::measure(state, ML);
+
+    for (auto&& ml : std::views::iota(0u, ML.size()))
+    {
+        EXPECT_NEAR(probabilities_ML_single[ml], probabilities_ML[ml], 1e-12);
+        EXPECT_MATRIX_CLOSE(resulting_state_ML_single[ml], resulting_state_ML_single[ml], 1e-12);
+    }
+
+    auto const completeness = std::transform_reduce(policy, ML.cbegin(), ML.cend()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& Nlm)
+    {
+        return (Nlm.adjoint() * Nlm).eval();
+    });
+    EXPECT_MATRIX_CLOSE(completeness, Eigen::MatrixXcd::Identity(_2_pow_n, _2_pow_n), 1e-12);
+}
