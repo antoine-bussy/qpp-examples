@@ -221,3 +221,65 @@ TEST(chapter2_2, not_projective_measurements)
         }
     }
 }
+
+//! @brief Equations 2.102 through 2.115
+TEST(chapter2_2, projective_measurements)
+{
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const M = qpp::randH(_2_pow_n);
+    EXPECT_MATRIX_EQ(M.adjoint(), M);
+    auto const [lambda, X] = qpp::heig(M);
+    EXPECT_TRUE((X.adjoint() * X).isIdentity(1e-12));
+
+    auto P = std::vector<qpp::cmat>(X.cols());
+    for (auto&& m : range)
+        P[m] = X.col(m) * X.col(m).adjoint();
+
+    auto const M_check = std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& m)
+    {
+        return (lambda[m] * P[m]).eval();
+    });
+    EXPECT_MATRIX_CLOSE(M_check, M, 1e-12);
+
+    auto const state = qpp::randket(_2_pow_n);
+    auto const [result, probabilities, resulting_state] = qpp::measure(state, P);
+    for (auto&& m : range)
+    {
+        auto const& Pm = P[m];
+        auto const pm = state.dot(Pm * state);
+        EXPECT_NEAR(pm.real(), probabilities[m], 1e-12);
+        EXPECT_NEAR(pm.imag(), 0., 1e-12);
+        auto const post_measurement_state_m = (Pm * state / std::sqrt(pm.real())).eval();
+        EXPECT_MATRIX_CLOSE(post_measurement_state_m, resulting_state[m], 1e-12);
+    }
+
+    auto const mean_M = std::transform_reduce(policy, range.begin(), range.end()
+        , 0.
+        , std::plus<>{}
+        , [&](auto&& m)
+    {
+        return lambda[m] * probabilities[m];
+    });
+    auto const mean_Mb = state.dot(M * state);
+    EXPECT_NEAR(mean_M, mean_Mb.real(), 1e-12);
+    EXPECT_NEAR(mean_Mb.imag(), 0., 1e-12);
+
+    auto const variance_M = std::transform_reduce(policy, range.begin(), range.end()
+        , 0.
+        , std::plus<>{}
+        , [&](auto&& m)
+    {
+        auto const dx = lambda[m] - mean_M;
+        return probabilities[m] * dx * dx ;
+    });
+    auto const variance_Mb = state.dot(M * M * state) - mean_M * mean_M;
+    EXPECT_NEAR(variance_M, variance_Mb.real(), 1e-12);
+    EXPECT_NEAR(variance_Mb.imag(), 0., 1e-12);
+}
