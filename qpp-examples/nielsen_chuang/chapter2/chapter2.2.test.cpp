@@ -199,3 +199,25 @@ TEST(chapter2_2, non_completeness)
         std::cerr << ">> Completeness X1Z1:\n" << qpp::disp(completeness(qpp::st.px1, qpp::st.pz1)) << "\n\n";
     }
 }
+
+//! @brief Measurements operators are not necessarily projective measurements
+TEST(chapter2_2, not_projective_measurements)
+{
+    std::srand(0);
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto const measurement_operators = qpp::randkraus(_2_pow_n, _2_pow_n);
+
+    for (auto&& m : std::views::iota(0u, _2_pow_n))
+    {
+        auto const& Mm = measurement_operators[m];
+        EXPECT_FALSE(Mm.adjoint().isApprox(Mm, 1e-1));
+        EXPECT_FALSE(Mm.isApprox(Mm * Mm, 1e-1));
+        for (auto&& l : std::views::iota(m + 1, _2_pow_n))
+        {
+            auto const& Ml = measurement_operators[l];
+            EXPECT_FALSE((Ml * Mm).isZero(1e-2));
+            EXPECT_FALSE((Mm * Ml).isZero(1e-2));
+        }
+    }
+}
