@@ -39,9 +39,8 @@ TEST(chapter2_2, measurement_operators)
     {
         auto const& Mm = measurement_operators[m];
         auto const pm = state.dot(Mm.adjoint() * Mm * state);
-        EXPECT_NEAR(pm.real(), probabilities[m], 1e-12);
-        EXPECT_NEAR(pm.imag(), 0., 1e-12);
-        auto const post_measurement_state_m = (Mm * state / std::sqrt(pm.real())).eval();
+        EXPECT_COMPLEX_CLOSE(pm, probabilities[m], 1e-12);
+        auto const post_measurement_state_m = (Mm * state / std::sqrt(probabilities[m])).eval();
         EXPECT_MATRIX_CLOSE(post_measurement_state_m, resulting_state[m], 1e-12);
     }
 
@@ -83,17 +82,15 @@ TEST(chapter2_2, measurement_operators_one_qubit)
     auto const [result, probabilities, resulting_state] = qpp::measure(state, { M0, M1 });
 
     auto const p0 = state.dot(M0.adjoint() * M0 * state);
-    EXPECT_NEAR(p0.real(), probabilities[0], 1e-12);
-    EXPECT_NEAR(p0.real(), std::norm(state[0]), 1e-12);
-    EXPECT_NEAR(p0.imag(), 0., 1e-12);
+    EXPECT_COMPLEX_CLOSE(p0, probabilities[0], 1e-12);
+    EXPECT_COMPLEX_CLOSE(p0, std::norm(state[0]), 1e-12);
     auto const post_measurement_state_0 = (M0 * state / std::abs(state[0])).eval();
     EXPECT_MATRIX_CLOSE(post_measurement_state_0, resulting_state[0], 1e-12);
     EXPECT_MATRIX_CLOSE(post_measurement_state_0, state[0] / std::abs(state[0]) * 0_ket, 1e-12);
 
     auto const p1 = state.dot(M1.adjoint() * M1 * state);
-    EXPECT_NEAR(p1.real(), probabilities[1], 1e-12);
-    EXPECT_NEAR(p1.real(), std::norm(state[1]), 1e-12);
-    EXPECT_NEAR(p1.imag(), 0., 1e-12);
+    EXPECT_COMPLEX_CLOSE(p1, probabilities[1], 1e-12);
+    EXPECT_COMPLEX_CLOSE(p1, std::norm(state[1]), 1e-12);
     auto const post_measurement_state_1 = (M1 * state / std::abs(state[1])).eval();
     EXPECT_MATRIX_CLOSE(post_measurement_state_1, resulting_state[1], 1e-12);
     EXPECT_MATRIX_CLOSE(post_measurement_state_1, state[1] / std::abs(state[1]) * 1_ket, 1e-12);
@@ -254,9 +251,8 @@ TEST(chapter2_2, projective_measurements)
     {
         auto const& Pm = P[m];
         auto const pm = state.dot(Pm * state);
-        EXPECT_NEAR(pm.real(), probabilities[m], 1e-12);
-        EXPECT_NEAR(pm.imag(), 0., 1e-12);
-        auto const post_measurement_state_m = (Pm * state / std::sqrt(pm.real())).eval();
+        EXPECT_COMPLEX_CLOSE(pm, probabilities[m], 1e-12);
+        auto const post_measurement_state_m = (Pm * state / std::sqrt(probabilities[m])).eval();
         EXPECT_MATRIX_CLOSE(post_measurement_state_m, resulting_state[m], 1e-12);
     }
 
@@ -268,8 +264,7 @@ TEST(chapter2_2, projective_measurements)
         return lambda[m] * probabilities[m];
     });
     auto const mean_Mb = state.dot(M * state);
-    EXPECT_NEAR(mean_M, mean_Mb.real(), 1e-12);
-    EXPECT_NEAR(mean_Mb.imag(), 0., 1e-12);
+    EXPECT_COMPLEX_CLOSE(mean_M, mean_Mb, 1e-12);
 
     auto const variance_M = std::transform_reduce(policy, range.begin(), range.end()
         , 0.
@@ -280,8 +275,7 @@ TEST(chapter2_2, projective_measurements)
         return probabilities[m] * dx * dx ;
     });
     auto const variance_Mb = state.dot(M * M * state) - mean_M * mean_M;
-    EXPECT_NEAR(variance_M, variance_Mb.real(), 1e-12);
-    EXPECT_NEAR(variance_Mb.imag(), 0., 1e-12);
+    EXPECT_COMPLEX_CLOSE(variance_M, variance_Mb, 1e-12);
 }
 
 //! @brief Exercise 2.58
