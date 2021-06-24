@@ -219,6 +219,20 @@ TEST(chapter2_2, not_projective_measurements)
     }
 }
 
+namespace
+{
+    //! @brief Compute mean and variance
+    auto statistics(qpp_e::maths::Matrix auto const& M, qpp_e::maths::Matrix auto const& state)
+    {
+        auto const mean = state.dot(M * state);
+        EXPECT_NEAR(mean.imag(), 0., 1e-12);
+        auto const variance = state.dot(M * M * state) - mean * mean;
+        EXPECT_GE(variance.real(), -1e-12);
+        EXPECT_NEAR(variance.imag(), 0., 1e-12);
+        return std::tuple{ mean.real(), variance.real(), std::sqrt(std::max(variance.real(), 0.)) };
+    }
+}
+
 //! @brief Equations 2.102 through 2.104 and 2.110 through 2.115
 TEST(chapter2_2, projective_measurements)
 {
@@ -263,9 +277,6 @@ TEST(chapter2_2, projective_measurements)
     {
         return lambda[m] * probabilities[m];
     });
-    auto const mean_Mb = state.dot(M * state);
-    EXPECT_COMPLEX_CLOSE(mean_M, mean_Mb, 1e-12);
-
     auto const variance_M = std::transform_reduce(policy, range.begin(), range.end()
         , 0.
         , std::plus<>{}
@@ -274,7 +285,8 @@ TEST(chapter2_2, projective_measurements)
         auto const dx = lambda[m] - mean_M;
         return probabilities[m] * dx * dx ;
     });
-    auto const variance_Mb = state.dot(M * M * state) - mean_M * mean_M;
+    auto const [mean_Mb, variance_Mb, std_Mb] = statistics(M, state);
+    EXPECT_COMPLEX_CLOSE(mean_M, mean_Mb, 1e-12);
     EXPECT_COMPLEX_CLOSE(variance_M, variance_Mb, 1e-12);
 }
 
@@ -291,9 +303,8 @@ TEST(chapter2_2, projective_measurements_with_eigenstate)
     for (auto&& m : range)
     {
         auto const state = X.col(m);
-        auto const mean_M = state.dot(M * state);
+        auto const [mean_M, variance_M, std_M] = statistics(M, state);
         EXPECT_COMPLEX_CLOSE(mean_M, lambda[m], 1e-12);
-        auto const variance_M = state.dot(M * M * state) - mean_M * mean_M;
         EXPECT_NEAR(std::abs(variance_M), 0., 1e-12);
     }
 }
@@ -309,16 +320,10 @@ TEST(chapter2_2, heisenberg_uncertainty_principle)
     auto const D = qpp::randH(_2_pow_n);
     auto const commutator = (C * D - D * C).eval();
 
-    auto constexpr standard_deviation = [](auto&& M, auto&& psi)
-    {
-        auto const mean_M = psi.dot(M * psi);
-        auto const variance_M = psi.dot(M * M * psi) - mean_M * mean_M;
-        EXPECT_GE(variance_M.real(), 0.);
-        EXPECT_NEAR(variance_M.imag(), 0., 1e-12);
-        return std::sqrt(variance_M.real());
-    };
+    auto const [mean_C, variance_C, std_C] = statistics(C, state);
+    auto const [mean_D, variance_D, std_D] = statistics(D, state);
 
-    EXPECT_GE(standard_deviation(C, state) * standard_deviation(D, state), 0.5 * std::abs(state.dot(commutator * state)));
+    EXPECT_GE(std_C * std_D, 0.5 * std::abs(state.dot(commutator * state)));
 }
 
 //! @brief Box 2.4 and equation 2.109
@@ -330,19 +335,13 @@ TEST(chapter2_2, heisenberg_uncertainty_principle_pauli)
     auto const commutator = (qpp::gt.X * qpp::gt.Y - qpp::gt.Y * qpp::gt.X).eval();
     EXPECT_MATRIX_CLOSE(commutator, 2i * qpp::gt.Z, 1e-12);
 
-    auto constexpr standard_deviation = [](auto&& M, auto&& psi)
-    {
-        auto const mean_M = psi.dot(M * psi);
-        auto const variance_M = psi.dot(M * M * psi) - mean_M * mean_M;
-        EXPECT_GE(variance_M.real(), 0.);
-        EXPECT_NEAR(variance_M.imag(), 0., 1e-12);
-        return std::sqrt(variance_M.real());
-    };
+    auto const [mean_X, variance_X, std_X] = statistics(qpp::gt.X, 0_ket);
+    auto const [mean_Y, variance_Y, std_Y] = statistics(qpp::gt.Y, 0_ket);
 
     EXPECT_COMPLEX_CLOSE((0_ket).dot(qpp::gt.Z * 0_ket), 1., 1e-12);
-    EXPECT_GE(standard_deviation(qpp::gt.X, 0_ket) * standard_deviation(qpp::gt.Y, 0_ket), 1.);
-    EXPECT_GE(standard_deviation(qpp::gt.X, 0_ket), 0.);
-    EXPECT_GE(standard_deviation(qpp::gt.Y, 0_ket), 0.);
+    EXPECT_GE(std_X * std_Y, 1.);
+    EXPECT_GE(std_X, 0.);
+    EXPECT_GE(std_Y, 0.);
 }
 
 //! @brief Equation 2.116
