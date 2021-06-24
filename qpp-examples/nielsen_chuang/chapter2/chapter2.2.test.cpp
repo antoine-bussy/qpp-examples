@@ -4,7 +4,9 @@
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
+
 #include <execution>
+#include <numbers>
 
 namespace
 {
@@ -157,4 +159,43 @@ TEST(chapter2_2, cascade_measurement_operators)
         return (Nlm.adjoint() * Nlm).eval();
     });
     EXPECT_MATRIX_CLOSE(completeness, Eigen::MatrixXcd::Identity(_2_pow_n, _2_pow_n), 1e-12);
+}
+
+//! @brief Box 2.3 and equations 2.99 through 2.101
+//! @details Instead of reproducing the proof and its equations as is, we show by example that measurements operators
+//! on a non orthogonal basis, e.g. (|0>, |+>), don't satisfy the completeness relation.
+TEST(chapter2_2, non_completeness)
+{
+   using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    EXPECT_MATRIX_EQ(qpp::st.pz0, 0_prj);
+    EXPECT_MATRIX_EQ(qpp::st.pz1, 1_prj);
+    EXPECT_MATRIX_CLOSE(qpp::st.px0, qpp::prj(0_ket + 1_ket), 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::st.px0, qpp::prj(inv_sqrt2 * (0_ket + 1_ket)), 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::st.px1, qpp::prj(0_ket - 1_ket), 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::st.px1, qpp::prj(inv_sqrt2 * (0_ket - 1_ket)), 1e-12);
+
+    auto constexpr completeness = [](auto&& M0, auto&& M1) { return (M0.adjoint() * M0 + M1.adjoint() * M1).eval(); };
+
+    EXPECT_TRUE(completeness(qpp::st.pz0, qpp::st.pz1).isIdentity(1e-12));
+    EXPECT_TRUE(completeness(qpp::st.px0, qpp::st.px1).isIdentity(1e-12));
+    EXPECT_FALSE(completeness(qpp::st.px0, qpp::st.pz0).isIdentity(1e-1));
+    EXPECT_FALSE(completeness(qpp::st.px0, qpp::st.pz1).isIdentity(1e-1));
+    EXPECT_FALSE(completeness(qpp::st.px1, qpp::st.pz0).isIdentity(1e-1));
+    EXPECT_FALSE(completeness(qpp::st.px1, qpp::st.pz1).isIdentity(1e-1));
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> PZ0:\n" << qpp::disp(qpp::st.pz0) << "\n\n";
+        std::cerr << ">> PZ1:\n" << qpp::disp(qpp::st.pz1) << "\n\n";
+        std::cerr << ">> PX0:\n" << qpp::disp(qpp::st.px0) << "\n\n";
+        std::cerr << ">> PX1:\n" << qpp::disp(qpp::st.px1) << "\n\n";
+        std::cerr << ">> Completeness Z:\n" << qpp::disp(completeness(qpp::st.pz0, qpp::st.pz1)) << "\n\n";
+        std::cerr << ">> Completeness X:\n" << qpp::disp(completeness(qpp::st.px0, qpp::st.px1)) << "\n\n";
+        std::cerr << ">> Completeness X0Z0:\n" << qpp::disp(completeness(qpp::st.px0, qpp::st.pz0)) << "\n\n";
+        std::cerr << ">> Completeness X0Z1:\n" << qpp::disp(completeness(qpp::st.px0, qpp::st.pz1)) << "\n\n";
+        std::cerr << ">> Completeness X1Z0:\n" << qpp::disp(completeness(qpp::st.px1, qpp::st.pz0)) << "\n\n";
+        std::cerr << ">> Completeness X1Z1:\n" << qpp::disp(completeness(qpp::st.px1, qpp::st.pz1)) << "\n\n";
+    }
 }
