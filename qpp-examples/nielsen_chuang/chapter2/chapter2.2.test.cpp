@@ -297,3 +297,26 @@ TEST(chapter2_2, projective_measurements_with_eigenstate)
         EXPECT_NEAR(std::abs(variance_M), 0., 1e-12);
     }
 }
+
+//! @brief Box 2.4 and equations 2.105 through 2.108
+TEST(chapter2_2, heisenberg_uncertainty_principle)
+{
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+
+    auto const state = qpp::randket(_2_pow_n);
+    auto const C = qpp::randH(_2_pow_n);
+    auto const D = qpp::randH(_2_pow_n);
+    auto const commutator = (C * D - D * C).eval();
+
+    auto constexpr standard_deviation = [](auto&& M, auto&& psi)
+    {
+        auto const mean_M = psi.dot(M * psi);
+        auto const variance_M = psi.dot(M * M * psi) - mean_M * mean_M;
+        EXPECT_GE(variance_M.real(), 0.);
+        EXPECT_NEAR(variance_M.imag(), 0., 1e-12);
+        return std::sqrt(variance_M.real());
+    };
+
+    EXPECT_GE(standard_deviation(C, state) * standard_deviation(D, state), 0.5 * std::abs(state.dot(commutator * state)));
+}
