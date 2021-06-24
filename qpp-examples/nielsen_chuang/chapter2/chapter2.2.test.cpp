@@ -283,3 +283,23 @@ TEST(chapter2_2, projective_measurements)
     EXPECT_NEAR(variance_M, variance_Mb.real(), 1e-12);
     EXPECT_NEAR(variance_Mb.imag(), 0., 1e-12);
 }
+
+//! @brief Exercise 2.58
+TEST(chapter2_2, projective_measurements_with_eigenstate)
+{
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+
+    auto const M = qpp::randH(_2_pow_n);
+    auto const [lambda, X] = qpp::heig(M);
+
+    for (auto&& m : range)
+    {
+        auto const state = X.col(m);
+        auto const mean_M = state.dot(M * state);
+        EXPECT_COMPLEX_CLOSE(mean_M, lambda[m], 1e-12);
+        auto const variance_M = state.dot(M * M * state) - mean_M * mean_M;
+        EXPECT_NEAR(std::abs(variance_M), 0., 1e-12);
+    }
+}
