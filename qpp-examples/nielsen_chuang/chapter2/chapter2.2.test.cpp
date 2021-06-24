@@ -219,7 +219,7 @@ TEST(chapter2_2, not_projective_measurements)
     }
 }
 
-//! @brief Equations 2.102 through 2.115
+//! @brief Equations 2.102 through 2.104 and 2.110 through 2.115
 TEST(chapter2_2, projective_measurements)
 {
     auto constexpr n = 3u;
@@ -343,4 +343,12 @@ TEST(chapter2_2, heisenberg_uncertainty_principle_pauli)
     EXPECT_GE(standard_deviation(qpp::gt.X, 0_ket) * standard_deviation(qpp::gt.Y, 0_ket), 1.);
     EXPECT_GE(standard_deviation(qpp::gt.X, 0_ket), 0.);
     EXPECT_GE(standard_deviation(qpp::gt.Y, 0_ket), 0.);
+}
+
+//! @brief Equation 2.116
+TEST(chapter2_2, spin_axis_measurement)
+{
+    auto const v = Eigen::Vector3d::Random().eval();
+    auto const v_dot_sigma = (v[0] * qpp::gt.X + v[1] * qpp::gt.Y + v[2] * qpp::gt.Z).eval();
+    EXPECT_MATRIX_EQ(v_dot_sigma.adjoint(), v_dot_sigma);
 }
