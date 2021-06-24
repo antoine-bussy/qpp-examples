@@ -320,3 +320,27 @@ TEST(chapter2_2, heisenberg_uncertainty_principle)
 
     EXPECT_GE(standard_deviation(C, state) * standard_deviation(D, state), 0.5 * std::abs(state.dot(commutator * state)));
 }
+
+//! @brief Box 2.4 and equation 2.109
+TEST(chapter2_2, heisenberg_uncertainty_principle_pauli)
+{
+    using namespace std::complex_literals;
+    using namespace qpp::literals;
+
+    auto const commutator = (qpp::gt.X * qpp::gt.Y - qpp::gt.Y * qpp::gt.X).eval();
+    EXPECT_MATRIX_CLOSE(commutator, 2i * qpp::gt.Z, 1e-12);
+
+    auto constexpr standard_deviation = [](auto&& M, auto&& psi)
+    {
+        auto const mean_M = psi.dot(M * psi);
+        auto const variance_M = psi.dot(M * M * psi) - mean_M * mean_M;
+        EXPECT_GE(variance_M.real(), 0.);
+        EXPECT_NEAR(variance_M.imag(), 0., 1e-12);
+        return std::sqrt(variance_M.real());
+    };
+
+    EXPECT_COMPLEX_CLOSE((0_ket).dot(qpp::gt.Z * 0_ket), 1., 1e-12);
+    EXPECT_GE(standard_deviation(qpp::gt.X, 0_ket) * standard_deviation(qpp::gt.Y, 0_ket), 1.);
+    EXPECT_GE(standard_deviation(qpp::gt.X, 0_ket), 0.);
+    EXPECT_GE(standard_deviation(qpp::gt.Y, 0_ket), 0.);
+}
