@@ -347,7 +347,47 @@ TEST(chapter2_2, heisenberg_uncertainty_principle_pauli)
 //! @brief Equation 2.116
 TEST(chapter2_2, spin_axis_measurement)
 {
-    auto const v = Eigen::Vector3d::Random().eval();
+    auto const v = Eigen::Vector3d::Random().normalized().eval();
     auto const v_dot_sigma = (v[0] * qpp::gt.X + v[1] * qpp::gt.Y + v[2] * qpp::gt.Z).eval();
     EXPECT_MATRIX_EQ(v_dot_sigma.adjoint(), v_dot_sigma);
+}
+
+//! @brief Exercise 2.59
+TEST(chapter2_2, observable_X)
+{
+    using namespace qpp::literals;
+
+    auto const [mean, variance, standard_deviation] = statistics(qpp::gt.X, 0_ket);
+    EXPECT_NEAR(mean, 0., 1e-12);
+    EXPECT_NEAR(standard_deviation, 1., 1e-12);
+}
+
+//! @brief Exercise 2.60
+TEST(chapter2_2, spin_axis_measurement_eigen)
+{
+    auto const v = Eigen::Vector3d::Random().normalized().eval();
+    auto const v_dot_sigma = (v[0] * qpp::gt.X + v[1] * qpp::gt.Y + v[2] * qpp::gt.Z).eval();
+    auto [eigen_values, eigen_vectors] = qpp::heig(v_dot_sigma);
+    EXPECT_NEAR(eigen_values[0], -1., 1e-12);
+    EXPECT_NEAR(eigen_values[1],  1., 1e-12);
+
+    auto const P_minus = (eigen_vectors.col(0) * eigen_vectors.col(0).adjoint());
+    auto const P_plus  = (eigen_vectors.col(1) * eigen_vectors.col(1).adjoint());
+    EXPECT_MATRIX_CLOSE(P_minus, 0.5 * (qpp::gt.Id2 - v_dot_sigma), 1e-12);
+    EXPECT_MATRIX_CLOSE(P_plus,  0.5 * (qpp::gt.Id2 + v_dot_sigma), 1e-12);
+}
+
+//! @brief Exercise 2.61
+TEST(chapter2_2, spin_axis_measure)
+{
+    using namespace std::complex_literals;
+    using namespace qpp::literals;
+
+    auto const v = Eigen::Vector3d::Random().normalized().eval();
+    auto const v_dot_sigma = (v[0] * qpp::gt.X + v[1] * qpp::gt.Y + v[2] * qpp::gt.Z).eval();
+
+    auto const [result, probabilities, resulting_state] = qpp::measure(0_ket, qpp::hevects(v_dot_sigma));
+
+    EXPECT_NEAR(probabilities[1], 0.5 * (1. + v[2]), 1e-12);
+    EXPECT_MATRIX_CLOSE(resulting_state[1], std::sqrt(0.5 * (1. + v[2])) * 0_ket + (v[0] + 1i * v[1]) / std::sqrt(2. * (1. + v[2])) * 1_ket, 1e-12);
 }
