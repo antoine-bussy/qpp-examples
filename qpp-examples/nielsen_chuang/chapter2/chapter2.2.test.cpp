@@ -318,12 +318,11 @@ TEST(chapter2_2, heisenberg_uncertainty_principle)
     auto const state = qpp::randket(_2_pow_n);
     auto const C = qpp::randH(_2_pow_n);
     auto const D = qpp::randH(_2_pow_n);
-    auto const commutator = (C * D - D * C).eval();
 
     auto const [mean_C, variance_C, std_C] = statistics(C, state);
     auto const [mean_D, variance_D, std_D] = statistics(D, state);
 
-    EXPECT_GE(std_C * std_D, 0.5 * std::abs(state.dot(commutator * state)));
+    EXPECT_GE(std_C * std_D, 0.5 * std::abs(state.dot(qpp::comm(C, D) * state)));
 }
 
 //! @brief Box 2.4 and equation 2.109
@@ -332,8 +331,7 @@ TEST(chapter2_2, heisenberg_uncertainty_principle_pauli)
     using namespace std::complex_literals;
     using namespace qpp::literals;
 
-    auto const commutator = (qpp::gt.X * qpp::gt.Y - qpp::gt.Y * qpp::gt.X).eval();
-    EXPECT_MATRIX_CLOSE(commutator, 2i * qpp::gt.Z, 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::comm(qpp::gt.X, qpp::gt.Y), 2i * qpp::gt.Z, 1e-12);
 
     auto const [mean_X, variance_X, std_X] = statistics(qpp::gt.X, 0_ket);
     auto const [mean_Y, variance_Y, std_Y] = statistics(qpp::gt.Y, 0_ket);
