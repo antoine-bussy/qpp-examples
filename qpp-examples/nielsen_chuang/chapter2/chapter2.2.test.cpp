@@ -389,3 +389,58 @@ TEST(chapter2_2, spin_axis_measure)
     EXPECT_NEAR(probabilities[1], 0.5 * (1. + v[2]), 1e-12);
     EXPECT_MATRIX_CLOSE(resulting_state[1], std::sqrt(0.5 * (1. + v[2])) * 0_ket + (v[0] + 1i * v[1]) / std::sqrt(2. * (1. + v[2])) * 1_ket, 1e-12);
 }
+
+//! @brief Equations 2.117 through 2.120
+TEST(chapter2_2, povm)
+{
+    using namespace qpp::literals;
+    auto constexpr sqrt2 = std::numbers::sqrt2;
+    auto constexpr inv_sqrt2 = 0.5 * sqrt2;
+
+    auto const psi1 = 0_ket;
+    auto const psi2 = (inv_sqrt2 * (0_ket + 1_ket)).eval();
+    auto const psi = std::vector{ psi1, psi2 };
+
+    auto const E1 = (sqrt2 / (1. + sqrt2) * 1_ket * (1_ket).adjoint()).eval();
+    auto const E2 = (0.5 * sqrt2 / (1. + sqrt2) * (0_ket - 1_ket) * (0_ket - 1_ket).adjoint()).eval();
+    auto const E3 = (Eigen::Matrix2cd::Identity() - E1 - E2).eval();
+
+    auto const Ks = std::vector{ qpp::sqrtm(E1), qpp::sqrtm(E2), qpp::sqrtm(E3) };
+
+    auto const [result1, probabilities1, resulting_state1] = qpp::measure(psi1, Ks);
+    EXPECT_THAT((std::array{ 1, 2 }), testing::Contains(result1));
+    EXPECT_EQ(probabilities1[0], 0.);
+    EXPECT_LT(probabilities1[1], 1.);
+    EXPECT_LT(probabilities1[2], 1.);
+
+    auto const [result2, probabilities2, resulting_state2] = qpp::measure(psi2, Ks);
+    EXPECT_THAT((std::array{ 0, 2 }), testing::Contains(result2));
+    EXPECT_LT(probabilities2[0], 1.);
+    EXPECT_EQ(probabilities2[1], 0.);
+    EXPECT_LT(probabilities2[2], 1.);
+
+    auto rd = std::random_device{};
+    auto gen = std::mt19937{ rd() };
+    auto distrib = std::uniform_int_distribution{ 0, 1 };
+
+    for (auto&& n : std::views::iota(0, 50))
+    {
+        static_cast<void>(n);
+        auto const i = distrib(gen);
+        auto const [result, probabilities, resulting_state] = qpp::measure(psi[i], Ks);
+        switch (result)
+        {
+        case 0:
+            EXPECT_MATRIX_EQ(psi[i], psi2);
+            break;
+        case 1:
+            EXPECT_MATRIX_EQ(psi[i], psi1);
+            break;
+        case 2:
+            break;
+        default:
+            assert(false);
+            break;
+        }
+    }
+}
