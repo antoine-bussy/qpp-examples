@@ -468,7 +468,7 @@ TEST(chapter2_2, povm)
         case 2:
             break;
         default:
-            assert(false);
+            ASSERT_FALSE(false);
             break;
         }
     }
@@ -524,8 +524,90 @@ TEST(chapter2_2, povm_and_measurement)
         case 2:
             break;
         default:
-            assert(false);
+            ASSERT_FALSE(false);
             break;
+        }
+    }
+}
+
+//! @brief Exercise 2.64
+TEST(chapter2_2, povm_construction)
+{
+    std::srand(0u);
+    auto constexpr n = 5u;
+    auto constexpr m = 3u;
+    auto constexpr range = std::views::iota(0u, m) | std::views::common;
+
+    auto psi = Eigen::MatrixXcd::Zero(n, m).eval();
+
+    auto constexpr rank = [](auto const& M)
+    {
+        return M.jacobiSvd().setThreshold(1e-1).rank();
+    };
+
+    while (rank(psi) < m)
+        psi.setRandom();
+
+    for (auto&& p : psi.colwise())
+        p.normalize();
+
+    auto E = std::vector<Eigen::MatrixXcd>{ m + 1, Eigen::MatrixXcd::Zero(n, n) };
+
+    auto const povm = [&](auto const& i)
+    {
+        auto A = psi.eval();
+        A.col(i).swap(A.rightCols<1>());
+        auto const x = qpp::grams(A).rightCols<1>().eval();
+        return (x * x.adjoint()).eval();
+    };
+
+    for (auto&& i : range)
+    {
+        E[i] = povm(i);
+        E[m] -= E[i];
+    }
+
+    auto const min_eigen_value = qpp::hevals(E[m]).minCoeff();
+
+    if (min_eigen_value < 0.)
+        for (auto& e : E)
+            e /= -1.01 * min_eigen_value;
+    E[m] += Eigen::MatrixXcd::Identity(n, n);
+
+    auto Ks = std::vector<Eigen::MatrixXcd>{};
+    Ks.reserve(m + 1);
+    for (auto& e : E)
+        Ks.emplace_back(qpp::sqrtm(e));
+
+    for (auto&& i : range)
+    {
+        auto const [result, probabilities, resulting_state] = qpp::measure(psi.col(i), Ks);
+        EXPECT_THAT((std::array{ i, m }), testing::Contains(result));
+        EXPECT_LT(probabilities[i], 1.);
+        if (print_text)
+            std::cerr << "Probability for psi[" << i << "]: " << probabilities[i] << '\n';
+        EXPECT_GT(probabilities[i], 0.);
+        for (auto&& j : range)
+            if (i != j)
+            {
+                EXPECT_NEAR(probabilities[j], 0., 1e-12);
+            }
+        EXPECT_LT(probabilities[m], 1.);
+        EXPECT_GT(probabilities[m], 0.);
+    }
+
+    auto rd = std::random_device{};
+    auto gen = std::mt19937{ rd() };
+    auto distrib = std::uniform_int_distribution{ 0u, m - 1u };
+
+    for (auto&& n : std::views::iota(0, 50))
+    {
+        static_cast<void>(n);
+        auto const i = distrib(gen);
+        auto const [result, probabilities, resulting_state] = qpp::measure(psi.col(i), Ks);
+        if (result != m)
+        {
+            EXPECT_EQ(result, i);
         }
     }
 }
