@@ -643,3 +643,13 @@ TEST(chapter2_2, composite_system)
     auto const [mean, variance, STD] = statistics(observable, state);
     EXPECT_NEAR(mean, 0., 1e-12);
 }
+
+//! @brief Exercise 2.67
+TEST(chapter2_2, extended_unitary_matrix)
+{
+    auto const U = qpp::randU(5);
+    auto Uext = Eigen::MatrixXcd::Zero(8, 8).eval();
+    Uext.topLeftCorner<5, 5>() = U;
+    Uext.bottomRightCorner<3, 3>().setIdentity();
+    EXPECT_MATRIX_CLOSE(Uext.adjoint() * Uext, Eigen::MatrixXcd::Identity(8, 8), 1e-12);
+}
