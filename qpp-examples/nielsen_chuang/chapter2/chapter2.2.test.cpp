@@ -611,3 +611,22 @@ TEST(chapter2_2, povm_construction)
         }
     }
 }
+
+//! @brief Equation 2.121 and exercise 2.65
+TEST(chapter2_2, relative_phase)
+{
+    using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    auto const psi1 = (inv_sqrt2 * (0_ket + 1_ket)).eval();
+    auto const psi2 = (inv_sqrt2 * (0_ket - 1_ket)).eval();
+
+    for (auto&& i : {0, 1})
+        EXPECT_NEAR(std::norm(psi1[i]), std::norm(psi2[i]), 1e-12);
+
+    auto const psi1b = (qpp::gt.H * psi1).eval();
+    auto const psi2b = (qpp::gt.H * psi2).eval();
+
+    for (auto&& i : {0, 1})
+        EXPECT_THAT(std::norm(psi1b[i]), testing::Not(testing::DoubleNear(std::norm(psi2b[i]), 1e-1)));
+}
