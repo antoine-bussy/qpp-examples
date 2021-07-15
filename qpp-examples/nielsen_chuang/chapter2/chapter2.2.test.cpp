@@ -630,3 +630,16 @@ TEST(chapter2_2, relative_phase)
     for (auto&& i : {0, 1})
         EXPECT_THAT(std::norm(psi1b[i]), testing::Not(testing::DoubleNear(std::norm(psi2b[i]), 1e-1)));
 }
+
+//! @brief Exercise 2.66
+TEST(chapter2_2, composite_system)
+{
+    using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    auto const state = (inv_sqrt2 * (00_ket + 11_ket)).eval();
+    auto const observable = qpp::kron(qpp::gt.X, qpp::gt.Z);
+
+    auto const [mean, variance, STD] = statistics(observable, state);
+    EXPECT_NEAR(mean, 0., 1e-12);
+}
