@@ -24,6 +24,7 @@ namespace qpp_e::maths
             && actual.isApprox(expected, precision);
     }
     auto constexpr matrix_close_l = [](auto const& actual, auto const& expected, auto const& precision) { return matrix_close(actual, expected, precision); };
+    auto constexpr matrix_not_close_l = [](auto const& actual, auto const& expected, auto const& precision) { return !matrix_close(actual, expected, precision); };
 
     auto complex_close(ComplexNumber auto const& actual, ComplexNumber auto const& expected, RealNumber auto const& precision)
     {

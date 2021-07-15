@@ -390,6 +390,35 @@ TEST(chapter2_2, spin_axis_measure)
     EXPECT_MATRIX_CLOSE(resulting_state[1], std::sqrt(0.5 * (1. + v[2])) * 0_ket + (v[0] + 1i * v[1]) / std::sqrt(2. * (1. + v[2])) * 1_ket, 1e-12);
 }
 
+//! @brief Exercise 2.62
+TEST(chapter2_2, povm_and_projective)
+{
+    using namespace qpp::literals;
+    auto constexpr sqrt2 = std::numbers::sqrt2;
+
+    auto const E1 = (sqrt2 / (1. + sqrt2) * 1_ket * (1_ket).adjoint()).eval();
+    auto const E2 = (0.5 * sqrt2 / (1. + sqrt2) * (0_ket - 1_ket) * (0_ket - 1_ket).adjoint()).eval();
+    auto const E3 = (Eigen::Matrix2cd::Identity() - E1 - E2).eval();
+
+    auto const Ks = std::vector{ qpp::sqrtm(E1), qpp::sqrtm(E2), qpp::sqrtm(E3) };
+
+    /* POVM is different from measurement... */
+    EXPECT_MATRIX_NOT_CLOSE(E1, Ks[0], 1e-2);
+    EXPECT_MATRIX_NOT_CLOSE(E2, Ks[1], 1e-2);
+    EXPECT_MATRIX_NOT_CLOSE(E3, Ks[2], 1e-2);
+
+    /* ... therefore not projective */
+    for (auto&& i : std::views::iota(0, 3))
+        for (auto&& j : std::views::iota(0, 3))
+        {
+            if (i == j)
+                EXPECT_MATRIX_NOT_CLOSE(Ks[i] * Ks[i], Ks[i], 1e-2);
+            else
+                EXPECT_MATRIX_NOT_CLOSE(Ks[i] * Ks[j], Eigen::Matrix2cd::Zero(), 1e-2);
+
+        }
+}
+
 //! @brief Equations 2.117 through 2.120
 TEST(chapter2_2, povm)
 {
