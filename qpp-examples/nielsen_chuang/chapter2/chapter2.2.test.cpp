@@ -644,12 +644,64 @@ TEST(chapter2_2, composite_system)
     EXPECT_NEAR(mean, 0., 1e-12);
 }
 
-//! @brief Exercise 2.67
-TEST(chapter2_2, extended_unitary_matrix)
+//! @brief Equations 2.122 through 2.131 and exercise 2.67
+TEST(chapter2_2, ancillary_system)
 {
-    auto const U = qpp::randU(5);
-    auto Uext = Eigen::MatrixXcd::Zero(8, 8).eval();
-    Uext.topLeftCorner<5, 5>() = U;
-    Uext.bottomRightCorner<3, 3>().setIdentity();
-    EXPECT_MATRIX_CLOSE(Uext.adjoint() * Uext, Eigen::MatrixXcd::Identity(8, 8), 1e-12);
+    auto constexpr n = 1u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr MM = 3u;
+    auto constexpr D = _2_pow_n * MM;
+
+    auto const M = qpp::randkraus(MM, _2_pow_n);
+    auto const completeness = std::transform_reduce(std::execution::seq, M.cbegin(), M.cend()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& Mm)
+    {
+        return (Mm.adjoint() * Mm).eval();
+    });
+    EXPECT_MATRIX_CLOSE(completeness, Eigen::MatrixXcd::Identity(_2_pow_n, _2_pow_n), 1e-12);
+
+    auto U_partial = Eigen::MatrixXcd::Zero(D, _2_pow_n).eval();
+    for (auto&& i : range)
+    {
+        auto const psi = Eigen::VectorXcd::Unit(_2_pow_n, i);
+        for (auto&& m : std::views::iota(0u, MM))
+            U_partial.col(i) += qpp::kron(M[m] * psi, Eigen::VectorXcd::Unit(MM, m));
+    }
+    auto const U_orthogonal = qpp::grams(U_partial.adjoint().fullPivLu().kernel());
+    EXPECT_EQ(U_orthogonal.rows(), U_partial.rows());
+    EXPECT_EQ(U_orthogonal.cols(), U_partial.rows() - U_partial.cols());
+
+    auto U = Eigen::MatrixXcd::Identity(D, D).eval();
+    auto it = U_orthogonal.colwise().cbegin();
+    for (auto&& i : range)
+        for (auto&& j : std::views::iota(0u, MM))
+        {
+            auto const psi_m = qpp::kron(Eigen::VectorXcd::Unit(_2_pow_n, i), Eigen::VectorXcd::Unit(MM, j));
+            auto const col = qpp::zket2dits(psi_m, { D }).front();
+            if(j == 0)
+                U.col(col) = U_partial.col(i);
+            else
+                U.col(col) = *(it++);
+        }
+    if (print_text)
+        std::cerr << "Matrix U:\n" << qpp::disp(U) << "\n\n";
+    EXPECT_MATRIX_CLOSE(U.adjoint() * U, Eigen::MatrixXcd::Identity(D, D), 1e-12);
+
+    auto P = std::vector<Eigen::MatrixXcd>(MM);
+    for (auto&& m : std::views::iota(0u, MM))
+        P[m] = qpp::kron(Eigen::MatrixXcd::Identity(_2_pow_n, _2_pow_n), qpp::prj(Eigen::VectorXcd::Unit(MM, m)));
+
+    auto const psi = qpp::randket(_2_pow_n);
+    auto const [result, probabilities, resulting_state] = qpp::measure(U * qpp::kron(psi, Eigen::VectorXcd::Unit(MM, 0)), P);
+
+    for (auto&& m : std::views::iota(0u, MM))
+    {
+        auto const pm = psi.dot(M[m].adjoint() * M[m] * psi);
+        EXPECT_COMPLEX_CLOSE(pm, probabilities[m], 1e-12);
+        auto const post_measurement_state_m = (qpp::kron(M[m] * psi, Eigen::VectorXcd::Unit(MM, m)) / std::sqrt(probabilities[m])).eval();
+        EXPECT_MATRIX_CLOSE(post_measurement_state_m, resulting_state[m], 1e-12);
+    }
 }

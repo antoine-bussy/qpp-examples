@@ -361,7 +361,7 @@ TEST(chapter1_4, bitwise_inner_product)
         auto const x_vec = qpp::n2multiidx(x, dims);
         auto const X = Eigen::VectorX<qpp::idx>::Map(x_vec.data(), x_vec.size());
 
-        for(auto&& z: range)
+        for(auto&& z : range)
         {
             auto const z_vec = qpp::n2multiidx(z, dims);
             auto const Z = Eigen::VectorX<qpp::idx>::Map(z_vec.data(), z_vec.size());
