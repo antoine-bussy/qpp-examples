@@ -35,3 +35,31 @@ TEST(chapter2_3, superdense_coding)
             std::cerr << "Sent message: " << sent_message << ", received: " << received_message << '\n';
     }
 }
+
+//! @brief Exercise 2.70
+TEST(chapter2_3, superdense_coding_interception)
+{
+    using namespace std::complex_literals;
+    auto const psi = qpp::st.b00;
+    auto const gates = std::vector<Eigen::Matrix2cd>{ qpp::gt.Id2, qpp::gt.Z, qpp::gt.X, 1i * qpp::gt.Y };
+    auto const messages = std::vector<std::string>{ "00", "01", "10", "11" };
+
+    auto const M = qpp::randkraus(4);
+    auto Mext = std::vector<Eigen::MatrixXcd>{};
+    for (auto const& Mm : M)
+        Mext.emplace_back(qpp::kron(Mm, qpp::gt.Id2));
+
+    auto const [result0, probabilities0, resulting_state0] = qpp::measure(qpp::apply(psi, gates[0], { 0 }), Mext);
+    auto const probabilities_ref = Eigen::Vector4d::Map(probabilities0.data());
+
+    for (auto&& i : std::views::iota(0u, messages.size()))
+    {
+        auto const& sent_message = messages[i];
+        auto const sent_state = qpp::apply(psi, gates[i], { 0 });
+
+        auto const [result, probabilities, resulting_state] = qpp::measure(sent_state, Mext);
+        EXPECT_MATRIX_CLOSE(Eigen::Vector4d::Map(probabilities.data()), probabilities_ref, 1e-12);
+        if (print_text)
+            std::cerr << "Sent message: " << sent_message << ", Eve's probabilites: " << qpp::disp(probabilities, ", ") << '\n';
+    }
+}
