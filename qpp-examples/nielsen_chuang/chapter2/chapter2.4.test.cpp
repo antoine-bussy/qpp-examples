@@ -92,3 +92,30 @@ TEST(chapter2_4, density_operator_measure)
         EXPECT_MATRIX_CLOSE(rho_m, resulting_state[m], 1e-12);
     }
 }
+
+//! @brief Equations 2.148 through 2.152
+TEST(chapter2_4, density_operator_measure_output)
+{
+    std::srand(0u);
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr MM = 7u;
+    auto constexpr range = std::views::iota(0u, MM) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const rho = qpp::randrho(_2_pow_n);
+    expect_density_operator(rho, 1e-12);
+    auto const M = qpp::randkraus(MM, _2_pow_n);
+
+    auto const [result, probabilities, resulting_state] = qpp::measure(rho, M);
+
+    auto const rho_out = std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& m)
+    {
+        return (M[m] * rho * M[m].adjoint()).eval();
+    });
+    EXPECT_MATRIX_NOT_CLOSE(rho_out, rho, 1e-1);
+    expect_density_operator(rho_out, 1e-12);
+}
