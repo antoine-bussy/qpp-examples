@@ -12,6 +12,17 @@ namespace
     auto constexpr print_text = false;
 }
 
+namespace
+{
+    //! @brief Characterization of density operator from theorem 2.5
+    auto expect_density_operator(qpp_e::maths::Matrix auto const& rho, qpp_e::maths::RealNumber auto const& precision)
+    {
+        EXPECT_COMPLEX_CLOSE(rho.trace(), 1., precision);
+        EXPECT_MATRIX_CLOSE(rho.adjoint(), rho, precision);
+        EXPECT_GE(qpp::hevals(rho).maxCoeff(), 0.);
+    }
+}
+
 //! @brief Equations 2.138 and 2.139
 TEST(chapter2_4, density_operator_transformation)
 {
@@ -33,6 +44,8 @@ TEST(chapter2_4, density_operator_transformation)
         return (p[i] * qpp::prj(psi_i)).eval();
     });
 
+    expect_density_operator(rho, 1e-12);
+
     auto target = qpp::qram(n);
     std::iota(target.begin(), target.end(), 0u);
 
@@ -48,6 +61,7 @@ TEST(chapter2_4, density_operator_transformation_2)
     auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
 
     auto const rho = qpp::randrho(_2_pow_n);
+    expect_density_operator(rho, 1e-12);
 
     auto target = qpp::qram(n);
     std::iota(target.begin(), target.end(), 0u);
