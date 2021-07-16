@@ -56,3 +56,25 @@ TEST(chapter2_4, density_operator_transformation_2)
     auto const rho_out = qpp::apply(rho, U, target);
     EXPECT_MATRIX_CLOSE(rho_out, U * rho * U.adjoint(), 1e-12);
 }
+
+//! @brief Equations 2.140 through 2.147
+TEST(chapter2_4, density_operator_measure)
+{
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr MM = 7u;
+
+    auto const rho = qpp::randrho(_2_pow_n);
+    auto const M = qpp::randkraus(MM, _2_pow_n);
+
+    auto const [result, probabilities, resulting_state] = qpp::measure(rho, M);
+
+    for (auto&& m : std::views::iota(0u, MM))
+    {
+        auto const pm = (M[m].adjoint() * M[m] * rho).trace();
+        EXPECT_COMPLEX_CLOSE(pm, probabilities[m], 1e-12);
+
+        auto const rho_m = ((M[m] * rho * M[m].adjoint()) / pm).eval();
+        EXPECT_MATRIX_CLOSE(rho_m, resulting_state[m], 1e-12);
+    }
+}
