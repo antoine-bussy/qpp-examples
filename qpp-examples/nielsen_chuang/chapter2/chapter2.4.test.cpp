@@ -40,3 +40,19 @@ TEST(chapter2_4, density_operator_transformation)
     auto const rho_out = qpp::apply(rho, U, target);
     EXPECT_MATRIX_CLOSE(rho_out, U * rho * U.adjoint(), 1e-12);
 }
+
+//! @brief Equation 2.139
+TEST(chapter2_4, density_operator_transformation_2)
+{
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+
+    auto const rho = qpp::randrho(_2_pow_n);
+
+    auto target = qpp::qram(n);
+    std::iota(target.begin(), target.end(), 0u);
+
+    auto const U = qpp::randU(_2_pow_n);
+    auto const rho_out = qpp::apply(rho, U, target);
+    EXPECT_MATRIX_CLOSE(rho_out, U * rho * U.adjoint(), 1e-12);
+}
