@@ -19,7 +19,7 @@ namespace
     {
         EXPECT_COMPLEX_CLOSE(rho.trace(), 1., precision);
         EXPECT_MATRIX_CLOSE(rho.adjoint(), rho, precision);
-        EXPECT_GE(qpp::hevals(rho).maxCoeff(), 0.);
+        EXPECT_GE(qpp::hevals(rho).minCoeff(), -precision);
     }
 }
 
