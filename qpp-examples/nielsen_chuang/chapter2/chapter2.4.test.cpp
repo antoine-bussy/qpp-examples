@@ -119,3 +119,32 @@ TEST(chapter2_4, density_operator_measure_output)
     EXPECT_MATRIX_NOT_CLOSE(rho_out, rho, 1e-1);
     expect_density_operator(rho_out, 1e-12);
 }
+
+//! @brief Theorem 2.5 and equations 2.153 through 2.157
+TEST(chapter2_4, density_operator_characterization)
+{
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr I = 7u;
+    auto constexpr range = std::views::iota(0u, I) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const p = Eigen::VectorXd::Map(qpp::randprob(I).data(), I).eval();
+    EXPECT_NEAR(p.sum(), 1., 1e-12);
+
+    auto const rho = std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        auto const psi_i = qpp::randket(_2_pow_n);
+        return (p[i] * qpp::prj(psi_i)).eval();
+    });
+
+    expect_density_operator(rho, 1e-12);
+
+    auto const phi = qpp::randket(_2_pow_n);
+    auto const positivity = phi.dot(rho * phi);
+    EXPECT_COMPLEX_CLOSE(positivity, positivity.real(), 1e-12);
+    EXPECT_GE(positivity.real(), -1e-12);
+}
