@@ -148,3 +148,22 @@ TEST(chapter2_4, density_operator_characterization)
     EXPECT_COMPLEX_CLOSE(positivity, positivity.real(), 1e-12);
     EXPECT_GE(positivity.real(), -1e-12);
 }
+
+//! @brief Exercise 2.71
+TEST(chapter2_4, mixed_state_criterion)
+{
+    std::srand(0u);
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+
+    auto const rho_mixed = qpp::randrho(_2_pow_n);
+    expect_density_operator(rho_mixed, 1e-12);
+    auto const trace2_mixed = (rho_mixed * rho_mixed).trace();
+    EXPECT_COMPLEX_CLOSE(trace2_mixed, trace2_mixed.real(), 1e-12);
+    EXPECT_LT(trace2_mixed.real(), 1.);
+
+    auto const rho_pure = qpp::prj(qpp::randket(_2_pow_n));
+    expect_density_operator(rho_pure, 1e-12);
+    auto const trace2_pure = (rho_pure * rho_pure).trace();
+    EXPECT_COMPLEX_CLOSE(trace2_pure, 1., 1e-12);
+}
