@@ -285,3 +285,28 @@ TEST(chapter2_4, unitary_freedom_density_matrices_2)
 
     EXPECT_MATRIX_CLOSE(rho_psi, rho_phi, 1e-12);
 }
+
+//! @brief Theorem 2.6 and equations 2.166 through 2.174
+TEST(chapter2_4, unitary_freedom_density_matrices_3)
+{
+    using namespace qpp::literals;
+
+    auto psi = Eigen::Matrix2cd::Zero().eval();
+    psi.col(0) = std::sqrt(0.75) * 0_ket;
+    psi.col(1) = std::sqrt(0.25) * 1_ket;
+
+    auto const rho_psi = (psi.col(0) * psi.col(0).adjoint() + psi.col(1) * psi.col(1).adjoint()).eval();
+    expect_density_operator(rho_psi, 1e-12);
+
+    auto phi = Eigen::Matrix2cd::Zero().eval();
+    phi.col(0) = std::sqrt(0.5) * (std::sqrt(0.75) * 0_ket + std::sqrt(0.25) * 1_ket);
+    phi.col(1) = std::sqrt(0.5) * (std::sqrt(0.75) * 0_ket - std::sqrt(0.25) * 1_ket);
+
+    auto const rho_phi = (phi.col(0) * phi.col(0).adjoint() + phi.col(1) * phi.col(1).adjoint()).eval();
+    expect_density_operator(rho_phi, 1e-12);
+
+    EXPECT_MATRIX_CLOSE(rho_psi, rho_phi, 1e-12);
+
+    auto const U = (phi.inverse() * psi).eval();
+    EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::Matrix2cd::Identity(), 1e-12);
+}
