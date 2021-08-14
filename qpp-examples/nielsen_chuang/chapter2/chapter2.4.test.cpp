@@ -364,3 +364,30 @@ TEST(chapter2_4, generalized_bloch_sphere_3)
     auto const rho_mixed2 = density(0.9 * r);
     EXPECT_COMPLEX_NOT_CLOSE((rho_mixed2 * rho_mixed2).trace(), 1., 1e-1);
 }
+
+//! @brief Exercise 2.72 (4)
+TEST(chapter2_4, generalized_bloch_sphere_4)
+{
+    using namespace qpp::literals;
+    using namespace std::complex_literals;
+    std::srand(123u);
+
+    auto const angles = Eigen::Vector2d::Random().eval();
+    auto const& theta = angles[0];
+    auto const& phi = angles[1];
+
+    auto const psi = (std::cos(0.5 * theta) * 0_ket + std::exp(1i * phi) * std::sin(0.5 * theta) * 1_ket).eval();
+    EXPECT_NEAR(psi.squaredNorm(), 1., 1e-12);
+    auto const rho = (psi * psi.adjoint()).eval();
+    expect_density_operator(rho, 1e-12);
+    EXPECT_COMPLEX_CLOSE((rho * rho).trace(), 1., 1e-12);
+
+    auto const r = Eigen::Vector3d
+    {
+        std::sin(theta) * std::cos(phi),
+        std::sin(theta) * std::sin(phi),
+        std::cos(theta),
+    };
+
+    EXPECT_MATRIX_CLOSE(r, bloch_vector(rho), 1e-12);
+}
