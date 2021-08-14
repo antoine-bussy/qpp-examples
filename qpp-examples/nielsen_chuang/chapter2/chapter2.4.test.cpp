@@ -167,3 +167,25 @@ TEST(chapter2_4, mixed_state_criterion)
     auto const trace2_pure = (rho_pure * rho_pure).trace();
     EXPECT_COMPLEX_CLOSE(trace2_pure, 1., 1e-12);
 }
+
+//! @brief Equations 2.162 through 2.165
+TEST(chapter2_4, quantum_states_from_density)
+{
+    using namespace qpp::literals;
+
+    EXPECT_MATRIX_EQ(0_prj, qpp::prj(0_ket));
+    EXPECT_MATRIX_EQ(1_prj, qpp::prj(1_ket));
+
+    auto const rho = (0.75 * 0_prj + 0.25 * 1_prj).eval();
+    expect_density_operator(rho, 1e-12);
+
+    auto const [eigen_values, eigen_vectors] = qpp::heig(rho);
+    EXPECT_NEAR(eigen_values[0], 0.25, 1e-12);
+    EXPECT_MATRIX_CLOSE(eigen_vectors.col(0), 1_ket, 1e-12);
+    EXPECT_NEAR(eigen_values[1], 0.75, 1e-12);
+    EXPECT_MATRIX_CLOSE(eigen_vectors.col(1), 0_ket, 1e-12);
+
+    auto const a = (std::sqrt(0.75) * 0_ket + std::sqrt(0.25) * 1_ket).eval();
+    auto const b = (std::sqrt(0.75) * 0_ket - std::sqrt(0.25) * 1_ket).eval();
+    EXPECT_MATRIX_CLOSE(rho, 0.5 * qpp::prj(a) + 0.5 * qpp::prj(b), 1e-12);
+}
