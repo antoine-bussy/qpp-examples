@@ -318,6 +318,12 @@ namespace
         assert(r.cols() == 1 && r.rows() == 3);
         return 0.5 * (Eigen::Matrix2cd::Identity() + r[0] * qpp::gt.X + r[1] * qpp::gt.Y + r[2] * qpp::gt.Z);
     }
+
+    auto bloch_vector(qpp_e::maths::Matrix auto const& rho) -> Eigen::Vector3d
+    {
+        assert(rho.cols() == 2 && rho.rows() == 2);
+        return { 2 * rho(1,0).real(), 2 * rho(1,0).imag(), 2 * rho(0,0).real() - 1 };
+    }
 }
 
 //! @brief Exercise 2.72 (1)
@@ -327,4 +333,15 @@ TEST(chapter2_4, generalized_bloch_sphere_1)
     expect_density_operator(density(r), 1e-12);
     expect_density_operator(density(0.9 * r), 1e-12);
     EXPECT_LT(qpp::hevals(density(1.1 * r)).minCoeff(), 1e-12);
+}
+
+//! @brief Exercise 2.72 (2)
+TEST(chapter2_4, generalized_bloch_sphere_2)
+{
+    auto const rho = density(Eigen::Vector3d::Zero());
+    expect_density_operator(rho, 1e-12);
+    EXPECT_MATRIX_CLOSE(rho, 0.5 * Eigen::Matrix2cd::Identity(), 1e-12);
+
+    auto const r = bloch_vector(0.5 * Eigen::Matrix2cd::Identity());
+    EXPECT_TRUE(r.isZero(1e-12));
 }
