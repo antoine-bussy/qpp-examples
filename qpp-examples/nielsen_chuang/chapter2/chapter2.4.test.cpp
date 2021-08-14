@@ -310,3 +310,21 @@ TEST(chapter2_4, unitary_freedom_density_matrices_3)
     auto const U = (phi.inverse() * psi).eval();
     EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::Matrix2cd::Identity(), 1e-12);
 }
+
+namespace
+{
+    auto density(qpp_e::maths::Matrix auto const& r) -> Eigen::Matrix2cd
+    {
+        assert(r.cols() == 1 && r.rows() == 3);
+        return 0.5 * (Eigen::Matrix2cd::Identity() + r[0] * qpp::gt.X + r[1] * qpp::gt.Y + r[2] * qpp::gt.Z);
+    }
+}
+
+//! @brief Exercise 2.72 (1)
+TEST(chapter2_4, generalized_bloch_sphere_1)
+{
+    auto const r = Eigen::Vector3d::Random().normalized().eval();
+    expect_density_operator(density(r), 1e-12);
+    expect_density_operator(density(0.9 * r), 1e-12);
+    EXPECT_LT(qpp::hevals(density(1.1 * r)).minCoeff(), 1e-12);
+}
