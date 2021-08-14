@@ -18,7 +18,7 @@ class QppConan(ConanFile):
 
     def source(self):
         git = tools.Git()
-        git.clone(self.fork, self.version)
+        git.clone(self.url, self.version)
 
     def package(self):
         cmake = CMake(self)
