@@ -345,3 +345,22 @@ TEST(chapter2_4, generalized_bloch_sphere_2)
     auto const r = bloch_vector(0.5 * Eigen::Matrix2cd::Identity());
     EXPECT_TRUE(r.isZero(1e-12));
 }
+
+//! @brief Exercise 2.72 (3)
+TEST(chapter2_4, generalized_bloch_sphere_3)
+{
+    std::srand(123u);
+
+    auto const rho_mixed = qpp::randrho();
+    EXPECT_LE(bloch_vector(rho_mixed).squaredNorm(), 1. - 1e-1);
+
+    auto const rho_pure = qpp::prj(qpp::randket());
+    EXPECT_NEAR(bloch_vector(rho_pure).squaredNorm(), 1., 1e-12);
+
+    auto const r = Eigen::Vector3d::Random().normalized().eval();
+    auto const rho_pure2 = density(r);
+    EXPECT_COMPLEX_CLOSE((rho_pure2 * rho_pure2).trace(), 1., 1e-12);
+
+    auto const rho_mixed2 = density(0.9 * r);
+    EXPECT_COMPLEX_NOT_CLOSE((rho_mixed2 * rho_mixed2).trace(), 1., 1e-1);
+}
