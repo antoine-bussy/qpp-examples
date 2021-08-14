@@ -189,3 +189,99 @@ TEST(chapter2_4, quantum_states_from_density)
     auto const b = (std::sqrt(0.75) * 0_ket - std::sqrt(0.25) * 1_ket).eval();
     EXPECT_MATRIX_CLOSE(rho, 0.5 * qpp::prj(a) + 0.5 * qpp::prj(b), 1e-12);
 }
+
+//! @brief Theorem 2.6 and equations 2.166 through 2.174
+TEST(chapter2_4, unitary_freedom_density_matrices_1)
+{
+    std::srand(10u);
+
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+
+    auto constexpr m = 7u;
+    auto constexpr range_m = std::views::iota(0u, m) | std::views::common;
+    auto constexpr l = 5u;
+    auto constexpr range_l = std::views::iota(0u, l) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto psi = Eigen::MatrixXcd::Zero(_2_pow_n, m).eval();
+    auto const p = Eigen::VectorXd::Map(qpp::randprob(m).data(), m).eval();
+    EXPECT_NEAR(p.sum(), 1., 1e-12);
+    for(auto&& i : std::views::iota(0u, m))
+        psi.col(i) = std::sqrt(p[i]) * qpp::randket(_2_pow_n);
+
+    auto const rho_psi = std::transform_reduce(policy, range_m.begin(), range_m.end()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (psi.col(i) * psi.col(i).adjoint()).eval();
+    });
+    expect_density_operator(rho_psi, 1e-12);
+
+    auto phi = Eigen::MatrixXcd::Zero(_2_pow_n, m).eval();
+    auto const q = Eigen::VectorXd::Map(qpp::randprob(l).data(), l).eval();
+    EXPECT_NEAR(q.sum(), 1., 1e-12);
+    for(auto&& i : std::views::iota(0u, l))
+        phi.col(i) = std::sqrt(q[i]) * qpp::randket(_2_pow_n);
+
+    auto const rho_phi = std::transform_reduce(policy, range_l.begin(), range_l.end()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (phi.col(i) * phi.col(i).adjoint()).eval();
+    });
+    expect_density_operator(rho_phi, 1e-12);
+    EXPECT_MATRIX_NOT_CLOSE(rho_psi, rho_phi, 1e-1);
+
+    auto const U = phi.bdcSvd(Eigen::ComputeThinU|Eigen::ComputeThinV).solve(psi).transpose().eval();
+    EXPECT_MATRIX_NOT_CLOSE(U * U.adjoint(), Eigen::MatrixXcd::Identity(m, m), 1e-1);
+}
+
+//! @brief Theorem 2.6 and equations 2.166 through 2.174
+TEST(chapter2_4, unitary_freedom_density_matrices_2)
+{
+    std::srand(15u);
+
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+
+    auto constexpr m = 5u;
+    auto constexpr range_m = std::views::iota(0u, m) | std::views::common;
+    auto constexpr l = 7u;
+    auto constexpr range_l = std::views::iota(0u, l) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto psi = Eigen::MatrixXcd::Zero(_2_pow_n, m).eval();
+    auto const p = Eigen::VectorXd::Map(qpp::randprob(m).data(), m).eval();
+    EXPECT_NEAR(p.sum(), 1., 1e-12);
+    for(auto&& i : std::views::iota(0u, m))
+        psi.col(i) = std::sqrt(p[i]) * qpp::randket(_2_pow_n);
+
+    auto const rho_psi = std::transform_reduce(policy, range_m.begin(), range_m.end()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (psi.col(i) * psi.col(i).adjoint()).eval();
+    });
+    expect_density_operator(rho_psi, 1e-12);
+
+    auto const U = qpp::randU(l).eval();
+    auto const U_partial = U(Eigen::seqN(0, m), Eigen::seqN(0, l));
+    EXPECT_MATRIX_CLOSE(U_partial * U_partial.adjoint(), Eigen::MatrixXcd::Identity(m, m), 1e-12);
+
+    auto const phi = (psi * U_partial).eval();
+
+    auto const rho_phi = std::transform_reduce(policy, range_l.begin(), range_l.end()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (phi.col(i) * phi.col(i).adjoint()).eval();
+    });
+    expect_density_operator(rho_phi, 1e-12);
+
+    EXPECT_MATRIX_CLOSE(rho_psi, rho_phi, 1e-12);
+}
