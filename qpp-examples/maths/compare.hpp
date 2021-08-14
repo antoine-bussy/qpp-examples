@@ -31,6 +31,7 @@ namespace qpp_e::maths
         return std::norm(actual - expected) <= precision * std::min(std::norm(actual), std::norm(expected));
     }
     auto constexpr complex_close_l = [](auto const& actual, auto const& expected, auto const& precision) { return complex_close(actual, expected, precision); };
+    auto constexpr complex_not_close_l = [](auto const& actual, auto const& expected, auto const& precision) { return !complex_close(actual, expected, precision); };
 
     auto collinear(Matrix auto const& actual, Matrix auto const& expected, RealNumber auto const& precision)
     {
