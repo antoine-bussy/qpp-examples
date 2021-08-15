@@ -391,3 +391,55 @@ TEST(chapter2_4, generalized_bloch_sphere_4)
 
     EXPECT_MATRIX_CLOSE(r, bloch_vector(rho), 1e-12);
 }
+
+//! @brief Exercise 2.73
+TEST(chapter2_4, minimal_ensemble)
+{
+    std::srand(46u);
+
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+
+    auto constexpr m = 5u;
+    auto constexpr range_m = std::views::iota(0u, m) | std::views::common;
+    auto const _0_m = Eigen::seqN(0, m);
+    auto constexpr policy = std::execution::par;
+
+    auto lambda = Eigen::VectorXd::Zero(_2_pow_n).eval();
+    lambda(_0_m) = Eigen::VectorXd::Map(qpp::randprob(m).data(), m);
+
+    auto const P = qpp::randU(_2_pow_n);
+    auto const rho = (P * lambda.asDiagonal() * P.adjoint()).eval();
+    expect_density_operator(rho, 1e-12);
+
+    auto psi = (P(Eigen::all, _0_m) * lambda(_0_m).cwiseSqrt().asDiagonal() * qpp::randU(m)).eval();
+    auto const p = psi.colwise().squaredNorm().eval();
+    psi.colwise().normalize();
+    EXPECT_NEAR(p.sum(), 1., 1e-12);
+    EXPECT_MATRIX_NOT_CLOSE(psi.adjoint() * psi, Eigen::MatrixXcd::Identity(m,m), 1e-1);
+    if (print_text)
+    {
+        std::cerr << "Probability vector: " << qpp::disp(p) << '\n';
+        std::cerr << "psi.adjoint() * psi:\n" << qpp::disp(psi.adjoint() * psi) << '\n';
+    }
+
+    auto lambda_inverse = Eigen::VectorXd::Zero(_2_pow_n).eval();
+    lambda_inverse(_0_m) = lambda(_0_m).cwiseInverse();
+    auto const rho_inverse = (P * lambda_inverse.asDiagonal() * P.adjoint()).eval();
+    EXPECT_MATRIX_CLOSE(rho_inverse * rho * P(Eigen::all, _0_m), P(Eigen::all, _0_m), 1e-12);
+
+    for(auto&& i : range_m)
+    {
+        EXPECT_COMPLEX_CLOSE(p[i], 1. / psi.col(i).dot(rho_inverse * psi.col(i)), 1e-12);
+    }
+
+    auto const rho_psi = std::transform_reduce(policy, range_m.begin(), range_m.end()
+        , Eigen::MatrixXcd::Zero(_2_pow_n, _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (p[i] * psi.col(i) * psi.col(i).adjoint()).eval();
+    });
+    expect_density_operator(rho_psi, 1e-12);
+    EXPECT_MATRIX_CLOSE(rho_psi, rho, 1e-12);
+}
