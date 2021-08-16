@@ -444,3 +444,24 @@ TEST(chapter2_4, minimal_ensemble)
     expect_density_operator(rho_psi, 1e-12);
     EXPECT_MATRIX_CLOSE(rho_psi, rho, 1e-12);
 }
+
+//! @brief Equations 2.177 and 2.178
+TEST(chapter2_4, partial_trace)
+{
+    qpp_e::maths::seed(12u);
+
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr m = 2u;
+    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+
+    auto const a1 = qpp::randket(_2_pow_n);
+    auto const a2 = qpp::randket(_2_pow_n);
+    auto const b1 = qpp::randket(_2_pow_m);
+    auto const b2 = qpp::randket(_2_pow_m);
+
+    auto const op_a = (a1 * a2.adjoint()).eval();
+    auto const op_b = (b1 * b2.adjoint()).eval();
+
+    EXPECT_MATRIX_CLOSE(qpp::ptrace2(qpp::kron(op_a, op_b), { _2_pow_n, _2_pow_m }), qpp::trace(op_b) * op_a, 1e-12);
+}
