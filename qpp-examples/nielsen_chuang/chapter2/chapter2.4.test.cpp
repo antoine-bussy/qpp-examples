@@ -483,3 +483,12 @@ TEST(chapter2_4, reduced_density_operator)
     EXPECT_MATRIX_CLOSE(qpp::ptrace2(rho_sigma, { _2_pow_n, _2_pow_m }), rho, 1e-12);
     EXPECT_MATRIX_CLOSE(qpp::ptrace1(rho_sigma, { _2_pow_n, _2_pow_m }), sigma, 1e-12);
 }
+
+//! @brief Equations 2.185 through 2.191
+TEST(chapter2_4, reduced_density_operator_entangled)
+{
+    auto const rho = qpp::prj(qpp::st.b00);
+    auto const rho1 = qpp::ptrace2(rho);
+    EXPECT_MATRIX_CLOSE(rho1, 0.5 * qpp::gt.Id2, 1e-12);
+    EXPECT_COMPLEX_CLOSE(qpp::trace(rho1 * rho1), 0.5, 1e-12);
+}
