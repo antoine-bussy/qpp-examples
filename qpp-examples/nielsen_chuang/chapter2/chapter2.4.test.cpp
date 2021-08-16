@@ -465,3 +465,21 @@ TEST(chapter2_4, partial_trace)
 
     EXPECT_MATRIX_CLOSE(qpp::ptrace2(qpp::kron(op_a, op_b), { _2_pow_n, _2_pow_m }), qpp::trace(op_b) * op_a, 1e-12);
 }
+
+//! @brief Equation 2.184
+TEST(chapter2_4, reduced_density_operator)
+{
+    qpp_e::maths::seed(7u);
+
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr m = 2u;
+    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+
+    auto const rho = qpp::randrho(_2_pow_n);
+    auto const sigma = qpp::randrho(_2_pow_m);
+    auto const rho_sigma = qpp::kron(rho, sigma);
+
+    EXPECT_MATRIX_CLOSE(qpp::ptrace2(rho_sigma, { _2_pow_n, _2_pow_m }), rho, 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::ptrace1(rho_sigma, { _2_pow_n, _2_pow_m }), sigma, 1e-12);
+}
