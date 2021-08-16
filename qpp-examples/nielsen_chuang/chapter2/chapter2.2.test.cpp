@@ -4,6 +4,7 @@
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
+#include <qpp-examples/maths/random.hpp>
 
 #include <execution>
 #include <numbers>
@@ -200,7 +201,7 @@ TEST(chapter2_2, non_completeness)
 //! @brief Measurements operators are not necessarily projective measurements
 TEST(chapter2_2, not_projective_measurements)
 {
-    std::srand(0);
+    qpp_e::maths::seed(0);
     auto constexpr n = 3u;
     auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
     auto const measurement_operators = qpp::randkraus(_2_pow_n, _2_pow_n);
@@ -533,7 +534,7 @@ TEST(chapter2_2, povm_and_measurement)
 //! @brief Exercise 2.64
 TEST(chapter2_2, povm_construction)
 {
-    std::srand(0u);
+    qpp_e::maths::seed(0u);
     auto constexpr n = 5u;
     auto constexpr m = 3u;
     auto constexpr range = std::views::iota(0u, m) | std::views::common;

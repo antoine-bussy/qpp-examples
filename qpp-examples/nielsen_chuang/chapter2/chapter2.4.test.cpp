@@ -4,6 +4,7 @@
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
+#include <qpp-examples/maths/random.hpp>
 
 #include <execution>
 
@@ -96,7 +97,7 @@ TEST(chapter2_4, density_operator_measure)
 //! @brief Equations 2.148 through 2.152
 TEST(chapter2_4, density_operator_measure_output)
 {
-    std::srand(0u);
+    qpp_e::maths::seed(0u);
     auto constexpr n = 4u;
     auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
     auto constexpr MM = 7u;
@@ -152,7 +153,7 @@ TEST(chapter2_4, density_operator_characterization)
 //! @brief Exercise 2.71
 TEST(chapter2_4, mixed_state_criterion)
 {
-    std::srand(0u);
+    qpp_e::maths::seed(0u);
     auto constexpr n = 4u;
     auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
 
@@ -193,7 +194,7 @@ TEST(chapter2_4, quantum_states_from_density)
 //! @brief Theorem 2.6 and equations 2.166 through 2.174
 TEST(chapter2_4, unitary_freedom_density_matrices_1)
 {
-    std::srand(10u);
+    qpp_e::maths::seed(10u);
 
     auto constexpr n = 4u;
     auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
@@ -242,7 +243,7 @@ TEST(chapter2_4, unitary_freedom_density_matrices_1)
 //! @brief Theorem 2.6 and equations 2.166 through 2.174
 TEST(chapter2_4, unitary_freedom_density_matrices_2)
 {
-    std::srand(15u);
+    qpp_e::maths::seed(15u);
 
     auto constexpr n = 4u;
     auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
@@ -349,7 +350,7 @@ TEST(chapter2_4, generalized_bloch_sphere_2)
 //! @brief Exercise 2.72 (3)
 TEST(chapter2_4, generalized_bloch_sphere_3)
 {
-    std::srand(123u);
+    qpp_e::maths::seed(123u);
 
     auto const rho_mixed = qpp::randrho();
     EXPECT_LE(bloch_vector(rho_mixed).squaredNorm(), 1. - 1e-1);
@@ -370,7 +371,7 @@ TEST(chapter2_4, generalized_bloch_sphere_4)
 {
     using namespace qpp::literals;
     using namespace std::complex_literals;
-    std::srand(123u);
+    qpp_e::maths::seed(123u);
 
     auto const angles = Eigen::Vector2d::Random().eval();
     auto const& theta = angles[0];
@@ -395,7 +396,7 @@ TEST(chapter2_4, generalized_bloch_sphere_4)
 //! @brief Exercise 2.73
 TEST(chapter2_4, minimal_ensemble)
 {
-    std::srand(46u);
+    qpp_e::maths::seed(46u);
 
     auto constexpr n = 4u;
     auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
