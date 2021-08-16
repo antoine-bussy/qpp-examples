@@ -492,3 +492,80 @@ TEST(chapter2_4, reduced_density_operator_entangled)
     EXPECT_MATRIX_CLOSE(rho1, 0.5 * qpp::gt.Id2, 1e-12);
     EXPECT_COMPLEX_CLOSE(qpp::trace(rho1 * rho1), 0.5, 1e-12);
 }
+
+namespace
+{
+    //! @brief Compute mean and variance
+    auto statistics(qpp_e::maths::Matrix auto const& M, qpp_e::maths::Matrix auto const& state)
+    {
+        auto const mean = state.dot(M * state);
+        EXPECT_NEAR(mean.imag(), 0., 1e-12);
+        auto const variance = state.dot(M * M * state) - mean * mean;
+        EXPECT_GE(variance.real(), -1e-12);
+        EXPECT_NEAR(variance.imag(), 0., 1e-12);
+        return std::tuple{ mean.real(), variance.real(), std::sqrt(std::max(variance.real(), 0.)) };
+    }
+}
+
+//! @brief Box 2.6 and equations 2.179 through 2.183
+TEST(chapter2_4, partial_trace_observables)
+{
+    qpp_e::maths::seed(98u);
+
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr range_n = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr l = 2u;
+    auto constexpr _2_pow_l = qpp_e::maths::pow(2u, l);
+
+    auto const M = qpp::randH(_2_pow_n);
+    auto const [m, m_vec] = qpp::heig(M);
+    auto const M_tilde = qpp::kron(M, qpp::gt.Id(_2_pow_l));
+
+    auto P = std::vector<qpp::cmat>(m_vec.cols());
+    auto P_tilde = std::vector<qpp::cmat>(m_vec.cols());
+
+    for (auto&& i : range_n)
+    {
+        auto const state = qpp::kron(m_vec.col(i), qpp::randket(_2_pow_l)).col(0).eval();
+        auto const [ mean, variance, STD ] = statistics(M_tilde, state);
+        EXPECT_COMPLEX_CLOSE(mean, m[i], 1e-12);
+        EXPECT_NEAR(variance, 0., 1e-12);
+
+        P[i] = m_vec.col(i) * m_vec.col(i).adjoint();
+        P_tilde[i] = qpp::kron(P[i], qpp::gt.Id(_2_pow_l));
+    }
+
+    auto const state_a = qpp::randket(_2_pow_n);
+    auto const [result, probabilities, resulting_state] = qpp::measure(state_a, P);
+
+    auto const state_b = qpp::randket(_2_pow_l);
+    auto constexpr target = std::views::iota(0u, n) | std::views::common;
+    auto const [result_composite, probabilities_composite, resulting_state_composite] = qpp::measure(qpp::kron(state_a, state_b), P, { target.begin(), target.end() });
+
+    for (auto&& i : std::views::iota(0u, n))
+    {
+        EXPECT_COMPLEX_CLOSE(probabilities[i], probabilities_composite[i], 1e-12);
+    }
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> Measurement result: " << result << '\n';
+        std::cerr << ">> Probabilities: ";
+        std::cerr << qpp::disp(probabilities, ", ") << '\n';
+        std::cerr << ">> Resulting states:\n";
+        for (auto&& it : resulting_state)
+            std::cerr << qpp::disp(it) << "\n\n";
+        std::cerr << "-----------------------------\n";
+        std::cerr << ">> Composite Measurement result: " << result_composite << '\n';
+        std::cerr << ">> Composite Probabilities: ";
+        std::cerr << qpp::disp(probabilities_composite, ", ") << '\n';
+        std::cerr << ">> Composite Resulting states:\n";
+        for (auto&& it : resulting_state_composite)
+            std::cerr << qpp::disp(it) << "\n\n";
+    }
+
+    auto const rho_ab = qpp::randrho(_2_pow_n * _2_pow_l);
+    auto const rho_a = qpp::ptrace2(rho_ab, { _2_pow_n, _2_pow_l });
+    EXPECT_COMPLEX_CLOSE(qpp::trace(M * rho_a), qpp::trace(M_tilde * rho_ab), 1e-12);
+}
