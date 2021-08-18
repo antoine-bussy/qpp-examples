@@ -594,3 +594,26 @@ TEST(chapter2_4, composite_of_pure_states)
     expect_density_operator(rho_A, 1e-12);
     EXPECT_COMPLEX_CLOSE(qpp::trace(rho_A * rho_A), 1., 1e-12);
 }
+
+namespace
+{
+    auto constexpr bell_state_reduce_density_operator(qpp_e::maths::Matrix auto const& state)
+    {
+        using namespace qpp::literals;
+
+        auto const rho = qpp::prj(state);
+        auto const reduced_rho = (0.5 * (0_prj + 1_prj)).eval();
+        EXPECT_MATRIX_CLOSE(qpp::ptrace1(rho), reduced_rho, 1e-12);
+        EXPECT_MATRIX_CLOSE(qpp::ptrace2(rho), reduced_rho, 1e-12);
+        EXPECT_MATRIX_CLOSE(reduced_rho, 0.5 * Eigen::Matrix2cd::Identity(), 1e-12);
+    }
+}
+
+//! @brief Exercise 2.75
+TEST(chapter2_4, reduce_density_operator_of_bell_states)
+{
+    bell_state_reduce_density_operator(qpp::st.b00);
+    bell_state_reduce_density_operator(qpp::st.b01);
+    bell_state_reduce_density_operator(qpp::st.b10);
+    bell_state_reduce_density_operator(qpp::st.b11);
+}
