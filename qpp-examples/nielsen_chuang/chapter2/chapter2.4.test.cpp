@@ -617,3 +617,56 @@ TEST(chapter2_4, reduce_density_operator_of_bell_states)
     bell_state_reduce_density_operator(qpp::st.b10);
     bell_state_reduce_density_operator(qpp::st.b11);
 }
+
+//! @brief Equations 2.192 through 2.201
+TEST(chapter2_4, reduce_density_operator_and_quantum_teleportation)
+{
+    using namespace qpp::literals;
+    auto constexpr policy = std::execution::par;
+
+    auto const state = qpp::randket();
+    auto const& a = state[0];
+    auto const& b = state[1];
+
+    auto const psi2 = (0.5
+                *((qpp::kron(00_ket, a * 0_ket + b * 1_ket))
+                + (qpp::kron(01_ket, a * 1_ket + b * 0_ket))
+                + (qpp::kron(10_ket, a * 0_ket - b * 1_ket))
+                + (qpp::kron(11_ket, a * 1_ket - b * 0_ket))
+                )).eval();
+    EXPECT_COMPLEX_CLOSE(psi2.squaredNorm(), 1., 1e-12);
+
+    auto const [result0, probabilities0, resulting_state0] = qpp::measure(psi2, qpp::gt.Id(4), { 0, 1 }, 2, false);
+    EXPECT_MATRIX_CLOSE(Eigen::Vector4d::Map(probabilities0.data()).eval(), Eigen::Vector4d::Constant(0.25), 1e-12);
+
+    EXPECT_MATRIX_CLOSE(resulting_state0[0], qpp::kron(00_ket, a * 0_ket + b * 1_ket), 1e-12);
+    EXPECT_MATRIX_CLOSE(resulting_state0[1], qpp::kron(01_ket, a * 1_ket + b * 0_ket), 1e-12);
+    EXPECT_MATRIX_CLOSE(resulting_state0[2], qpp::kron(10_ket, a * 0_ket - b * 1_ket), 1e-12);
+    EXPECT_MATRIX_CLOSE(resulting_state0[3], qpp::kron(11_ket, a * 1_ket - b * 0_ket), 1e-12);
+
+    auto const rho_before_alice_measure = qpp::prj(psi2);
+    expect_density_operator(rho_before_alice_measure, 1e-12);
+
+    auto const [result1, probabilities1, resulting_state1] = qpp::measure(rho_before_alice_measure, qpp::gt.Id(4), { 0, 1 }, 2, false);
+    EXPECT_MATRIX_CLOSE(Eigen::Vector4d::Map(probabilities1.data()).eval(), Eigen::Vector4d::Constant(0.25), 1e-12);
+
+    auto constexpr range = std::views::iota(0u, 4u) | std::views::common;
+    auto const rho = std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::MatrixXcd::Zero(8, 8).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (probabilities1[i] * resulting_state1[i]).eval();
+    });
+    auto const expected_rho = std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::MatrixXcd::Zero(8, 8).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (probabilities0[i] * qpp::prj(resulting_state0[i])).eval();
+    });
+    EXPECT_MATRIX_CLOSE(rho, expected_rho, 1e-12);
+
+    auto const rhoB = qpp::ptrace1(rho, { 4, 2 });
+    EXPECT_MATRIX_CLOSE(rhoB, 0.5 * Eigen::Matrix2d::Identity(), 1e-12);
+}
