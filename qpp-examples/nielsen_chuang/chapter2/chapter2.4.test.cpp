@@ -569,3 +569,28 @@ TEST(chapter2_4, partial_trace_observables)
     auto const rho_a = qpp::ptrace2(rho_ab, { _2_pow_n, _2_pow_l });
     EXPECT_COMPLEX_CLOSE(qpp::trace(M * rho_a), qpp::trace(M_tilde * rho_ab), 1e-12);
 }
+
+//! @brief Exercise 2.74
+TEST(chapter2_4, composite_of_pure_states)
+{
+    qpp_e::maths::seed(25u);
+
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr m = 2u;
+    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+
+    auto const a = qpp::randket(_2_pow_n);
+    auto const rho_a = qpp::prj(a);
+    expect_density_operator(rho_a, 1e-12);
+    EXPECT_COMPLEX_CLOSE(qpp::trace(rho_a * rho_a), 1., 1e-12);
+
+    auto const b = qpp::randket(_2_pow_m);
+    auto const rho_b = qpp::prj(b);
+    expect_density_operator(rho_b, 1e-12);
+    EXPECT_COMPLEX_CLOSE(qpp::trace(rho_b * rho_b), 1., 1e-12);
+
+    auto const rho_A = qpp::ptrace2(qpp::kron(rho_a, rho_b), { _2_pow_n, _2_pow_m });
+    expect_density_operator(rho_A, 1e-12);
+    EXPECT_COMPLEX_CLOSE(qpp::trace(rho_A * rho_A), 1., 1e-12);
+}
