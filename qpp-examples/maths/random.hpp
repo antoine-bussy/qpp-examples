@@ -11,13 +11,7 @@ namespace qpp_e::maths
     template < class Sseq >
     inline auto qpp_seed(Sseq& seq)
     {
-        auto& gen =
-#ifdef NO_THREAD_LOCAL_
-            qpp::RandomDevices::get_instance().get_prng();
-#else
-            qpp::RandomDevices::get_thread_local_instance().get_prng();
-#endif
-        return gen.seed(seq);
+        return qpp::RandomDevices::get_instance().get_prng().seed(seq);
     }
 
     inline auto seed(unsigned int s)
