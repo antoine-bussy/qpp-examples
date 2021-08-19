@@ -1,0 +1,3 @@
+config.cxx = g++ -m64
+config.cc.coptions = -O3 -DNDEBUG -fPIE -w # -Werror -Wall -Wextra -pedantic -fopenmp
+config.cc.loptions = -O3 -DNDEBUG -fPIE

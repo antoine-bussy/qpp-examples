@@ -1,0 +1,6 @@
+$out_root/
+{
+  include qpp-examples/
+}
+
+export $out_root/qpp-examples/$import.target

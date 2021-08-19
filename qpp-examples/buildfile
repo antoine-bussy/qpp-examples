@@ -1,0 +1,45 @@
+intf_libs = # Interface dependencies.
+impl_libs = # Implementation dependencies.
+#import impl_libs += libhello%lib{hello}
+
+./: lib{qpp-examples}: {hxx ixx txx mxx}{** -**.test... -version} hxx{version} \
+  $impl_libs $intf_libs  gtest%lib{*} libqpp%lib{qpp} eigen3%lib{eigen}
+
+# Unit tests.
+#
+exe{*.test}: test = true
+
+# Disable backlinks.
+#
+exe{*}: backlink = false
+doc{*}: backlink = false
+
+for t: cxx{**.test...}
+{
+  d = $directory($t)
+  n = $name($t)...
+
+  ./: $d/exe{$n}: $t $d/{hxx ixx txx mxx}{+$n} $d/testscript{+$n} lib{qpp-examples}  gtest%lib{*} libqpp%lib{qpp} eigen3%lib{eigen}
+}
+
+# Include the generated version header into the distribution (so that we don't
+# pick up an installed one) and don't remove it when cleaning in src (so that
+# clean results in a state identical to distributed).
+#
+hxx{version}: in{version} $src_root/manifest
+{
+  dist  = true
+  clean = ($src_root != $out_root)
+}
+
+# Build options.
+#
+cxx.poptions =+ "-I$out_root" "-I$src_root"
+
+# Export options.
+#
+lib{qpp-examples}:
+{
+  cxx.export.poptions = "-I$out_root" "-I$src_root"
+  cxx.export.libs = $intf_libs
+}

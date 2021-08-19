@@ -24,7 +24,7 @@ class QppExamplesConan(ConanFile):
 
     def build_requirements(self):
         self.build_requires("qpp/main@local/snapshot", force_host_context=True)
-        self.build_requires("cmake/3.20.1@")
+        self.build_requires("cmake/3.20.4@")
         if "Ninja" in os.environ.get('CONAN_CMAKE_GENERATOR', ""):
             self.build_requires("ninja/1.10.2@")
         self.build_requires("gtest/cci.20210126@", force_host_context=True)

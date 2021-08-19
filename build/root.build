@@ -1,0 +1,17 @@
+cxx.std = c++20
+cxx.std = experimental
+cxx.features.modules = true
+
+using cxx
+
+assert $cxx.features.modules "no modules support for $cxx.signature"
+
+hxx{*}: extension = hpp
+ixx{*}: extension = ipp
+txx{*}: extension = tpp
+cxx{*}: extension = cpp
+mxx{*}: extension = mpp
+
+# The test target for cross-testing (running tests under Wine, etc).
+#
+test.target = $cxx.target

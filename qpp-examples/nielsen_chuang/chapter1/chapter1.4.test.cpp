@@ -7,6 +7,7 @@
 
 #include <numbers>
 #include <execution>
+#include <ranges>
 
 namespace
 {

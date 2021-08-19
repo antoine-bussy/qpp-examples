@@ -10,7 +10,7 @@
 
 namespace
 {
-    auto constexpr print_text = false;
+    auto constexpr print_text = true;
 }
 
 namespace

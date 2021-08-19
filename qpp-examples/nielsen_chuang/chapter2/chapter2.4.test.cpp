@@ -7,6 +7,7 @@
 #include <qpp-examples/maths/random.hpp>
 
 #include <execution>
+#include <ranges>
 
 namespace
 {

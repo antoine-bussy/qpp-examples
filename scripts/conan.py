@@ -34,7 +34,7 @@ if not multi_config_generator(generator):
 conan_os = platform.system()
 arch = "x86_64"
 
-conan_command = [ "conan", "install", "-g", "virtualbuildenv", "-g", "virtualenv", "-if", f"{build_folder}/conan", "--profile:build=default" ]
+conan_command = [ "conan", "install", "-g", "pkg_config", "-g", "virtualbuildenv", "-g", "virtualenv", "-if", f"{build_folder}/conan", "--profile:build=default" ]
 
 conan_command += [ "-s", f"os={conan_os}" ]
 conan_command += [ "-s", f"arch={arch}" ]
