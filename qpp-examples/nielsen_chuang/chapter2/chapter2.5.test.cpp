@@ -6,6 +6,8 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/random.hpp>
 
+#include <numbers>
+
 namespace
 {
     auto constexpr print_text = false;
@@ -56,3 +58,28 @@ TEST(chapter2_5, schmidt_reduced_density_operator)
     }
 }
 
+//! @brief Theorem 2.7 and equation 2.202
+TEST(chapter2_5, schmidt_reduced_density_operator_example)
+{
+    using namespace qpp::literals;
+
+    auto const psi = (std::numbers::inv_sqrt3_v<double> * (00_ket + 01_ket + 11_ket)).eval();
+    auto const rho = (psi * psi.adjoint()).eval();
+    expect_density_operator(rho, 1e-12);
+
+    auto const rhoA = qpp::ptrace2(rho);
+    auto const eigsA = qpp::hevals(rhoA);
+    auto const rhoB = qpp::ptrace1(rho);
+    auto const eigsB = qpp::hevals(rhoB);
+    EXPECT_MATRIX_CLOSE(eigsA, eigsB, 1e-12);
+    EXPECT_GE(eigsA.minCoeff(), -1e-12);
+    EXPECT_GE(eigsB.minCoeff(), -1e-12);
+    EXPECT_COMPLEX_CLOSE(qpp::trace(rhoA * rhoA), 7./9., 1e-12);
+    EXPECT_COMPLEX_CLOSE(qpp::trace(rhoB * rhoB), 7./9., 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << "EigsA:\n" << qpp::disp(eigsA) << "\n\n";
+        std::cerr << "EigsB:\n" << qpp::disp(eigsB) << "\n\n";
+    }
+}
