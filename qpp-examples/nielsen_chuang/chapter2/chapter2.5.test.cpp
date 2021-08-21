@@ -44,7 +44,7 @@ TEST(chapter2_5, schmidt_reduced_density_operator)
     auto const eigsB = qpp::hevals(rhoB);
 
     EXPECT_TRUE(eigsA.head(_2_pow_n - _2_pow_m).isZero(1e-12));
-    EXPECT_MATRIX_CLOSE(eigsA(Eigen::lastN(_2_pow_m), Eigen::all), eigsB, 1e-12);
+    EXPECT_MATRIX_CLOSE(eigsA(Eigen::lastN(_2_pow_m)), eigsB, 1e-12);
 
     EXPECT_GE(eigsA.minCoeff(), -1e-12);
     EXPECT_GE(eigsB.minCoeff(), -1e-12);
