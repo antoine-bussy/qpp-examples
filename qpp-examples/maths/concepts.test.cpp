@@ -26,3 +26,12 @@ TEST(concepts_test, complex_number)
     EXPECT_TRUE(qpp_e::maths::ComplexNumber<std::complex<float>>);
     EXPECT_FALSE(qpp_e::maths::ComplexNumber<char*>);
 }
+
+TEST(concepts_test, matrix_vector_block)
+{
+    using vector_t = Eigen::Vector4f;
+    auto const A = vector_t{};
+    using vector_block_t = std::decay_t<decltype(A.head<2>())>;
+
+    EXPECT_TRUE(qpp_e::maths::Matrix<vector_block_t>);
+}

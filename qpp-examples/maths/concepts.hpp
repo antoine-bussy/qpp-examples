@@ -10,7 +10,10 @@ Maths concepts.
 namespace qpp_e::maths
 {
     template < class Derived >
-    concept Matrix = std::derived_from<Derived, Eigen::MatrixBase<Derived>>;
+    concept Matrix = requires(Derived m)
+    {
+        []<class D>(Eigen::MatrixBase<D> const&){}(m);
+    };
 
     template < class T >
     concept RealNumber = std::is_arithmetic_v<T>;
