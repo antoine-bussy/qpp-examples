@@ -227,3 +227,29 @@ TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions)
     EXPECT_GT(D.minCoeff(), -1e-12);
     EXPECT_COMPLEX_CLOSE(D.squaredNorm(), 1., 1e-12);
 }
+
+//! @brief Exercise 2.77
+TEST(chapter2_5, three_vector_schmidt_decomposition)
+{
+    using namespace qpp::literals;
+
+    qpp_e::maths::seed(12u);
+
+    auto const psi = (000_ket + 011_ket).normalized().eval();
+
+    auto const x = qpp::randket();
+    auto const y = qpp::randket();
+    auto const X = qpp::kron(1_ket, x, y);
+    EXPECT_EQ(X.cols(), 1);
+    EXPECT_NEAR(std::norm(psi.dot(X.col(0))), 0., 1e-12);
+
+    auto const iA = qpp::randket();
+    auto const phase = qpp::randU(1)(0, 0);
+    EXPECT_COMPLEX_CLOSE(std::norm(phase), 1., 1e-12);
+
+    auto const iA_orth = (phase * Eigen::Vector2cd{ std::conj(iA[1]), -std::conj(iA[0]) }).eval();
+    EXPECT_NEAR(std::norm(iA_orth.dot(iA)), 0., 1e-12);
+
+    EXPECT_COMPLEX_CLOSE((1_ket).dot(iA), iA[1], 1e-12);
+    EXPECT_COMPLEX_CLOSE((1_ket).dot(iA_orth), -phase * std::conj(iA[0]), 1e-12);
+}
