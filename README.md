@@ -24,9 +24,8 @@ Install pip and Conan, as root
 apt install python3-pip
 python3 -m pip install conan
 ```
-Install Eigen and QPP with Conan
+Install QPP with Conan
 ```bash
-conan create third_party/conanfile.eigen.py eigen/3.4-rc1@local/rc
 conan create third_party/conanfile.qpp.py qpp/main@local/snapshot
 ```
 
