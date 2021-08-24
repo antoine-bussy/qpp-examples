@@ -226,6 +226,54 @@ TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions)
     EXPECT_COMPLEX_CLOSE(D.squaredNorm(), 1., 1e-12);
 }
 
+//! @brief Exercise 2.76
+TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions_qpp)
+{
+    qpp_e::maths::seed(1982u);
+
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr m = 3u;
+    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr range_m = std::views::iota(0u, _2_pow_m) | std::views::common;
+    auto constexpr _2_pow_npm = _2_pow_n * _2_pow_m;
+    auto constexpr policy = std::execution::par;
+
+    auto const psi = qpp::randket(_2_pow_npm);
+
+    auto const t0 = std::chrono::high_resolution_clock::now();
+    auto const U = qpp::schmidtA(psi, { _2_pow_n, _2_pow_m });
+    auto const t1 = std::chrono::high_resolution_clock::now();
+    auto const D = qpp::schmidtcoeffs(psi, { _2_pow_n, _2_pow_m });
+    auto const t2 = std::chrono::high_resolution_clock::now();
+    auto const V = qpp::schmidtB(psi, { _2_pow_n, _2_pow_m });
+    auto const tf = std::chrono::high_resolution_clock::now();
+
+    if constexpr (print_text)
+    {
+        std::cerr << "U:   " << std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() << " us" << std::endl;
+        std::cerr << "D:   " << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << " us" << std::endl;
+        std::cerr << "V:   " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t2).count() << " us" << std::endl;
+        std::cerr << "All: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
+    }
+
+    EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::MatrixXcd::Identity(_2_pow_n, _2_pow_n), 1e-12);
+    EXPECT_MATRIX_CLOSE(V * V.adjoint(), Eigen::MatrixXcd::Identity(_2_pow_m, _2_pow_m), 1e-12);
+
+    auto const psi2 = std::transform_reduce(policy, range_m.begin(), range_m.end()
+        , Eigen::VectorXcd::Zero(_2_pow_npm).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (D[i] * qpp::kron(U.col(i), V.col(i))).eval();
+    });
+    EXPECT_MATRIX_CLOSE(psi2, psi, 1e-12);
+    EXPECT_COMPLEX_CLOSE(psi2.squaredNorm(), 1., 1e-12);
+
+    EXPECT_GT(D.minCoeff(), -1e-12);
+    EXPECT_COMPLEX_CLOSE(D.squaredNorm(), 1., 1e-12);
+}
+
 //! @brief Exercise 2.77
 TEST(chapter2_5, three_vector_schmidt_decomposition)
 {
