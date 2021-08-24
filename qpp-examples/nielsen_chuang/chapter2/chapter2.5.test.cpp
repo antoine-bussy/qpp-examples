@@ -6,6 +6,7 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/random.hpp>
 
+#include <chrono>
 #include <execution>
 #include <numbers>
 
@@ -184,10 +185,15 @@ TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions)
     EXPECT_MATRIX_CLOSE(psi2, psi, 1e-12);
     EXPECT_COMPLEX_CLOSE(psi2.squaredNorm(), 1., 1e-12);
 
+    auto const t0 = std::chrono::high_resolution_clock::now();
     auto const svd = A.bdcSvd(Eigen::ComputeFullU | Eigen::ComputeFullV);
     auto const& U = svd.matrixU();
     auto const& D = svd.singularValues();
     auto const  V = svd.matrixV().adjoint();
+    auto const tf = std::chrono::high_resolution_clock::now();
+
+    if constexpr (print_text)
+        std::cerr << "All: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
 
     EXPECT_MATRIX_CLOSE(A, U.leftCols(_2_pow_m) * D.asDiagonal() * V, 1e-12);
     EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::MatrixXcd::Identity(_2_pow_n, _2_pow_n), 1e-12);
