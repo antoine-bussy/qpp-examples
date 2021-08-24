@@ -96,12 +96,8 @@ TEST(chapter2_5, schmidt_decomposition_proof)
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
 
-    auto const a = qpp::randket(_2_pow_n);
-    auto const b = qpp::randket(_2_pow_n);
-    auto const A = (a * b.transpose()).eval();
-    auto const psi = qpp::kron(a, b);
-    EXPECT_COMPLEX_CLOSE(psi.squaredNorm(), 1., 1e-12);
-    EXPECT_EQ(psi.size(), _4_pow_n);
+    auto const psi = qpp::randket(_4_pow_n);
+    auto const A = psi.reshaped(_2_pow_n, _2_pow_n).transpose().eval();
 
     auto const psi2 = std::transform_reduce(policy, range.begin(), range.end()
         , Eigen::VectorXcd::Zero(_4_pow_n).eval()
@@ -169,12 +165,8 @@ TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions)
     auto constexpr _2_pow_npm = _2_pow_n * _2_pow_m;
     auto constexpr policy = std::execution::par;
 
-    auto const a = qpp::randket(_2_pow_n);
-    auto const b = qpp::randket(_2_pow_m);
-    auto const A = (a * b.transpose()).eval();
-    auto const psi = qpp::kron(a, b);
-    EXPECT_COMPLEX_CLOSE(psi.squaredNorm(), 1., 1e-12);
-    EXPECT_EQ(psi.size(), _2_pow_npm);
+    auto const psi = qpp::randket(_2_pow_npm);
+    auto const A = psi.reshaped(_2_pow_m, _2_pow_n).transpose();
 
     auto const psi2 = std::transform_reduce(policy, range_n.begin(), range_n.end()
         , Eigen::VectorXcd::Zero(_2_pow_npm).eval()
