@@ -299,3 +299,23 @@ TEST(chapter2_5, three_vector_schmidt_decomposition)
     EXPECT_COMPLEX_CLOSE((1_ket).dot(iA), iA[1], 1e-12);
     EXPECT_COMPLEX_CLOSE((1_ket).dot(iA_orth), -phase * std::conj(iA[0]), 1e-12);
 }
+
+//! @brief Exercise 2.78 part 1
+TEST(chapter2_5, schmidt_number)
+{
+    qpp_e::maths::seed(974u);
+
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr m = 3u;
+    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+
+    auto const a = qpp::randket(_2_pow_n);
+    auto const b = qpp::randket(_2_pow_m);
+
+    auto const psi = qpp::kron(a, b);
+    auto const A = psi.reshaped(_2_pow_m, _2_pow_n).transpose();
+
+    auto const schmidt = A.bdcSvd().setThreshold(1e-2).rank();
+    EXPECT_EQ(schmidt, 1);
+}
