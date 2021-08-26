@@ -363,7 +363,7 @@ TEST(chapter2_4, generalized_bloch_sphere_3)
     EXPECT_COMPLEX_CLOSE((rho_pure2 * rho_pure2).trace(), 1., 1e-12);
 
     auto const rho_mixed2 = density(0.9 * r);
-    EXPECT_COMPLEX_NOT_CLOSE((rho_mixed2 * rho_mixed2).trace(), 1., 1e-1);
+    EXPECT_COMPLEX_NOT_CLOSE((rho_mixed2 * rho_mixed2).trace(), 1., 1e-2);
 }
 
 //! @brief Exercise 2.72 (4)

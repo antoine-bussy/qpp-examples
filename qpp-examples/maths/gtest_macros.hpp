@@ -21,7 +21,7 @@ Macros for types comparison with googletest.
 #define EXPECT_COMPLEX_CLOSE(actual, expected, precision) EXPECT_PRED3(qpp_e::maths::complex_close_l, actual, expected, precision)
 
 //! @brief Complex non closeness GTest macro
-#define EXPECT_COMPLEX_NOT_CLOSE(actual, expected, precision) EXPECT_PRED3(qpp_e::maths::complex_close_l, actual, expected, precision)
+#define EXPECT_COMPLEX_NOT_CLOSE(actual, expected, precision) EXPECT_PRED3(qpp_e::maths::complex_not_close_l, actual, expected, precision)
 
 //! @brief Collinearity GTest macro
 #define EXPECT_COLLINEAR(actual, expected, precision) EXPECT_PRED3(qpp_e::maths::collinear_l, actual, expected, precision)
