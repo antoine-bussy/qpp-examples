@@ -319,3 +319,56 @@ TEST(chapter2_5, schmidt_number)
     auto const schmidt = A.bdcSvd().setThreshold(1e-2).rank();
     EXPECT_EQ(schmidt, 1);
 }
+
+//! @brief Exercise 2.78 part 2
+TEST(chapter2_5, reduced_density_operator_of_product_state)
+{
+    qpp_e::maths::seed(33u);
+
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr m = 3u;
+    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+
+    {
+        auto const a = qpp::randket(_2_pow_n);
+        auto const b = qpp::randket(_2_pow_m);
+        auto const psi_product = qpp::kron(a, b);
+
+        auto const rho = (psi_product * psi_product.adjoint());
+        expect_density_operator(rho, 1e-12);
+
+        auto const rhoA = qpp::ptrace2(rho, { _2_pow_n, _2_pow_m });
+        auto const rhoB = qpp::ptrace1(rho, { _2_pow_n, _2_pow_m });
+
+        auto const trace_rhoA_2 = (rhoA * rhoA).trace();
+        auto const trace_rhoB_2 = (rhoB * rhoB).trace();
+
+        EXPECT_COMPLEX_CLOSE(trace_rhoA_2, 1., 1e-12);
+        EXPECT_COMPLEX_CLOSE(trace_rhoB_2, 1., 1e-12);
+
+        auto const sum_lambda_i_pow_4 = qpp::schmidtcoeffs(psi_product, { _2_pow_n, _2_pow_m }).cwiseAbs2().squaredNorm();
+        EXPECT_COMPLEX_CLOSE(trace_rhoA_2, sum_lambda_i_pow_4, 1e-12);
+        EXPECT_COMPLEX_CLOSE(trace_rhoB_2, sum_lambda_i_pow_4, 1e-12);
+    }
+
+    {
+        auto const psi_not_product = qpp::randket(_2_pow_n * _2_pow_m);
+
+        auto const rho = (psi_not_product * psi_not_product.adjoint());
+        expect_density_operator(rho, 1e-12);
+
+        auto const rhoA = qpp::ptrace2(rho, { _2_pow_n, _2_pow_m });
+        auto const rhoB = qpp::ptrace1(rho, { _2_pow_n, _2_pow_m });
+
+        auto const trace_rhoA_2 = (rhoA * rhoA).trace();
+        auto const trace_rhoB_2 = (rhoB * rhoB).trace();
+
+        EXPECT_COMPLEX_NOT_CLOSE(trace_rhoA_2, 1., 1e-2);
+        EXPECT_COMPLEX_NOT_CLOSE(trace_rhoB_2, 1., 1e-2);
+
+        auto const sum_lambda_i_pow_4 = qpp::schmidtcoeffs(psi_not_product, { _2_pow_n, _2_pow_m }).cwiseAbs2().squaredNorm();
+        EXPECT_COMPLEX_CLOSE(trace_rhoA_2, sum_lambda_i_pow_4, 1e-12);
+        EXPECT_COMPLEX_CLOSE(trace_rhoB_2, sum_lambda_i_pow_4, 1e-12);
+    }
+}
