@@ -372,3 +372,34 @@ TEST(chapter2_5, reduced_density_operator_of_product_state)
         EXPECT_COMPLEX_CLOSE(trace_rhoB_2, sum_lambda_i_pow_4, 1e-12);
     }
 }
+
+//! @brief Equations 2.207 through 2.211
+TEST(chapter2_5, purification)
+{
+    qpp_e::maths::seed(3u);
+
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const rhoA = qpp::randrho(_2_pow_n);
+
+    EXPECT_COMPLEX_NOT_CLOSE((rhoA * rhoA).trace(), 1., 1e-2);
+
+    auto const [p, iA] = qpp::heig(rhoA);
+
+    auto const AR = std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::VectorXcd::Zero(_2_pow_n * _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (std::sqrt(p[i]) * qpp::kron(iA.col(i), Eigen::VectorXcd::Unit(_2_pow_n, i))).eval();
+    });
+
+    auto const rhoAR = qpp::prj(AR);
+    expect_density_operator(rhoAR, 1e-12);
+
+    auto const rho = qpp::ptrace2(rhoAR, { _2_pow_n, _2_pow_n });
+    EXPECT_MATRIX_CLOSE(rho, rhoA, 1e-12);
+}
