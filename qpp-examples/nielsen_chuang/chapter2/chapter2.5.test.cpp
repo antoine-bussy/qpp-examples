@@ -477,3 +477,50 @@ TEST(chapter2_5, same_schmidt_coefficients)
         std::cerr << "Y:\n" << qpp::disp(Y.transpose()) << "\n\n";
     }
 }
+
+//! @brief Exercice 2.81
+TEST(chapter2_5, freedom_in_purifications)
+{
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const rhoA = qpp::randrho(_2_pow_n);
+    EXPECT_COMPLEX_NOT_CLOSE((rhoA * rhoA).trace(), 1., 1e-2);
+
+    auto const iR = qpp::randU(_2_pow_n);
+    auto const [p, iA] = qpp::heig(rhoA);
+
+    auto const AR = std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::VectorXcd::Zero(_2_pow_n * _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (std::sqrt(p[i]) * qpp::kron(iA.col(i), iR.col(i))).eval();
+    });
+
+    auto const rhoAR = qpp::prj(AR);
+    expect_density_operator(rhoAR, 1e-12);
+
+    auto const rho = qpp::ptrace2(rhoAR, { _2_pow_n, _2_pow_n });
+    EXPECT_MATRIX_CLOSE(rho, rhoA, 1e-12);
+
+    /* Matrix X only depends on rhoA */
+    auto const X = (iA * p.cwiseSqrt().asDiagonal()).eval();
+
+    /* With Ur as the matrix of basis iR, we have Y = (Ia x Ur) AR */
+    auto const Y = (qpp::kron(Eigen::MatrixXcd::Identity(_2_pow_n,_2_pow_n), iR.adjoint()) * AR).eval();
+    auto const Y_reshaped = Y.reshaped(_2_pow_n,_2_pow_n);
+
+    /* After reshaping and transposition on Y, we have X = Y */
+    EXPECT_MATRIX_CLOSE(X, Y_reshaped.transpose(), 1e-12);
+    /* Therefore, for any purification AR1 and AR2, we have: X = (Ia x Ur1) AR1 = (Ia x Ur2) AR2 */
+
+    if constexpr (print_text)
+    {
+        std::cerr << "X:\n" << qpp::disp(X) << "\n\n";
+        std::cerr << "Y_reshaped:\n" << qpp::disp(Y_reshaped.transpose()) << "\n";
+    }
+
+}
