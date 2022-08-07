@@ -440,3 +440,40 @@ TEST(chapter2_5, schmidt_decomposition_two_qubits)
         }
     }
 }
+
+//! @brief Exercice 2.80
+TEST(chapter2_5, same_schmidt_coefficients)
+{
+    auto constexpr n = 5u;
+    auto constexpr m = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+
+    auto const psi = qpp::randket(_2_pow_n * _2_pow_m);
+    auto const [schmidt_basisA, schmidt_basisB, schmidt_coeffs, schmidt_probs] = qpp::schmidt(psi, { _2_pow_n, _2_pow_m });
+    EXPECT_EQ(schmidt_coeffs.size(), std::min(_2_pow_n, _2_pow_m));
+
+    /* Vector X only depends on Schmidt coefficients */
+    auto const X = qpp::kron(schmidt_coeffs.cast<Eigen::dcomplex>(), Eigen::VectorXcd::Unit(1u + std::min(_2_pow_n, _2_pow_m), 0u)).eval();
+    /* With U = schmidt_basisA.adjoint() and V = schmidt_basisB.adjoint(), we have Y = (U x V) * psi */
+    auto const Y = (qpp::kron(schmidt_basisA.adjoint(), schmidt_basisB.adjoint()) * psi).eval();
+
+    EXPECT_MATRIX_CLOSE(schmidt_basisA * schmidt_basisA.adjoint(), Eigen::MatrixXcd::Identity(_2_pow_n, _2_pow_n), 1e-12);
+    EXPECT_MATRIX_CLOSE(schmidt_basisB * schmidt_basisB.adjoint(), Eigen::MatrixXcd::Identity(_2_pow_m, _2_pow_m), 1e-12);
+
+    /* With some padding on X, we have X = Y */
+    EXPECT_MATRIX_CLOSE(X, Y.head(X.size()), 1e-12);
+    EXPECT_TRUE(Y.tail(Y.size() - X.size()).isZero(1e-12));
+    /* Therefore, for any psi1 and psi2 with the same Schmidt coefficients, we have: X = (U1 x V1) * psi1 = (U2 x V2) * psi2 */
+
+    if constexpr (print_text)
+    {
+        std::cerr << "State:\n" << qpp::disp(psi) << "\n";
+        std::cerr << "Schmidt Basis A:\n" << qpp::disp(schmidt_basisA) << "\n";
+        std::cerr << "Schmidt Basis B:\n" << qpp::disp(schmidt_basisB) << "\n";
+        std::cerr << "Schmidt Coeffs:\n" << qpp::disp(schmidt_coeffs) << "\n";
+        std::cerr << "Schmidt Probs:\n" << qpp::disp(schmidt_probs) << "\n";
+        std::cerr << "X:\n" << qpp::disp(X.transpose()) << "\n";
+        std::cerr << "Y:\n" << qpp::disp(Y.transpose()) << "\n\n";
+    }
+}
