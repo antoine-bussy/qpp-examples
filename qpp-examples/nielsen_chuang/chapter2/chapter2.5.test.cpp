@@ -403,3 +403,40 @@ TEST(chapter2_5, purification)
     auto const rho = qpp::ptrace2(rhoAR, { _2_pow_n, _2_pow_n });
     EXPECT_MATRIX_CLOSE(rho, rhoA, 1e-12);
 }
+
+//! @brief Exercice 2.79
+TEST(chapter2_5, schmidt_decomposition_two_qubits)
+{
+    using namespace qpp::literals;
+    auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
+
+    auto const states = std::array
+    {
+        (inv_sqrt2 * (00_ket + 11_ket)).eval(),
+        (0.5 * (00_ket + 01_ket + 10_ket + 11_ket)).eval(),
+        (std::numbers::inv_sqrt3 * (00_ket + 01_ket + 10_ket)).eval(),
+    };
+
+    for(auto&& state : states)
+    {
+        auto const [schmidt_basisA, schmidt_basisB, schmidt_coeffs, schmidt_probs] = qpp::schmidt(state);
+
+        EXPECT_EQ(schmidt_coeffs.size(), 2);
+        EXPECT_COMPLEX_CLOSE(schmidt_coeffs.squaredNorm(), 1., 1e-12);
+        EXPECT_GE(schmidt_coeffs.minCoeff(), -1e-12);
+
+        auto const verification_state = (schmidt_coeffs[0] * qpp::kron(schmidt_basisA.col(0), schmidt_basisB.col(0))
+                                    +schmidt_coeffs[1] * qpp::kron(schmidt_basisA.col(1), schmidt_basisB.col(1))).eval();
+        EXPECT_MATRIX_CLOSE(state, verification_state, 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << "State:\n" << qpp::disp(state) << "\n";
+            std::cerr << "Schmidt Basis A:\n" << qpp::disp(schmidt_basisA) << "\n";
+            std::cerr << "Schmidt Basis B:\n" << qpp::disp(schmidt_basisB) << "\n";
+            std::cerr << "Schmidt Coeffs:\n" << qpp::disp(schmidt_coeffs) << "\n";
+            std::cerr << "Schmidt Probs:\n" << qpp::disp(schmidt_probs) << "\n";
+            std::cerr << "Verification State:\n" << qpp::disp(verification_state) << "\n\n";
+        }
+    }
+}
