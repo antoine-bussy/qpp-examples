@@ -243,6 +243,7 @@ TEST(chapter2_4, unitary_freedom_density_matrices_1)
 //! @brief Theorem 2.6 and equations 2.166 through 2.174
 TEST(chapter2_4, unitary_freedom_density_matrices_2)
 {
+    using namespace Eigen::indexing;
     qpp_e::maths::seed(15u);
 
     auto constexpr n = 4u;
@@ -270,7 +271,7 @@ TEST(chapter2_4, unitary_freedom_density_matrices_2)
     expect_density_operator(rho_psi, 1e-12);
 
     auto const U = qpp::randU(l).eval();
-    auto const U_partial = U(Eigen::seqN(0, m), Eigen::seqN(0, l));
+    auto const U_partial = U(seqN(0, m), seqN(0, l));
     EXPECT_MATRIX_CLOSE(U_partial * U_partial.adjoint(), Eigen::MatrixXcd::Identity(m, m), 1e-12);
 
     auto const phi = (psi * U_partial).eval();
@@ -396,6 +397,7 @@ TEST(chapter2_4, generalized_bloch_sphere_4)
 //! @brief Exercise 2.73
 TEST(chapter2_4, minimal_ensemble)
 {
+    using namespace Eigen::indexing;
     qpp_e::maths::seed(46u);
 
     auto constexpr n = 4u;
@@ -403,7 +405,7 @@ TEST(chapter2_4, minimal_ensemble)
 
     auto constexpr m = 5u;
     auto constexpr range_m = std::views::iota(0u, m) | std::views::common;
-    auto const _0_m = Eigen::seqN(0, m);
+    auto const _0_m = seqN(0, m);
     auto constexpr policy = std::execution::par;
 
     auto lambda = Eigen::VectorXd::Zero(_2_pow_n).eval();
@@ -413,7 +415,7 @@ TEST(chapter2_4, minimal_ensemble)
     auto const rho = (P * lambda.asDiagonal() * P.adjoint()).eval();
     expect_density_operator(rho, 1e-12);
 
-    auto psi = (P(Eigen::all, _0_m) * lambda(_0_m).cwiseSqrt().asDiagonal() * qpp::randU(m)).eval();
+    auto psi = (P(all, _0_m) * lambda(_0_m).cwiseSqrt().asDiagonal() * qpp::randU(m)).eval();
     auto const p = psi.colwise().squaredNorm().eval();
     psi.colwise().normalize();
     EXPECT_NEAR(p.sum(), 1., 1e-12);
@@ -427,7 +429,7 @@ TEST(chapter2_4, minimal_ensemble)
     auto lambda_inverse = Eigen::VectorXd::Zero(_2_pow_n).eval();
     lambda_inverse(_0_m) = lambda(_0_m).cwiseInverse();
     auto const rho_inverse = (P * lambda_inverse.asDiagonal() * P.adjoint()).eval();
-    EXPECT_MATRIX_CLOSE(rho_inverse * rho * P(Eigen::all, _0_m), P(Eigen::all, _0_m), 1e-12);
+    EXPECT_MATRIX_CLOSE(rho_inverse * rho * P(all, _0_m), P(all, _0_m), 1e-12);
 
     for(auto&& i : range_m)
     {

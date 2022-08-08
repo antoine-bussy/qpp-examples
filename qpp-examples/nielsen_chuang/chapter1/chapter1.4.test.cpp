@@ -32,6 +32,7 @@ TEST(chapter1_4, mket)
 //! @brief Figure 1.14
 TEST(chapter1_4, toffoli_gate)
 {
+    using namespace Eigen::indexing;
     using namespace qpp::literals;
 
     EXPECT_MATRIX_EQ(qpp::gt.TOF * 000_ket, 000_ket);
@@ -50,7 +51,7 @@ TEST(chapter1_4, toffoli_gate)
                 EXPECT_MATRIX_EQ(qpp::gt.TOF * qpp::mket({a, b, c}), qpp::mket({a, b, (c + a * b) % 2}));
 
     auto toffoli_matrix = Eigen::Matrix<qpp::cplx, 8, 8>::Identity().eval();
-    toffoli_matrix(Eigen::lastN(2), Eigen::lastN(2)) = Eigen::Vector4cd{ 0, 1, 1, 0 }.reshaped(2,2);
+    toffoli_matrix(lastN(2), lastN(2)) = Eigen::Vector4cd{ 0, 1, 1, 0 }.reshaped(2,2);
     EXPECT_MATRIX_EQ(qpp::gt.TOF, toffoli_matrix);
     EXPECT_MATRIX_EQ(qpp::gt.TOF * qpp::gt.TOF.adjoint(), (Eigen::Matrix<qpp::cplx, 8, 8>::Identity()));
 

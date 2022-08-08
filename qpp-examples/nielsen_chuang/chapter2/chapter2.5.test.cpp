@@ -29,6 +29,7 @@ namespace
 //! @brief Theorem 2.7 and equation 2.202
 TEST(chapter2_5, schmidt_reduced_density_operator)
 {
+    using namespace Eigen::indexing;
     qpp_e::maths::seed(899u);
 
     auto constexpr n = 4u;
@@ -46,7 +47,7 @@ TEST(chapter2_5, schmidt_reduced_density_operator)
     auto const eigsB = qpp::hevals(rhoB);
 
     EXPECT_TRUE(eigsA.head(_2_pow_n - _2_pow_m).isZero(1e-12));
-    EXPECT_MATRIX_CLOSE(eigsA(Eigen::lastN(_2_pow_m)), eigsB, 1e-12);
+    EXPECT_MATRIX_CLOSE(eigsA(lastN(_2_pow_m)), eigsB, 1e-12);
 
     EXPECT_GE(eigsA.minCoeff(), -1e-12);
     EXPECT_GE(eigsB.minCoeff(), -1e-12);
@@ -569,6 +570,8 @@ TEST(chapter2_5, purification_and_measurement)
 //! @brief Exercice 2.82, part 3
 TEST(chapter2_5, purification_and_measurement_3)
 {
+    using namespace Eigen::indexing;
+
     qpp_e::maths::seed(798u);
 
     auto constexpr n = 3u;
@@ -610,13 +613,13 @@ TEST(chapter2_5, purification_and_measurement_3)
         auto const& st = resulting_state[i];
         auto const [pi, iAi] = qpp::heig(st);
         EXPECT_MATRIX_CLOSE(pi, Eigen::VectorXd::Unit(_2_pow_n, _2_pow_n-1), 1e-12);
-        EXPECT_COLLINEAR(iAi(Eigen::all,Eigen::last), iA.col(i), 1e-12);
+        EXPECT_COLLINEAR(iAi(all,last), iA.col(i), 1e-12);
 
         if constexpr (print_text)
         {
             std::cerr << ">> pi: " << qpp::disp(pi.transpose()) << "\n";
             std::cerr << ">> iA, last col: " << qpp::disp(iA.col(i).transpose()) << "\n";
-            std::cerr << ">> iAi, ith col: " << qpp::disp(iAi(Eigen::all,Eigen::last).transpose()) << "\n\n";
+            std::cerr << ">> iAi, ith col: " << qpp::disp(iAi(all,last).transpose()) << "\n\n";
         }
     }
 }
