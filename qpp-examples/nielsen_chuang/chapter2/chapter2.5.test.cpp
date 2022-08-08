@@ -522,10 +522,9 @@ TEST(chapter2_5, freedom_in_purifications)
         std::cerr << "X:\n" << qpp::disp(X) << "\n\n";
         std::cerr << "Y_reshaped:\n" << qpp::disp(Y_reshaped.transpose()) << "\n";
     }
-
 }
 
-//! @brief Exercice 2.82, part 1
+//! @brief Exercice 2.82, part 1 & 2
 TEST(chapter2_5, purification_and_measurement)
 {
     auto constexpr n = 3u;
@@ -564,5 +563,60 @@ TEST(chapter2_5, purification_and_measurement)
         auto const [resultA, probabilitiesA, resulting_stateA] = qpp::measure(resulting_state[i], iA);
         EXPECT_MATRIX_CLOSE(Eigen::VectorXd::Map(probabilitiesA.data(), probabilitiesA.size()), Eigen::VectorXd::Unit(probabilitiesA.size(), i), 1e-12);
         EXPECT_MATRIX_CLOSE(resulting_stateA[i], qpp::prj(iA.col(i)), 1e-12);
+    }
+}
+
+//! @brief Exercice 2.82, part 3
+TEST(chapter2_5, purification_and_measurement_3)
+{
+    qpp_e::maths::seed(798u);
+
+    auto constexpr n = 3u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const rhoA = qpp::randrho(_2_pow_n);
+    EXPECT_COMPLEX_NOT_CLOSE((rhoA * rhoA).trace(), 1., 1e-2);
+
+    auto const iR = qpp::randU(_2_pow_n);
+    auto const [p, iA] = qpp::heig(rhoA);
+
+    auto const AR = std::transform_reduce(policy, range.begin(), range.end()
+        , Eigen::VectorXcd::Zero(_2_pow_n * _2_pow_n).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (std::sqrt(p[i]) * qpp::kron(iA.col(i), iR.col(i))).eval();
+    });
+
+    auto const rhoAR = qpp::prj(AR);
+    expect_density_operator(rhoAR, 1e-12);
+
+    /* Part 3 */
+    auto const [result, probabilities, resulting_state] = qpp::measure(rhoAR, iR, { 1u }, { _2_pow_n, _2_pow_n }, true);
+
+    EXPECT_MATRIX_CLOSE(Eigen::VectorXd::Map(probabilities.data(), probabilities.size()), p, 1e-12);
+
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> p: " << qpp::disp(p.transpose()) << "\n";
+        std::cerr << ">> Probabilities: " << qpp::disp(probabilities, ", ") << "\n\n";
+    }
+
+    for (auto&& i : range)
+    {
+        auto const& st = resulting_state[i];
+        auto const [pi, iAi] = qpp::heig(st);
+        EXPECT_MATRIX_CLOSE(pi, Eigen::VectorXd::Unit(_2_pow_n, _2_pow_n-1), 1e-12);
+        EXPECT_COLLINEAR(iAi(Eigen::all,Eigen::last), iA.col(i), 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> pi: " << qpp::disp(pi.transpose()) << "\n";
+            std::cerr << ">> iA, last col: " << qpp::disp(iA.col(i).transpose()) << "\n";
+            std::cerr << ">> iAi, ith col: " << qpp::disp(iAi(Eigen::all,Eigen::last).transpose()) << "\n\n";
+        }
     }
 }
