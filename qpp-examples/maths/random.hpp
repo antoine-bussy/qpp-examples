@@ -14,7 +14,7 @@ namespace qpp_e::maths
         return qpp::RandomDevices::get_instance().get_prng().seed(seq);
     }
 
-    inline auto seed(unsigned int s)
+    inline auto seed(unsigned int s = std::time(0))
     {
         std::srand(s);
         return qpp_seed(s);
