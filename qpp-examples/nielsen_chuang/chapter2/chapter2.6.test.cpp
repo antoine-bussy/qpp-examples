@@ -12,6 +12,20 @@ namespace
     auto constexpr print_text = false;
 }
 
+namespace
+{
+    //! @brief Compute mean and variance
+    auto statistics(qpp_e::maths::Matrix auto const& M, qpp_e::maths::Matrix auto const& state)
+    {
+        auto const mean = state.dot(M * state);
+        EXPECT_NEAR(mean.imag(), 0., 1e-12);
+        auto const variance = state.dot(M * M * state) - mean * mean;
+        EXPECT_GE(variance.real(), -1e-12);
+        EXPECT_NEAR(variance.imag(), 0., 1e-12);
+        return std::tuple{ mean.real(), variance.real(), std::sqrt(std::max(variance.real(), 0.)) };
+    }
+}
+
 //! @brief Box 2.7 and equations 2.213 through 2.217
 TEST(chapter2_6, anti_correlations)
 {
@@ -82,4 +96,30 @@ TEST(chapter2_6, anti_correlations)
         std::cerr << ">> alt_state: " << qpp::disp(det * ab_state.transpose()) << '\n';
         std::cerr << ">> det: " << det << ", norm: " << std::norm(det) << "\n";
     }
+}
+
+//! @brief Equations 2.226 through 2.230
+TEST(chapter2_6, bell_inequality)
+{
+    auto constexpr sqrt2 = std::numbers::sqrt2;
+    auto constexpr inv_sqrt2 = 0.5 * sqrt2;
+
+    auto const state = qpp::st.b11;
+
+    auto const Q = qpp::gt.Z;
+    auto const R = qpp::gt.X;
+    auto const S = (-inv_sqrt2 * (qpp::gt.Z + qpp::gt.X)).eval();
+    auto const T = ( inv_sqrt2 * (qpp::gt.Z - qpp::gt.X)).eval();
+
+    auto const [mean_QS, variance_QS, std_QS] = statistics(qpp::kron(Q,S), state);
+    auto const [mean_RT, variance_RT, std_RT] = statistics(qpp::kron(R,T), state);
+    auto const [mean_RS, variance_RS, std_RS] = statistics(qpp::kron(R,S), state);
+    auto const [mean_QT, variance_QT, std_QT] = statistics(qpp::kron(Q,T), state);
+
+    EXPECT_NEAR(mean_QS, inv_sqrt2, 1e-12);
+    EXPECT_NEAR(mean_RS, inv_sqrt2, 1e-12);
+    EXPECT_NEAR(mean_RT, inv_sqrt2, 1e-12);
+    EXPECT_NEAR(mean_QT,-inv_sqrt2, 1e-12);
+
+    EXPECT_NEAR(mean_QS + mean_RS + mean_RT - mean_QT, 2 * sqrt2, 1e-12);
 }
