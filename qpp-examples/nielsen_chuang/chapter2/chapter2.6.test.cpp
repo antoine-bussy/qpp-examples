@@ -123,3 +123,33 @@ TEST(chapter2_6, bell_inequality)
 
     EXPECT_NEAR(mean_QS + mean_RS + mean_RT - mean_QT, 2 * sqrt2, 1e-12);
 }
+
+//! @brief Problem 2.1
+//! @details The problem is poorly worded, missing hypothesis and definitions
+//! @see https://math.stackexchange.com/questions/1049553/function-of-pauli-matrices
+TEST(chapter2_6, functions_pauli_matrices)
+{
+    qpp_e::maths::seed();
+
+    auto const n = Eigen::Vector3d::Random().normalized().eval();
+    auto const n_dot_sigma = (n[0] * qpp::gt.X + n[1] * qpp::gt.Y + n[2] * qpp::gt.Z).eval();
+
+    auto const [evals, evects] = qpp::heig(n_dot_sigma);
+    EXPECT_MATRIX_CLOSE(evals, Eigen::Vector2d(-1, 1), 1e-12);
+
+    auto const e1 = evects.col(1);
+    auto const e2 = evects.col(0);
+
+    auto const e1_e1 = (e1 * e1.adjoint()).eval();
+    auto const e2_e2 = (e2 * e2.adjoint()).eval();
+
+    EXPECT_MATRIX_CLOSE(n_dot_sigma, e1_e1 - e2_e2, 1e-12);
+    EXPECT_MATRIX_CLOSE(Eigen::Matrix2cd::Identity(), e1_e1 + e2_e2, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> n_dot_sigma:\n" << qpp::disp(n_dot_sigma) << "\n\n";
+        std::cerr << ">> e1_e1:\n" << qpp::disp(e1_e1) << "\n\n";
+        std::cerr << ">> e2_e2:\n" << qpp::disp(e2_e2) << "\n\n";
+    }
+}
