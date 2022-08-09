@@ -2,9 +2,11 @@
 #include <gmock/gmock.h>
 
 #include <qpp/qpp.h>
+#include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
 
+#include <execution>
 #include <numbers>
 
 namespace
@@ -23,6 +25,14 @@ namespace
         EXPECT_GE(variance.real(), -1e-12);
         EXPECT_NEAR(variance.imag(), 0., 1e-12);
         return std::tuple{ mean.real(), variance.real(), std::sqrt(std::max(variance.real(), 0.)) };
+    }
+
+    //! @brief Characterization of density operator from theorem 2.5
+    auto expect_density_operator(qpp_e::maths::Matrix auto const& rho, qpp_e::maths::RealNumber auto const& precision)
+    {
+        EXPECT_COMPLEX_CLOSE(rho.trace(), 1., precision);
+        EXPECT_MATRIX_CLOSE(rho.adjoint(), rho, precision);
+        EXPECT_GE(qpp::hevals(rho).minCoeff(), -precision);
     }
 }
 
@@ -151,5 +161,55 @@ TEST(chapter2_6, functions_pauli_matrices)
         std::cerr << ">> n_dot_sigma:\n" << qpp::disp(n_dot_sigma) << "\n\n";
         std::cerr << ">> e1_e1:\n" << qpp::disp(e1_e1) << "\n\n";
         std::cerr << ">> e2_e2:\n" << qpp::disp(e2_e2) << "\n\n";
+    }
+}
+
+//! @brief Problem 2.2, part (1)
+TEST(chapter2_6, properties_of_the_schmidt_number_1)
+{
+    qpp_e::maths::seed(974u);
+
+    auto constexpr n = 4u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr m = 3u;
+    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    ASSERT_GE(n, m);
+    auto constexpr range_m = std::views::iota(0u, _2_pow_m) | std::views::common;
+    auto constexpr policy = std::execution::par;
+
+    auto const iA = qpp::randU(_2_pow_n);
+    auto const iB = qpp::randU(_2_pow_m);
+
+    auto const mask = Eigen::VectorX<bool>::Random(_2_pow_n).eval();
+    auto const lambda = Eigen::VectorXd::Random(_2_pow_n).cwiseProduct(mask.cast<double>()).normalized().eval();
+
+    auto const psi = std::transform_reduce(policy, range_m.begin(), range_m.end()
+        , Eigen::VectorXcd::Zero(_2_pow_n * _2_pow_m).eval()
+        , std::plus<>{}
+        , [&](auto&& i)
+    {
+        return (lambda[i] * qpp::kron(iA.col(i), iB.col(i))).eval();
+    });
+
+    auto const [schmidt_basisA, schmidt_basisB, schmidt_coeffs, schmidt_probs] = qpp::schmidt(psi, { _2_pow_n, _2_pow_m });
+    auto const schmidt_number = (schmidt_coeffs.array() > 1e-12).count();
+
+    /* psi is a pure state */
+    auto const rho = qpp::prj(psi);
+    auto const rhoA = qpp::ptrace2(rho, { _2_pow_n, _2_pow_m });
+    expect_density_operator(rhoA, 1e-12);
+
+    auto const rank = rhoA.bdcSvd().setThreshold(1e-12).rank();
+    EXPECT_EQ(rank, schmidt_number);
+
+    if constexpr (print_text)
+    {
+        std::cerr << "lambda:\n" << qpp::disp(lambda) << "\n";
+        std::cerr << "psi:\n" << qpp::disp(psi) << "\n";
+        std::cerr << "Schmidt Basis A:\n" << qpp::disp(schmidt_basisA) << "\n";
+        std::cerr << "Schmidt Basis B:\n" << qpp::disp(schmidt_basisB) << "\n";
+        std::cerr << "Schmidt Coeffs:\n" << qpp::disp(schmidt_coeffs) << "\n";
+        std::cerr << "Schmidt Probs:\n" << qpp::disp(schmidt_probs) << "\n";
+        std::cerr << "Schmidt Number:\n" << schmidt_number << "\n";
     }
 }
