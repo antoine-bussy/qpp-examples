@@ -213,3 +213,57 @@ TEST(chapter2_6, properties_of_the_schmidt_number_1)
         std::cerr << "Schmidt Number:\n" << schmidt_number << "\n";
     }
 }
+
+//! @brief Problem 2.2, part (2)
+TEST(chapter2_6, properties_of_the_schmidt_number_2)
+{
+    for (auto&& s : {1660140020u, 1660140083u})
+    {
+        qpp_e::maths::seed(s);
+
+        auto constexpr N = 40u;
+        auto constexpr M = 27u;
+        ASSERT_GE(N, M);
+        auto constexpr range_M = std::views::iota(0u, M) | std::views::common;
+
+        auto constexpr n = 4u;
+        auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+        auto constexpr m = 3u;
+        auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+        auto constexpr policy = std::execution::par;
+
+        auto const alpha = Eigen::MatrixXcd::Random(_2_pow_n, N).eval();
+        auto const beta = Eigen::MatrixXcd::Random(_2_pow_m, M).eval();
+
+        auto const mask_zero = Eigen::ArrayX<bool>::Random(M).eval();
+        auto non_zero_alpha_beta = std::atomic{ 0u };
+
+        auto const psi = std::transform_reduce(policy, range_M.begin(), range_M.end()
+            , Eigen::VectorXcd::Zero(_2_pow_n * _2_pow_m).eval()
+            , std::plus<>{}
+            , [&](auto&& i)
+        {
+            if (mask_zero[i])
+                return Eigen::VectorXcd::Zero(_2_pow_n * _2_pow_m).eval();
+
+            auto const alpha_beta = (qpp::kron(alpha.col(i), beta.col(i))).col(0).eval();
+            if (alpha_beta.isZero(1e-12))
+                return Eigen::VectorXcd::Zero(_2_pow_n * _2_pow_m).eval();
+
+            ++non_zero_alpha_beta;
+            return alpha_beta;
+        });
+
+        auto const [schmidt_basisA, schmidt_basisB, schmidt_coeffs, schmidt_probs] = qpp::schmidt(psi, { _2_pow_n, _2_pow_m });
+        auto const schmidt_number = (schmidt_coeffs.array() > 1e-12).count();
+
+        EXPECT_GE(non_zero_alpha_beta, schmidt_number);
+
+        if constexpr (print_text)
+        {
+            std::cerr << "Schmidt Number:\n" << schmidt_number << "\n";
+            std::cerr << "Non-zero alpha*beta:\n" << non_zero_alpha_beta << "\n";
+            std::cerr << "N: " << N << ", M: " << M << "\n";
+        }
+    }
+}
