@@ -267,3 +267,77 @@ TEST(chapter2_6, properties_of_the_schmidt_number_2)
         }
     }
 }
+
+//! @brief Problem 2.2, part (3)
+TEST(chapter2_6, properties_of_the_schmidt_number_3)
+{
+    qpp_e::maths::seed();
+
+    auto constexpr n = 5u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr m = 4u;
+    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    ASSERT_GE(n, m);
+    auto constexpr policy = std::execution::par;
+
+    auto const iA = qpp::randU(_2_pow_n);
+    auto const iB = qpp::randU(_2_pow_m);
+
+    auto constexpr j_phi = 9u;
+    auto constexpr j_gamma = 6u;
+    auto constexpr j_common = 5u;
+
+    ASSERT_GE(_2_pow_m, j_phi);
+    ASSERT_GE(j_phi, j_gamma);
+
+    ASSERT_GE(j_phi, j_common);
+    ASSERT_GE(j_gamma, j_common);
+    auto constexpr d_phi = j_phi - j_common;
+    auto constexpr d_gamma = j_gamma - j_common;
+    ASSERT_GE(_2_pow_m, j_common + d_phi + d_gamma);
+
+    auto const lambda = Eigen::VectorXd::Random(_2_pow_m).eval();
+    auto const schmidt_compose = [&](auto&& start, auto&& end)
+    {
+        auto const range = std::views::iota(start, end) | std::views::common;
+        return std::transform_reduce(policy, range.begin(), range.end()
+            , Eigen::VectorXcd::Zero(_2_pow_n * _2_pow_m).eval()
+            , std::plus<>{}
+            , [&](auto&& i)
+        {
+            return (lambda[i] * qpp::kron(iA.col(i), iB.col(i))).eval();
+        });
+    };
+
+    /* It's difficult to get a meaningfull example, so we artificially build one */
+    /* Compute a common part of a schmidt-like decomposition */
+    auto const state_common = schmidt_compose(0u, j_common);
+    /* Use it for alpha*phi and add another part of schmidt-like decomposition */
+    auto const alpha_phi = (state_common + schmidt_compose(j_common, j_common + d_phi)).eval();
+    /* Use it (negatively) for beta*gamma and add another part of schmidt-like decomposition */
+    auto const beta_gamma = (-state_common + schmidt_compose(_2_pow_m - d_gamma, _2_pow_m)).eval();
+
+    /* The common part cancels out, so that the difference of schmidt number between phi and gamma is not trivial (0),
+    and neither is psi, i.e. not _2_pow_m. */
+    auto const psi = (alpha_phi + beta_gamma).normalized().eval();
+
+    auto const schmidt_number = [&](auto&& state)
+    {
+        auto const schmidt_coeffs = qpp::schmidtcoeffs(state, { _2_pow_n, _2_pow_m });
+        return (schmidt_coeffs.array() > 1e-12).count();
+    };
+
+    auto const phi_schmidt_number = schmidt_number(alpha_phi.normalized().eval());
+    auto const gamma_schmidt_number = schmidt_number(beta_gamma.normalized().eval());
+    auto const psi_schmidt_number = schmidt_number(psi);
+
+    EXPECT_GE(psi_schmidt_number, std::abs(phi_schmidt_number - gamma_schmidt_number));
+
+    if constexpr (print_text)
+    {
+        std::cerr << "Schmidt Number phi  : " << phi_schmidt_number << "\n";
+        std::cerr << "Schmidt Number gamma: " << gamma_schmidt_number << "\n";
+        std::cerr << "Schmidt Number psi  : " << psi_schmidt_number << "\n";
+    }
+
+}
