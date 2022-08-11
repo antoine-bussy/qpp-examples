@@ -20,13 +20,13 @@ class QppExamplesConan(ConanFile):
     short_paths = True
 
     def requirements(self):
-        self.requires("tbb/2020.3@")
+        self.requires("onetbb/2021.3.0@")
 
     def build_requirements(self):
         self.build_requires("qpp/main@local/snapshot", force_host_context=True)
-        self.build_requires("cmake/3.21.1@")
+        self.build_requires("cmake/3.24.0@")
         if "Ninja" in os.environ.get('CONAN_CMAKE_GENERATOR', ""):
-            self.build_requires("ninja/1.10.2@")
+            self.build_requires("ninja/1.11.0@")
         self.build_requires("gtest/cci.20210126@", force_host_context=True)
 
     default_user = "a-bussy"

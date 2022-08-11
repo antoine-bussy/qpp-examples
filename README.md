@@ -11,13 +11,12 @@ Nielsen, M., & Chuang, I. (2010). *Quantum Computation and Quantum Information: 
 
 ## Installation instructions
 
-Build has only been tested under Ubuntu 20.04 with g++-10
+Build has only been tested under Ubuntu 22.04 with g++-12
 
-Install g++-10, as root
+Install g++-12, as root
 ```bash
-apt install g++-10
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 90
+apt install g++-12
+update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 120
 ```
 Install pip and Conan, as root
 ```bash

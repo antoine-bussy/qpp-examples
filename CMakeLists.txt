@@ -11,7 +11,7 @@ message(STATUS "${CMAKE_PROJECT_NAME} Version: ${CMAKE_PROJECT_VERSION}")
 math(EXPR bits "8*${CMAKE_SIZEOF_VOID_P}")
 message(STATUS "Target is ${bits} bits")
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set(CMAKE_DEBUG_POSTFIX d)
@@ -21,7 +21,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(qpp REQUIRED)
 find_package(GTest REQUIRED)
-find_package(TBB 2020.3 REQUIRED)
+find_package(TBB 2021.3 REQUIRED)
 find_package(OpenMP REQUIRED)
 
 enable_testing()

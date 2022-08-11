@@ -4,6 +4,8 @@
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
 
+#include <ranges>
+
 namespace
 {
     auto constexpr print_text = false;

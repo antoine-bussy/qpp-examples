@@ -2,8 +2,8 @@
 #include <gmock/gmock.h>
 
 #include <qpp/qpp.h>
-#include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
+#include <qpp-examples/maths/gtest_macros.hpp>
 
 #include <numbers>
 

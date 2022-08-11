@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <ranges>
-#include <numbers>
-
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
+
+#include <numbers>
+#include <ranges>
 
 namespace
 {
