@@ -376,3 +376,46 @@ TEST(chapter2_6, kron_product_mixed_product)
         std::cerr << "(AC) x (BD) Eigen:\n" << qpp::disp(ACxBD_eigen) << "\n\n";
     }
 }
+
+//! @brief Problem 2.3
+TEST(chapter2_6, tsierelson_inequality)
+{
+    qpp_e::maths::seed();
+
+    auto constexpr n = 2u;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+
+    auto const observable = []
+    {
+        auto const v = Eigen::Vector3d::Random().normalized().eval();
+        return (v[0] * qpp::gt.X + v[1] * qpp::gt.Y + v[2] * qpp::gt.Z).eval();
+    };
+
+    auto const Q = observable();
+    auto const R = observable();
+    auto const S = observable();
+    auto const T = observable();
+
+    auto const lie_bracket = [](auto&& A, auto&& B)
+    {
+        return (A * B - B * A).eval();
+    };
+
+    auto const M = (qpp::kron(Q, S) + qpp::kron(R, S) + qpp::kron(R, T) - qpp::kron(Q, T)).eval();
+    auto const M2 = (M * M).eval();
+    auto const N = (4. * Eigen::Matrix<Eigen::dcomplex, _2_pow_n, _2_pow_n>::Identity() + qpp::kron(lie_bracket(Q,R), lie_bracket(S,T))).eval();
+
+    EXPECT_MATRIX_CLOSE(M2, N, 1e-12);
+
+    auto const [mean, variance, STD] = statistics(M, qpp::randket(_2_pow_n));
+
+    EXPECT_LE(mean, 2. * std::numbers::sqrt2 + 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << "M * M:\n" << qpp::disp(M2) << "\n\n";
+        std::cerr << "N:\n" << qpp::disp(N) << "\n\n";
+        std::cerr << "mean: " << mean << "\n";
+        std::cerr << "2*sqrt(2): " << 2. * std::numbers::sqrt2 << "\n";
+    }
+}
