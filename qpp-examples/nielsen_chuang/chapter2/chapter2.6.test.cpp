@@ -6,6 +6,8 @@
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
 
+#include <unsupported/Eigen/KroneckerProduct>
+
 #include <execution>
 #include <numbers>
 #include <ranges>
@@ -340,5 +342,37 @@ TEST(chapter2_6, properties_of_the_schmidt_number_3)
         std::cerr << "Schmidt Number gamma: " << gamma_schmidt_number << "\n";
         std::cerr << "Schmidt Number psi  : " << psi_schmidt_number << "\n";
     }
+}
 
+//! @brief Check that (A x B)(C x D) = (AC) x (BD)
+TEST(chapter2_6, kron_product_mixed_product)
+{
+    qpp_e::maths::seed();
+
+    auto constexpr n = 2u;
+
+    auto const A = Eigen::Matrix<Eigen::dcomplex, n, n>::Random().eval();
+    auto const B = Eigen::Matrix<Eigen::dcomplex, n, n>::Random().eval();
+    auto const C = Eigen::Matrix<Eigen::dcomplex, n, n>::Random().eval();
+    auto const D = Eigen::Matrix<Eigen::dcomplex, n, n>::Random().eval();
+
+    auto const AxB_CxD = (qpp::kron(A,B) * qpp::kron(C,D)).eval();
+    auto const ACxBD = qpp::kron((A*C).eval(),(B*D).eval());
+
+    auto const AxB_CxD_eigen = (Eigen::kroneckerProduct(A,B) * Eigen::kroneckerProduct(C,D)).eval();
+    auto const ACxBD_eigen = Eigen::kroneckerProduct((A*C).eval(),(B*D).eval());
+
+    EXPECT_MATRIX_CLOSE(AxB_CxD, ACxBD, 1e-12);
+    EXPECT_MATRIX_CLOSE(AxB_CxD_eigen, ACxBD_eigen, 1e-12);
+
+    EXPECT_MATRIX_CLOSE(AxB_CxD, AxB_CxD_eigen, 1e-12);
+    EXPECT_MATRIX_CLOSE(ACxBD, ACxBD_eigen, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << "(A x B)(C x D):\n" << qpp::disp(AxB_CxD) << "\n\n";
+        std::cerr << "(AC) x (BD):\n" << qpp::disp(ACxBD) << "\n\n";
+        std::cerr << "(A x B)(C x D) Eigen:\n" << qpp::disp(AxB_CxD_eigen) << "\n\n";
+        std::cerr << "(AC) x (BD) Eigen:\n" << qpp::disp(ACxBD_eigen) << "\n\n";
+    }
 }
