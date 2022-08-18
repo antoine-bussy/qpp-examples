@@ -360,7 +360,7 @@ TEST(chapter2_6, kron_product_mixed_product)
     auto const ACxBD = qpp::kron((A*C).eval(),(B*D).eval());
 
     auto const AxB_CxD_eigen = (Eigen::kroneckerProduct(A,B) * Eigen::kroneckerProduct(C,D)).eval();
-    auto const ACxBD_eigen = Eigen::kroneckerProduct((A*C).eval(),(B*D).eval());
+    auto const ACxBD_eigen = Eigen::kroneckerProduct((A*C).eval(),(B*D).eval()).eval();
 
     EXPECT_MATRIX_CLOSE(AxB_CxD, ACxBD, 1e-12);
     EXPECT_MATRIX_CLOSE(AxB_CxD_eigen, ACxBD_eigen, 1e-12);
