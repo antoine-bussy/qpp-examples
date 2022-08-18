@@ -61,3 +61,32 @@ TEST(chapter4_2, important_single_qubit_gates)
         std::cerr << ">> T:\n" << qpp::disp(T) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.1
+TEST(chapter4_2, pauli_matrices_eigen_vectors)
+{
+    using namespace std::literals::complex_literals;
+
+    auto const [ lambda_X, v_X ] = qpp::heig(qpp::gt.X);
+    EXPECT_MATRIX_CLOSE(lambda_X, Eigen::Vector2cd(-1., 1.), 1e-12);
+    EXPECT_COLLINEAR(v_X.col(0), Eigen::Vector2cd(-1., 1.), 1e-12);
+    EXPECT_COLLINEAR(v_X.col(1), Eigen::Vector2cd(1., 1.), 1e-12);
+
+    auto const [ lambda_Y, v_Y ] = qpp::heig(qpp::gt.Y);
+    EXPECT_MATRIX_CLOSE(lambda_Y, Eigen::Vector2cd(-1., 1.), 1e-12);
+    EXPECT_COLLINEAR(v_Y.col(0), Eigen::Vector2cd(1., -1i), 1e-12);
+    EXPECT_COLLINEAR(v_Y.col(1), Eigen::Vector2cd(1., 1i), 1e-12);
+
+    auto const [ lambda_Z, v_Z ] = qpp::heig(qpp::gt.Z);
+    EXPECT_MATRIX_CLOSE(lambda_Z, Eigen::Vector2cd(-1., 1.), 1e-12);
+    EXPECT_COLLINEAR(v_Z.col(0), Eigen::Vector2cd(0., 1.), 1e-12);
+    EXPECT_COLLINEAR(v_Z.col(1), Eigen::Vector2cd(1., 0.), 1e-12);
+
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> X: " << qpp::disp(lambda_X.transpose()) << "\n" << qpp::disp(v_X) << "\n\n";
+        std::cerr << ">> Y: " << qpp::disp(lambda_Y.transpose()) << "\n" << qpp::disp(v_Y) << "\n\n";
+        std::cerr << ">> Z: " << qpp::disp(lambda_Z.transpose()) << "\n" << qpp::disp(v_Z) << "\n\n";
+    }
+}
