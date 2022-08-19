@@ -6,6 +6,8 @@
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
 
+#include <unsupported/Eigen/MatrixFunctions>
+
 #include <execution>
 #include <numbers>
 #include <ranges>
@@ -82,11 +84,43 @@ TEST(chapter4_2, pauli_matrices_eigen_vectors)
     EXPECT_COLLINEAR(v_Z.col(0), Eigen::Vector2cd(0., 1.), 1e-12);
     EXPECT_COLLINEAR(v_Z.col(1), Eigen::Vector2cd(1., 0.), 1e-12);
 
-
     if constexpr (print_text)
     {
         std::cerr << ">> X: " << qpp::disp(lambda_X.transpose()) << "\n" << qpp::disp(v_X) << "\n\n";
         std::cerr << ">> Y: " << qpp::disp(lambda_Y.transpose()) << "\n" << qpp::disp(v_Y) << "\n\n";
         std::cerr << ">> Z: " << qpp::disp(lambda_Z.transpose()) << "\n" << qpp::disp(v_Z) << "\n\n";
+    }
+}
+
+//! @brief Equations 4.4 through 4.7 and Exercise 4.2
+TEST(chapter4_2, rotation_operators)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    auto const theta = qpp::rand(0., 4.*pi);
+    auto const cos = std::cos(0.5 * theta);
+    auto const sin = std::sin(0.5 * theta);
+
+    auto const Rx = Eigen::Matrix2cd{{cos, -1.i * sin}, {-1.i * sin, cos}};
+    EXPECT_MATRIX_CLOSE(Rx, qpp::gt.RX(theta), 1e-12);
+    EXPECT_MATRIX_CLOSE(Rx, (-0.5i * theta * qpp::gt.X).exp().eval(), 1e-12);
+    EXPECT_MATRIX_CLOSE(Rx, (cos * qpp::gt.Id2 - 1.i * sin * qpp::gt.X).eval(), 1e-12);
+
+    auto const Ry = Eigen::Matrix2cd{{cos, -1. * sin}, {sin, cos}};
+    EXPECT_MATRIX_CLOSE(Ry, qpp::gt.RY(theta), 1e-12);
+    EXPECT_MATRIX_CLOSE(Ry, (-0.5i * theta * qpp::gt.Y).exp().eval(), 1e-12);
+    EXPECT_MATRIX_CLOSE(Ry, (cos * qpp::gt.Id2 - 1.i * sin * qpp::gt.Y).eval(), 1e-12);
+
+    auto const Rz = Eigen::Vector2cd{ std::exp(-0.5i*theta), std::exp(0.5i*theta) }.asDiagonal().toDenseMatrix();
+    EXPECT_MATRIX_CLOSE(Rz, qpp::gt.RZ(theta), 1e-12);
+    EXPECT_MATRIX_CLOSE(Rz, (-0.5i * theta * qpp::gt.Z).exp().eval(), 1e-12);
+    EXPECT_MATRIX_CLOSE(Rz, (cos * qpp::gt.Id2 - 1.i * sin * qpp::gt.Z).eval(), 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> Rx:\n" << qpp::disp(Rx) << "\n\n";
+        std::cerr << ">> Ry:\n" << qpp::disp(Ry) << "\n\n";
+        std::cerr << ">> Rz:\n" << qpp::disp(Rz) << "\n\n";
     }
 }
