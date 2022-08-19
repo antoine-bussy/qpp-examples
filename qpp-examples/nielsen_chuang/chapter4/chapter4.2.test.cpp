@@ -131,3 +131,21 @@ TEST(chapter4_2, t_rotation_z)
     using namespace std::numbers;
     EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(qpp::gt.T, qpp::gt.RZ(0.25 * pi), 1e-12);
 }
+
+//! @brief Exercise 4.4
+TEST(chapter4_2, h_as_rotations)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    auto constexpr phi = 0.5 * pi;
+
+    auto const H = (std::exp(phi * 1.i) * qpp::gt.RX(phi) * qpp::gt.RZ(phi) * qpp::gt.RX(phi)).eval();
+    EXPECT_MATRIX_CLOSE(H, qpp::gt.H, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> H:\n" << qpp::disp(H) << "\n\n";
+        std::cerr << ">> H (QPP):\n" << qpp::disp(qpp::gt.H) << "\n\n";
+    }
+}
