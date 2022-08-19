@@ -25,3 +25,12 @@ Macros for types comparison with googletest.
 
 //! @brief Collinearity GTest macro
 #define EXPECT_COLLINEAR(actual, expected, precision) EXPECT_PRED3(qpp_e::maths::collinear_l, actual, expected, precision)
+
+//! @brief Phase factor collinearity GTest macro
+#define EXPECT_PHASE_COLLINEAR(actual, expected, precision) EXPECT_PRED3(qpp_e::maths::phase_collinear_l, actual, expected, precision)
+
+//! @brief Matrix closeness GTest macro, up to factor
+#define EXPECT_MATRIX_CLOSE_UP_TO_FACTOR(actual, expected, precision) EXPECT_PRED3(qpp_e::maths::matrix_close_up_to_factor_l, actual, expected, precision)
+
+//! @brief Matrix closeness GTest macro, up to phase factor
+#define EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(actual, expected, precision) EXPECT_PRED3(qpp_e::maths::matrix_close_up_to_phase_factor_l, actual, expected, precision)
