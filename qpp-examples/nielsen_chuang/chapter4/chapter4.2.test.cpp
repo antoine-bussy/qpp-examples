@@ -124,3 +124,10 @@ TEST(chapter4_2, rotation_operators)
         std::cerr << ">> Rz:\n" << qpp::disp(Rz) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.3
+TEST(chapter4_2, t_rotation_z)
+{
+    using namespace std::numbers;
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(qpp::gt.T, qpp::gt.RZ(0.25 * pi), 1e-12);
+}
