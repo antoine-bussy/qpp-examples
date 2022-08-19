@@ -173,3 +173,38 @@ TEST(chapter4_2, generalized_rotations)
         std::cerr << ">> Rtheta:\n" << qpp::disp(Rtheta) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.6
+TEST(chapter4_2, bloch_sphere_interpretation_of_rotations)
+{
+    using namespace std::numbers;
+
+    qpp_e::maths::seed(63u);
+
+    auto constexpr bloch_vector = [](auto&& psi)
+    {
+        auto const theta = 2. * std::acos(std::abs(psi[0]));
+        auto const phi = std::arg(psi[1]) - std::arg(psi[0]);
+
+        return (Eigen::AngleAxisd(phi, Eigen::Vector3d::UnitZ()) * Eigen::AngleAxisd(theta, Eigen::Vector3d::UnitY()) * Eigen::Vector3d::UnitZ()).eval();
+    };
+
+    auto const state = qpp::randket();
+    auto const lambda = bloch_vector(state);
+
+    auto const alpha = qpp::rand(0., 2.*pi);
+    auto const n = Eigen::Vector3d::Random().normalized().eval();
+
+    auto const lambda_rotated_state = bloch_vector((qpp::gt.Rn(alpha, {n[0], n[1], n[2]}) * state).eval());
+    auto const rotated_lambda = (Eigen::AngleAxisd(alpha, n).cast<Eigen::dcomplex>() * lambda).eval();
+
+    EXPECT_MATRIX_CLOSE(lambda_rotated_state, rotated_lambda, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> state: " << qpp::disp(state.transpose()) << "\n";
+        std::cerr << ">> lambda: " << qpp::disp(lambda.transpose()) << "\n";
+        std::cerr << ">> lambda_rotated_state: " << qpp::disp(lambda_rotated_state.transpose()) << "\n";
+        std::cerr << ">> rotated_lambda: " << qpp::disp(rotated_lambda.transpose()) << "\n";
+    }
+}
