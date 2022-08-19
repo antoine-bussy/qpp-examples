@@ -149,3 +149,27 @@ TEST(chapter4_2, h_as_rotations)
         std::cerr << ">> H (QPP):\n" << qpp::disp(qpp::gt.H) << "\n\n";
     }
 }
+
+//! @brief Equation 4.8 and Exercise 4.5
+TEST(chapter4_2, generalized_rotations)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed();
+
+    auto const n = Eigen::Vector3d::Random().normalized().eval();
+    auto const n_dot_sigma = (n[0] * qpp::gt.X + n[1] * qpp::gt.Y + n[2] * qpp::gt.Z).eval();
+    EXPECT_MATRIX_CLOSE((n_dot_sigma * n_dot_sigma).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
+
+    auto const theta = qpp::rand(0., 2.*pi);
+    auto const Rtheta = std::cos(0.5*theta) * qpp::gt.Id2 - 1.i * std::sin(0.5*theta) * n_dot_sigma;
+
+    EXPECT_MATRIX_CLOSE(Rtheta, qpp::gt.Rn(theta, {n[0], n[1], n[2]}), 1e-12);
+    EXPECT_MATRIX_CLOSE(Rtheta, (-0.5i * theta * n_dot_sigma).exp().eval(), 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> Rtheta:\n" << qpp::disp(Rtheta) << "\n\n";
+    }
+}
