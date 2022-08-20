@@ -223,3 +223,82 @@ TEST(chapter4_2, x_y_relation)
     auto const theta = qpp::rand(0., 2.*pi);
     EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.RY(theta) * qpp::gt.X).eval(), qpp::gt.RY(-theta), 1e-12);
 }
+
+//! @brief Exercise 4.8 and Equations 4.9 and 4.10
+TEST(chapter4_2, unitary_matrix_as_rotation)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed(3112u);
+
+    auto constexpr inv_sqrt2 = 0.5 * sqrt2;
+
+    auto constexpr decompose = [](auto&& U)
+    {
+        /* U = exp(iH), with H hermitian */
+        auto const H = Eigen::Matrix2cd{ -1.i * U.log() };
+        EXPECT_MATRIX_CLOSE(H, H.adjoint(), 1e-12);
+
+        auto const alpha_c = 0.5 * H.diagonal().sum();
+        EXPECT_COMPLEX_CLOSE(alpha_c, alpha_c.real(), 1e-12);
+        auto const alpha = std::remainder(alpha_c.real(), 2. * pi);
+
+        auto const H_2 = (H - Eigen::Vector2cd::Constant(alpha_c).asDiagonal().toDenseMatrix()).eval();
+        EXPECT_MATRIX_CLOSE(H_2, H_2.adjoint(), 1e-12);
+        EXPECT_COMPLEX_CLOSE(H_2(1,1), -H_2(0,0), 1e-12);
+
+        auto const H_22 = (H_2 * H_2).eval();
+        EXPECT_TRUE(H_22.isDiagonal(1e-12));
+        EXPECT_COMPLEX_CLOSE(H_22(0,0), H_22(1,1), 1e-12);
+        EXPECT_COMPLEX_CLOSE(H_22(0,0), H_22(0,0).real(), 1e-12);
+        EXPECT_GT(H_22(0,0).real(), -1e-12);
+
+        auto const theta = 2. * std::sqrt(std::abs(H_22(0,0).real()));
+
+        auto const n_dot_sigma = (H_2 / (-0.5 * theta)).eval();
+        EXPECT_MATRIX_CLOSE((n_dot_sigma * n_dot_sigma), Eigen::Matrix2cd::Identity(), 1e-12);
+
+        auto const n = Eigen::Vector3d
+        {
+            n_dot_sigma(1, 0).real(),
+            n_dot_sigma(1, 0).imag(),
+            n_dot_sigma(0, 0).real(),
+        };
+        EXPECT_COMPLEX_CLOSE(n.squaredNorm(), 1., 1.e-12);
+        EXPECT_MATRIX_CLOSE(n_dot_sigma, (n[0] * qpp::gt.X + n[1] * qpp::gt.Y + n[2] * qpp::gt.Z).eval(), 1e-12);
+
+        auto const rotation = (std::exp(1.i * alpha) * qpp::gt.Rn(theta, { n[0], n[1], n[2] })).eval();
+        EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
+            std::cerr << ">> H:\n" << qpp::disp(H) << "\n\n";
+            std::cerr << ">> alpha: " << alpha << "\n\n";
+            std::cerr << ">> H_2:\n" << qpp::disp(H_2) << "\n\n";
+            std::cerr << ">> H_22:\n" << qpp::disp(H_22) << "\n\n";
+            std::cerr << ">> theta: " << theta << "\n\n";
+            std::cerr << ">> n_dot_sigma:\n" << qpp::disp(n_dot_sigma) << "\n\n";
+            std::cerr << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
+            std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
+        }
+
+        return std::tuple{ alpha, theta, n };
+    };
+
+    /* Part 1 */
+    decompose(qpp::randU());
+
+    /* Part 2 */
+    auto const [alpha_H, theta_H, n_H ] = decompose(qpp::gt.H);
+    EXPECT_COMPLEX_CLOSE(alpha_H, 0.5 * pi, 1e-12);
+    EXPECT_COMPLEX_CLOSE(theta_H, pi, 1e-12);
+    EXPECT_MATRIX_CLOSE(n_H, Eigen::Vector3d(inv_sqrt2, 0., inv_sqrt2), 1e-12);
+
+    /* Part 3 */
+    auto const [alpha_S, theta_S, n_S ] = decompose(qpp::gt.S);
+    EXPECT_COMPLEX_CLOSE(alpha_S, 0.25 * pi, 1e-12);
+    EXPECT_COMPLEX_CLOSE(theta_S, 0.5 * pi, 1e-12);
+    EXPECT_MATRIX_CLOSE(n_S, Eigen::Vector3d::UnitZ(), 1e-12);
+}
