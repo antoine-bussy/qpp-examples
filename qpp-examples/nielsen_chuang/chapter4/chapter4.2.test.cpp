@@ -224,6 +224,39 @@ TEST(chapter4_2, x_y_relation)
     EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.RY(theta) * qpp::gt.X).eval(), qpp::gt.RY(-theta), 1e-12);
 }
 
+namespace
+{
+    //! @brief Compute rotation parameters from unitary matrix
+    auto unitary_to_rotation(qpp_e::maths::Matrix auto const& U)
+    {
+        using namespace std::literals::complex_literals;
+        using namespace std::numbers;
+
+        /* U = exp(iH), with H hermitian */
+        auto const H = Eigen::Matrix2cd{ -1.i * U.log() };
+
+        auto const alpha_c = 0.5 * H.diagonal().sum();
+        auto const alpha = std::remainder(alpha_c.real(), 2. * pi);
+
+        auto const H_2 = (H - Eigen::Vector2cd::Constant(alpha_c).asDiagonal().toDenseMatrix()).eval();
+        auto const H_22 = (H_2 * H_2).eval();
+        auto const theta = 2. * std::sqrt(std::abs(H_22(0,0).real()));
+
+        auto const n_dot_sigma = (H_2 / (-0.5 * theta)).eval();
+
+        auto const n = Eigen::Vector3d
+        {
+            n_dot_sigma(1, 0).real(),
+            n_dot_sigma(1, 0).imag(),
+            n_dot_sigma(0, 0).real(),
+        };
+
+        auto const rotation = (std::exp(1.i * alpha) * qpp::gt.Rn(theta, { n[0], n[1], n[2] })).eval();
+
+        return std::tuple{ alpha, theta, n };
+    }
+}
+
 //! @brief Exercise 4.8 and Equations 4.9 and 4.10
 TEST(chapter4_2, unitary_matrix_as_rotation)
 {
@@ -288,7 +321,12 @@ TEST(chapter4_2, unitary_matrix_as_rotation)
     };
 
     /* Part 1 */
-    decompose(qpp::randU());
+    auto const U = qpp::randU();
+    auto const [alpha_U, theta_U, n_U ] = decompose(U);
+    auto const [alpha_Ub, theta_Ub, n_Ub ] = unitary_to_rotation(U);
+    EXPECT_COMPLEX_CLOSE(alpha_U, alpha_Ub, 1e-12);
+    EXPECT_COMPLEX_CLOSE(theta_U, theta_Ub, 1e-12);
+    EXPECT_MATRIX_CLOSE(n_U, n_Ub, 1e-12);
 
     /* Part 2 */
     auto const [alpha_H, theta_H, n_H ] = decompose(qpp::gt.H);
