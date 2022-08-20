@@ -208,3 +208,18 @@ TEST(chapter4_2, bloch_sphere_interpretation_of_rotations)
         std::cerr << ">> rotated_lambda: " << qpp::disp(rotated_lambda.transpose()) << "\n";
     }
 }
+
+//! @brief Exercise 4.7
+TEST(chapter4_2, x_y_relation)
+{
+    using namespace std::numbers;
+
+    qpp_e::maths::seed(82u);
+
+    EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.Y * qpp::gt.X).eval(), -qpp::gt.Y, 1e-12);
+    /* Or, equivalently */
+    EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.Y + qpp::gt.Y * qpp::gt.X).eval(), Eigen::Matrix2cd::Zero(), 1e-12);
+
+    auto const theta = qpp::rand(0., 2.*pi);
+    EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.RY(theta) * qpp::gt.X).eval(), qpp::gt.RY(-theta), 1e-12);
+}
