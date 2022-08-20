@@ -6,6 +6,7 @@
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
 
+#include <unsupported/Eigen/EulerAngles>
 #include <unsupported/Eigen/MatrixFunctions>
 
 #include <execution>
@@ -251,9 +252,17 @@ namespace
             n_dot_sigma(0, 0).real(),
         };
 
-        auto const rotation = (std::exp(1.i * alpha) * qpp::gt.Rn(theta, { n[0], n[1], n[2] })).eval();
-
         return std::tuple{ alpha, theta, n };
+    }
+
+    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
+    auto euler_angles(qpp_e::maths::Matrix auto const& M)
+    {
+        using scalar_t = std::decay_t<decltype(M(0,0))>;
+        using system_t = Eigen::EulerSystem<_AlphaAxis, _BetaAxis, _GammaAxis>;
+        using angles_t = Eigen::EulerAngles<scalar_t, system_t>;
+
+        return angles_t{ M };
     }
 }
 
@@ -322,21 +331,51 @@ TEST(chapter4_2, unitary_matrix_as_rotation)
 
     /* Part 1 */
     auto const U = qpp::randU();
-    auto const [alpha_U, theta_U, n_U ] = decompose(U);
-    auto const [alpha_Ub, theta_Ub, n_Ub ] = unitary_to_rotation(U);
+    auto const [alpha_U, theta_U, n_U] = decompose(U);
+    auto const [alpha_Ub, theta_Ub, n_Ub] = unitary_to_rotation(U);
     EXPECT_COMPLEX_CLOSE(alpha_U, alpha_Ub, 1e-12);
     EXPECT_COMPLEX_CLOSE(theta_U, theta_Ub, 1e-12);
     EXPECT_MATRIX_CLOSE(n_U, n_Ub, 1e-12);
 
     /* Part 2 */
-    auto const [alpha_H, theta_H, n_H ] = decompose(qpp::gt.H);
+    auto const [alpha_H, theta_H, n_H] = decompose(qpp::gt.H);
     EXPECT_COMPLEX_CLOSE(alpha_H, 0.5 * pi, 1e-12);
     EXPECT_COMPLEX_CLOSE(theta_H, pi, 1e-12);
     EXPECT_MATRIX_CLOSE(n_H, Eigen::Vector3d(inv_sqrt2, 0., inv_sqrt2), 1e-12);
 
     /* Part 3 */
-    auto const [alpha_S, theta_S, n_S ] = decompose(qpp::gt.S);
+    auto const [alpha_S, theta_S, n_S] = decompose(qpp::gt.S);
     EXPECT_COMPLEX_CLOSE(alpha_S, 0.25 * pi, 1e-12);
     EXPECT_COMPLEX_CLOSE(theta_S, 0.5 * pi, 1e-12);
     EXPECT_MATRIX_CLOSE(n_S, Eigen::Vector3d::UnitZ(), 1e-12);
+}
+
+//! @brief Theorem 4.1 and Equations 4.11 and 4.12
+TEST(chapter4_2, z_y_decomposition)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed();
+
+    auto const U = qpp::randU();
+    auto const [alpha_, theta, n] = unitary_to_rotation(U);
+
+    auto const euler = euler_angles<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(Eigen::AngleAxisd(theta, n).toRotationMatrix());
+    auto const& e = euler.angles();
+
+    auto const rotation_ = (std::exp(1.i * alpha_) * qpp::gt.RZ(e[0]) * qpp::gt.RY(e[1]) * qpp::gt.RZ(e[2])).eval();
+    auto const alpha = (std::norm(U(0,0) + rotation_(0,0)) < 1e-12) ? (alpha_ + pi) : alpha_;
+    auto const rotation = (std::exp(1.i * alpha) * qpp::gt.RZ(e[0]) * qpp::gt.RY(e[1]) * qpp::gt.RZ(e[2])).eval();
+    EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
+        std::cerr << ">> alpha: " << alpha << "\n\n";
+        std::cerr << ">> theta: " << theta << "\n\n";
+        std::cerr << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
+        std::cerr << ">> euler: " << qpp::disp(euler.angles().transpose()) << "\n\n";
+        std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
+    }
 }
