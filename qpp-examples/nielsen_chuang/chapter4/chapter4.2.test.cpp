@@ -440,3 +440,30 @@ TEST(chapter4_2, rotation_composition)
         std::cerr << ">> Ub:\n" << qpp::disp(Ub) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.10
+TEST(chapter4_2, x_y_decomposition)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed();
+
+    auto const U = qpp::randU();
+    auto const [alpha, theta, n] = unitary_to_rotation(U);
+
+    auto const e = euler_decomposition<Eigen::EULER_X, Eigen::EULER_Y, Eigen::EULER_X>(alpha, theta, n);
+
+    auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RX(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RX(e[3])).eval();
+    EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
+        std::cerr << ">> alpha: " << alpha << "\n\n";
+        std::cerr << ">> theta: " << theta << "\n\n";
+        std::cerr << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
+        std::cerr << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
+        std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
+    }
+}
