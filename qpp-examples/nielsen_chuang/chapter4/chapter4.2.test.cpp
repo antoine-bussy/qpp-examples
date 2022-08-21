@@ -256,13 +256,30 @@ namespace
     }
 
     template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
-    auto euler_angles(qpp_e::maths::Matrix auto const& M)
+    auto euler_angles(auto const& M)
     {
-        using scalar_t = std::decay_t<decltype(M(0,0))>;
+        using scalar_t = std::decay_t<decltype(M)>::Scalar;
         using system_t = Eigen::EulerSystem<_AlphaAxis, _BetaAxis, _GammaAxis>;
         using angles_t = Eigen::EulerAngles<scalar_t, system_t>;
 
         return angles_t{ M };
+    }
+
+    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
+    auto euler_decomposition(qpp_e::maths::RealNumber auto const& alpha, qpp_e::maths::RealNumber auto const& theta, qpp_e::maths::Matrix auto const& n)
+    {
+        using namespace std::numbers;
+
+        auto const q = Eigen::Quaterniond{ Eigen::AngleAxisd{theta, n} };
+        auto const euler = euler_angles<_AlphaAxis, _BetaAxis, _GammaAxis>(q);
+        auto const qq = Eigen::Quaterniond{ euler };
+
+        auto res = Eigen::Vector4d{};
+        /* Eigen Euler Angles module performs range conversion, which messes up with the "single-qubit Euler decomposition" */
+        res[0] = qq.isApprox(q, 1e-12) ? alpha : (alpha + pi);
+        res.tail<3>() = euler.angles();
+
+        return res;
     }
 }
 
@@ -359,14 +376,11 @@ TEST(chapter4_2, z_y_decomposition)
     qpp_e::maths::seed();
 
     auto const U = qpp::randU();
-    auto const [alpha_, theta, n] = unitary_to_rotation(U);
+    auto const [alpha, theta, n] = unitary_to_rotation(U);
 
-    auto const euler = euler_angles<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(Eigen::AngleAxisd(theta, n).toRotationMatrix());
-    auto const& e = euler.angles();
+    auto const e = euler_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(alpha, theta, n);
 
-    auto const rotation_ = (std::exp(1.i * alpha_) * qpp::gt.RZ(e[0]) * qpp::gt.RY(e[1]) * qpp::gt.RZ(e[2])).eval();
-    auto const alpha = (std::norm(U(0,0) + rotation_(0,0)) < 1e-12) ? (alpha_ + pi) : alpha_;
-    auto const rotation = (std::exp(1.i * alpha) * qpp::gt.RZ(e[0]) * qpp::gt.RY(e[1]) * qpp::gt.RZ(e[2])).eval();
+    auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RZ(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RZ(e[3])).eval();
     EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
 
     if constexpr (print_text)
@@ -375,7 +389,7 @@ TEST(chapter4_2, z_y_decomposition)
         std::cerr << ">> alpha: " << alpha << "\n\n";
         std::cerr << ">> theta: " << theta << "\n\n";
         std::cerr << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
-        std::cerr << ">> euler: " << qpp::disp(euler.angles().transpose()) << "\n\n";
+        std::cerr << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
         std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
     }
 }
