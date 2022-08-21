@@ -367,7 +367,7 @@ TEST(chapter4_2, unitary_matrix_as_rotation)
     EXPECT_MATRIX_CLOSE(n_S, Eigen::Vector3d::UnitZ(), 1e-12);
 }
 
-//! @brief Theorem 4.1 and Equations 4.11 and 4.12
+//! @brief Theorem 4.1, Equations 4.11 and 4.12, and Exercise 4.9
 TEST(chapter4_2, z_y_decomposition)
 {
     using namespace std::literals::complex_literals;
@@ -383,6 +383,18 @@ TEST(chapter4_2, z_y_decomposition)
     auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RZ(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RZ(e[3])).eval();
     EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
 
+    auto const a = e[0] - 0.5 * (e[1] + e[3]);
+    auto const b = e[0] + 0.5 * (-e[1] + e[3]);
+    auto const c = e[0] + 0.5 * (e[1] - e[3]);
+    auto const d = e[0] + 0.5 * (e[1] + e[3]);
+    auto const cos = std::cos(0.5 * e[2]);
+    auto const sin = std::sin(0.5 * e[2]);
+    auto const UU = Eigen::Matrix2cd{
+        {std::exp(1.i * a) * cos, -std::exp(1.i * b) * sin},
+        {std::exp(1.i * c) * sin,  std::exp(1.i * d) * cos}
+    };
+    EXPECT_MATRIX_CLOSE(UU, U, 1e-12);
+
     if constexpr (print_text)
     {
         std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
@@ -391,6 +403,7 @@ TEST(chapter4_2, z_y_decomposition)
         std::cerr << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
         std::cerr << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
         std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
+        std::cerr << ">> UU:\n" << qpp::disp(UU) << "\n\n";
     }
 }
 
