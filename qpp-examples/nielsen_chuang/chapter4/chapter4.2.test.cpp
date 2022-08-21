@@ -393,3 +393,37 @@ TEST(chapter4_2, z_y_decomposition)
         std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
     }
 }
+
+//! @brief Check composition of rotations
+TEST(chapter4_2, rotation_composition)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed();
+
+    auto const n1 = Eigen::Vector3d::Random().normalized().eval();
+    auto const theta1 = qpp::rand(0., 2.*pi);
+
+    auto const n2 = Eigen::Vector3d::Random().normalized().eval();
+    auto const theta2 = qpp::rand(0., 2.*pi);
+
+    auto const composed_rot = Eigen::AngleAxisd(theta1, n1) * Eigen::AngleAxisd(theta2, n2);
+    auto const n = composed_rot.vec().normalized().eval();
+    auto const theta = 2. * std::atan2(composed_rot.vec().norm(), composed_rot.w());
+
+    auto const Ua = (qpp::gt.Rn(theta1, { n1[0], n1[1], n1[2] }) * qpp::gt.Rn(theta2, { n2[0], n2[1], n2[2] })).eval();
+    auto const Ub = qpp::gt.Rn(theta, { n[0], n[1], n[2] });
+
+    EXPECT_MATRIX_CLOSE(Ua, Ub, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> theta : " << theta << ", n : " << qpp::disp(n.transpose()) << "\n\n";
+        std::cerr << ">> theta1: " << theta1 << ", n1: " << qpp::disp(n1.transpose()) << "\n\n";
+        std::cerr << ">> theta2: " << theta2 << ", n2: " << qpp::disp(n2.transpose()) << "\n\n";
+
+        std::cerr << ">> Ua:\n" << qpp::disp(Ua) << "\n\n";
+        std::cerr << ">> Ub:\n" << qpp::disp(Ub) << "\n\n";
+    }
+}
