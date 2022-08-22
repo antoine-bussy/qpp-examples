@@ -443,3 +443,74 @@ TEST(chapter4_2, x_y_decomposition)
         std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
     }
 }
+
+//! @brief Check for Angle-Axis in a different basis
+TEST(chapter4_2, basis_change_angle_axis_rotation)
+{
+    using namespace std::numbers;
+
+    qpp_e::maths::seed();
+
+    auto const b_H_o = Eigen::Quaterniond::UnitRandom().toRotationMatrix().eval();
+    auto const o_X = Eigen::Vector3d::Random().normalized().eval();
+    auto const b_X = (b_H_o * o_X).eval();
+
+    auto const theta = qpp::rand(0., 2 * pi);
+
+    auto const o_R_o = Eigen::AngleAxisd(theta, o_X).toRotationMatrix();
+    auto const b_R_b = (b_H_o * o_R_o * b_H_o.inverse()).eval();
+    auto const b_R_b_alt = Eigen::AngleAxisd(theta, b_X).toRotationMatrix();
+
+    EXPECT_MATRIX_CLOSE(b_R_b, b_R_b_alt, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> b_R_b:\n" << qpp::disp(b_R_b) << "\n\n";
+        std::cerr << ">> b_R_b_alt:\n" << qpp::disp(b_R_b_alt) << "\n\n";
+    }
+}
+
+//! @brief Exercise 4.11 and Equation 4.13
+//! @details Equation 4.13 is not verified in general.
+//! @see Errata of N&C: https://michaelnielsen.org/qcqi/errata/errata/errata.html, for the correct formula
+//! @details However, it holds on some necessary and sufficient condition: @see generalized_euler_decomposition
+TEST(chapter4_2, n_m_decomposition)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed(7981584u);
+
+    auto const U = qpp::randU();
+    auto const [alpha_U, theta_U, n_U] = unitary_to_rotation(U);
+
+    auto const Q = Eigen::Quaterniond{ Eigen::AngleAxisd(theta_U, n_U) };
+    auto const R = Q.toRotationMatrix();
+
+    auto const n1 = Eigen::Vector3d::Random().normalized().eval();
+    auto const n2 = Eigen::Vector3d::Random().normalized().eval();
+
+    auto theta = generalized_euler_decomposition(R, n1, n2, n1);
+    auto const computed_Q = Eigen::AngleAxisd(theta[0], n1) * Eigen::AngleAxisd(theta[1], n2) * Eigen::AngleAxisd(theta[2], n1);
+    auto const computed_R = computed_Q.toRotationMatrix();
+    EXPECT_MATRIX_CLOSE(computed_R, R, 1e-12);
+
+    auto const alpha = Q.isApprox(computed_Q, 1e-12) ? alpha_U : (alpha_U + pi);
+
+    auto const computed_U = (std::exp(1.i * alpha)
+        * qpp::gt.Rn(theta[0], { n1[0], n1[1], n1[2]})
+        * qpp::gt.Rn(theta[1], { n2[0], n2[1], n2[2]})
+        * qpp::gt.Rn(theta[2], { n1[0], n1[1], n1[2]})).eval();
+    EXPECT_MATRIX_CLOSE(computed_U, U, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> theta: " << qpp::disp(theta.transpose()) << "\n\n";
+        std::cerr << ">> Q: " << Q << "\n";
+        std::cerr << ">> computed_Q: " << computed_Q << "\n\n";
+        std::cerr << ">> R:\n" << qpp::disp(R) << "\n\n";
+        std::cerr << ">> computed_R:\n" << qpp::disp(computed_R) << "\n\n";
+        std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
+        std::cerr << ">> computed_U:\n" << qpp::disp(computed_U) << "\n\n";
+    }
+}
