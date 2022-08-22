@@ -227,74 +227,13 @@ TEST(chapter4_2, x_y_relation)
 
 namespace
 {
+
     //! @brief Compute rotation parameters from unitary matrix
     auto unitary_to_rotation(qpp_e::maths::Matrix auto const& U)
     {
         using namespace std::literals::complex_literals;
         using namespace std::numbers;
 
-        /* U = exp(iH), with H hermitian */
-        auto const H = Eigen::Matrix2cd{ -1.i * U.log() };
-
-        auto const alpha_c = 0.5 * H.diagonal().sum();
-        auto const alpha = std::remainder(alpha_c.real(), 2. * pi);
-
-        auto const H_2 = (H - Eigen::Vector2cd::Constant(alpha_c).asDiagonal().toDenseMatrix()).eval();
-        auto const H_22 = (H_2 * H_2).eval();
-        auto const theta = 2. * std::sqrt(std::abs(H_22(0,0).real()));
-
-        auto const n_dot_sigma = (H_2 / (-0.5 * theta)).eval();
-
-        auto const n = Eigen::Vector3d
-        {
-            n_dot_sigma(1, 0).real(),
-            n_dot_sigma(1, 0).imag(),
-            n_dot_sigma(0, 0).real(),
-        };
-
-        return std::tuple{ alpha, theta, n };
-    }
-
-    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
-    auto euler_angles(auto const& M)
-    {
-        using scalar_t = std::decay_t<decltype(M)>::Scalar;
-        using system_t = Eigen::EulerSystem<_AlphaAxis, _BetaAxis, _GammaAxis>;
-        using angles_t = Eigen::EulerAngles<scalar_t, system_t>;
-
-        return angles_t{ M };
-    }
-
-    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
-    auto euler_decomposition(qpp_e::maths::RealNumber auto const& alpha, qpp_e::maths::RealNumber auto const& theta, qpp_e::maths::Matrix auto const& n)
-    {
-        using namespace std::numbers;
-
-        auto const q = Eigen::Quaterniond{ Eigen::AngleAxisd{theta, n} };
-        auto const euler = euler_angles<_AlphaAxis, _BetaAxis, _GammaAxis>(q);
-        auto const qq = Eigen::Quaterniond{ euler };
-
-        auto res = Eigen::Vector4d{};
-        /* Eigen Euler Angles module performs range conversion, which messes up with the "single-qubit Euler decomposition" */
-        res[0] = qq.isApprox(q, 1e-12) ? alpha : (alpha + pi);
-        res.tail<3>() = euler.angles();
-
-        return res;
-    }
-}
-
-//! @brief Exercise 4.8 and Equations 4.9 and 4.10
-TEST(chapter4_2, unitary_matrix_as_rotation)
-{
-    using namespace std::literals::complex_literals;
-    using namespace std::numbers;
-
-    qpp_e::maths::seed(3112u);
-
-    auto constexpr inv_sqrt2 = 0.5 * sqrt2;
-
-    auto constexpr decompose = [](auto&& U)
-    {
         /* U = exp(iH), with H hermitian */
         auto const H = Eigen::Matrix2cd{ -1.i * U.log() };
         EXPECT_MATRIX_CLOSE(H, H.adjoint(), 1e-12);
@@ -344,24 +283,61 @@ TEST(chapter4_2, unitary_matrix_as_rotation)
         }
 
         return std::tuple{ alpha, theta, n };
-    };
+    }
+
+    //! @brief Compute Euler angles for a compatible input M (rotation matrix, unit quaternion, ...)
+    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
+    auto euler_angles(auto const& M)
+    {
+        using scalar_t = std::decay_t<decltype(M)>::Scalar;
+        using system_t = Eigen::EulerSystem<_AlphaAxis, _BetaAxis, _GammaAxis>;
+        using angles_t = Eigen::EulerAngles<scalar_t, system_t>;
+
+        return angles_t{ M };
+    }
+
+    //! @brief Compute Euler decomposition and phase from phase, angle and unit axis
+    //! @see unitary_to_rotation (output)
+    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
+    auto euler_decomposition(qpp_e::maths::RealNumber auto const& alpha, qpp_e::maths::RealNumber auto const& theta, qpp_e::maths::Matrix auto const& n)
+    {
+        using namespace std::numbers;
+
+        auto const q = Eigen::Quaterniond{ Eigen::AngleAxisd{theta, n} };
+        auto const euler = euler_angles<_AlphaAxis, _BetaAxis, _GammaAxis>(q);
+        auto const qq = Eigen::Quaterniond{ euler };
+
+        auto res = Eigen::Vector4d{};
+        /* Eigen Euler Angles module performs range conversion, which messes up with the "single-qubit Euler decomposition" */
+        res[0] = qq.isApprox(q, 1e-12) ? alpha : (alpha + pi);
+        res.tail<3>() = euler.angles();
+
+        return res;
+    }
+
+}
+
+//! @brief Exercise 4.8 and Equations 4.9 and 4.10
+TEST(chapter4_2, unitary_matrix_as_rotation)
+{
+    using namespace std::numbers;
+
+    qpp_e::maths::seed(3112u);
+
+    auto constexpr inv_sqrt2 = 0.5 * sqrt2;
 
     /* Part 1 */
     auto const U = qpp::randU();
-    auto const [alpha_U, theta_U, n_U] = decompose(U);
-    auto const [alpha_Ub, theta_Ub, n_Ub] = unitary_to_rotation(U);
-    EXPECT_COMPLEX_CLOSE(alpha_U, alpha_Ub, 1e-12);
-    EXPECT_COMPLEX_CLOSE(theta_U, theta_Ub, 1e-12);
-    EXPECT_MATRIX_CLOSE(n_U, n_Ub, 1e-12);
+    unitary_to_rotation(U);
 
     /* Part 2 */
-    auto const [alpha_H, theta_H, n_H] = decompose(qpp::gt.H);
+    auto const [alpha_H, theta_H, n_H] = unitary_to_rotation(qpp::gt.H);
     EXPECT_COMPLEX_CLOSE(alpha_H, 0.5 * pi, 1e-12);
     EXPECT_COMPLEX_CLOSE(theta_H, pi, 1e-12);
     EXPECT_MATRIX_CLOSE(n_H, Eigen::Vector3d(inv_sqrt2, 0., inv_sqrt2), 1e-12);
 
     /* Part 3 */
-    auto const [alpha_S, theta_S, n_S] = decompose(qpp::gt.S);
+    auto const [alpha_S, theta_S, n_S] = unitary_to_rotation(qpp::gt.S);
     EXPECT_COMPLEX_CLOSE(alpha_S, 0.25 * pi, 1e-12);
     EXPECT_COMPLEX_CLOSE(theta_S, 0.5 * pi, 1e-12);
     EXPECT_MATRIX_CLOSE(n_S, Eigen::Vector3d::UnitZ(), 1e-12);
