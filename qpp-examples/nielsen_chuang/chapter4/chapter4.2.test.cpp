@@ -225,6 +225,22 @@ TEST(chapter4_2, x_y_relation)
     EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.RY(theta) * qpp::gt.X).eval(), qpp::gt.RY(-theta), 1e-12);
 }
 
+//! @brief Exercise 4.7 bis
+//! @details Same as Exercise 4.7, with X and Z. Needed for Corollary 4.2
+TEST(chapter4_2, x_z_relation)
+{
+    using namespace std::numbers;
+
+    qpp_e::maths::seed(28u);
+
+    EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.Z * qpp::gt.X).eval(), -qpp::gt.Z, 1e-12);
+    /* Or, equivalently */
+    EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.Z + qpp::gt.Z * qpp::gt.X).eval(), Eigen::Matrix2cd::Zero(), 1e-12);
+
+    auto const theta = qpp::rand(0., 2.*pi);
+    EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.RZ(theta) * qpp::gt.X).eval(), qpp::gt.RZ(-theta), 1e-12);
+}
+
 namespace
 {
 
