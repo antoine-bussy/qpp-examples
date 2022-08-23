@@ -591,3 +591,58 @@ TEST(chapter4_2, n_m_decomposition)
         std::cerr << ">> computed_U:\n" << qpp::disp(computed_U) << "\n\n";
     }
 }
+
+namespace
+{
+
+    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
+    auto abc_decomposition(qpp_e::maths::Matrix auto const& U)
+    {
+        using namespace std::literals::complex_literals;
+
+        auto const [alpha, theta, n] = unitary_to_rotation(U);
+
+        auto const e = euler_decomposition<_AlphaAxis, _BetaAxis, _GammaAxis>(alpha, theta, n);
+
+        auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RZ(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RZ(e[3])).eval();
+        EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
+
+        auto const A = (qpp::gt.RZ(e[1]) * qpp::gt.RY(0.5 * e[2])).eval();
+        auto const B = (qpp::gt.RY(-0.5 * e[2]) * qpp::gt.RZ(-0.5 * (e[3]+e[1]))).eval();
+        auto const C = qpp::gt.RZ(0.5 * (e[3]-e[1]));
+        auto const ABC = (A * B * C).eval();
+        EXPECT_MATRIX_CLOSE(ABC, Eigen::Matrix2cd::Identity(), 1e-12);
+
+        auto const B_inverse_signs = (qpp::gt.RY(0.5 * e[2]) * qpp::gt.RZ(0.5 * (e[3]+e[1]))).eval();
+        auto const XBX = (qpp::gt.X * B * qpp::gt.X).eval();
+        EXPECT_MATRIX_CLOSE(XBX, B_inverse_signs, 1e-12);
+
+        auto const AXBXC = (A * qpp::gt.X * B * qpp::gt.X * C).eval();
+        auto const eiaAXBXC = (std::exp(1.i * e[0]) * AXBXC).eval();
+        EXPECT_MATRIX_CLOSE(eiaAXBXC, U, 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
+            std::cerr << ">> alpha: " << alpha << "\n\n";
+            std::cerr << ">> A:\n" << qpp::disp(A) << "\n\n";
+            std::cerr << ">> B:\n" << qpp::disp(B) << "\n\n";
+            std::cerr << ">> C:\n" << qpp::disp(C) << "\n\n";
+            std::cerr << ">> ABC:\n" << qpp::disp(ABC) << "\n\n";
+            std::cerr << ">> AXBXC:\n" << qpp::disp(AXBXC) << "\n\n";
+            std::cerr << ">> eiaAXBXC:\n" << qpp::disp(eiaAXBXC) << "\n\n";
+        }
+
+        return std::tuple{ alpha, A, B, C };
+    }
+
+}
+
+//! @brief Corollary 4.2 and Equations 4.14 through 4.17
+TEST(chapter4_2, abc__decomposition)
+{
+    qpp_e::maths::seed(31385u);
+
+    auto const U = qpp::randU();
+    abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
+}
