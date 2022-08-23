@@ -625,6 +625,7 @@ namespace
         {
             std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
             std::cerr << ">> alpha: " << alpha << "\n\n";
+            std::cerr << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
             std::cerr << ">> A:\n" << qpp::disp(A) << "\n\n";
             std::cerr << ">> B:\n" << qpp::disp(B) << "\n\n";
             std::cerr << ">> C:\n" << qpp::disp(C) << "\n\n";
@@ -645,4 +646,30 @@ TEST(chapter4_2, abc__decomposition)
 
     auto const U = qpp::randU();
     abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
+}
+
+//! @brief Exercise 4.12
+TEST(chapter4_2, H_abc_decomposition)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    auto constexpr inv_sqrt2 = 0.5 * sqrt2;
+
+    auto const [ alpha, A, B, C ] = abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(qpp::gt.H);
+
+    EXPECT_COMPLEX_CLOSE(alpha, 0.5 * pi, 1e-12);
+
+    auto const expected_A = Eigen::Rotation2D{ 0.125 * pi }.toRotationMatrix().cast<Eigen::dcomplex>().eval();
+    EXPECT_MATRIX_CLOSE(expected_A, A, 1e-12);
+
+    auto const expected_B = (qpp::gt.RY(-0.25 * pi) * qpp::gt.RZ(-0.5 * pi)).eval();
+    EXPECT_MATRIX_CLOSE(expected_B, B, 1e-12);
+
+    auto const expected_C = Eigen::Matrix2cd
+    {
+        { inv_sqrt2 - 1.i * inv_sqrt2, 0. },
+        { 0., inv_sqrt2 + 1.i * inv_sqrt2 }
+    };
+    EXPECT_MATRIX_CLOSE(expected_C, C, 1e-12);
 }
