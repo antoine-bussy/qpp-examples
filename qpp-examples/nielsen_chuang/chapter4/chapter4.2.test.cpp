@@ -460,40 +460,6 @@ TEST(chapter4_2, z_y_decomposition)
     }
 }
 
-//! @brief Check composition of rotations
-TEST(chapter4_2, rotation_composition)
-{
-    using namespace std::literals::complex_literals;
-    using namespace std::numbers;
-
-    qpp_e::maths::seed();
-
-    auto const n1 = Eigen::Vector3d::Random().normalized().eval();
-    auto const theta1 = qpp::rand(0., 2.*pi);
-
-    auto const n2 = Eigen::Vector3d::Random().normalized().eval();
-    auto const theta2 = qpp::rand(0., 2.*pi);
-
-    auto const composed_rot = Eigen::AngleAxisd(theta1, n1) * Eigen::AngleAxisd(theta2, n2);
-    auto const n = composed_rot.vec().normalized().eval();
-    auto const theta = 2. * std::atan2(composed_rot.vec().norm(), composed_rot.w());
-
-    auto const Ua = (qpp::gt.Rn(theta1, { n1[0], n1[1], n1[2] }) * qpp::gt.Rn(theta2, { n2[0], n2[1], n2[2] })).eval();
-    auto const Ub = qpp::gt.Rn(theta, { n[0], n[1], n[2] });
-
-    EXPECT_MATRIX_CLOSE(Ua, Ub, 1e-12);
-
-    if constexpr (print_text)
-    {
-        std::cerr << ">> theta : " << theta << ", n : " << qpp::disp(n.transpose()) << "\n\n";
-        std::cerr << ">> theta1: " << theta1 << ", n1: " << qpp::disp(n1.transpose()) << "\n\n";
-        std::cerr << ">> theta2: " << theta2 << ", n2: " << qpp::disp(n2.transpose()) << "\n\n";
-
-        std::cerr << ">> Ua:\n" << qpp::disp(Ua) << "\n\n";
-        std::cerr << ">> Ub:\n" << qpp::disp(Ub) << "\n\n";
-    }
-}
-
 //! @brief Exercise 4.10
 TEST(chapter4_2, x_y_decomposition)
 {
@@ -699,4 +665,81 @@ TEST(chapter4_2, circuit_identites)
         std::cerr << ">> HTH:\n" << qpp::disp(HTH) << "\n\n";
         std::cerr << ">> Rx(pi/4):\n" << qpp::disp(qpp::gt.RX(0.25 * pi)) << "\n\n";
     }
+}
+
+namespace
+{
+    auto single_qubit_operation_composition(qpp_e::maths::RealNumber auto const& beta1, qpp_e::maths::Matrix auto const& n1
+                                        , qpp_e::maths::RealNumber auto const& beta2, qpp_e::maths::Matrix auto const& n2)
+    {
+        auto const composed_rot = Eigen::AngleAxisd(beta1, n1) * Eigen::AngleAxisd(beta2, n2);
+        auto const n12 = composed_rot.vec().normalized().eval();
+        auto const beta12 = 2. * std::atan2(composed_rot.vec().norm(), composed_rot.w());
+
+        auto const Ua = (qpp::gt.Rn(beta1, { n1[0], n1[1], n1[2] }) * qpp::gt.Rn(beta2, { n2[0], n2[1], n2[2] })).eval();
+        auto const Ub = qpp::gt.Rn(beta12, { n12[0], n12[1], n12[2] });
+
+        EXPECT_MATRIX_CLOSE(Ua, Ub, 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> beta12: " << beta12 << ", n12: " << qpp::disp(n12.transpose()) << "\n\n";
+            std::cerr << ">> beta1: " << beta1 << ", n1:" << qpp::disp(n1.transpose()) << "\n\n";
+            std::cerr << ">> beta2: " << beta2 << ", n2:" << qpp::disp(n2.transpose()) << "\n\n";
+
+            std::cerr << ">> Ua:\n" << qpp::disp(Ua) << "\n\n";
+            std::cerr << ">> Ub:\n" << qpp::disp(Ub) << "\n\n";
+        }
+
+        return std::tuple{ beta12, n12 };
+    }
+}
+
+//! @brief Exercise 4.15 and Equations 4.19 through 4.22
+TEST(chapter4_2, composition_of_single_qubit_operations)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed();
+
+    /* Part 1 */
+    auto const n1 = Eigen::Vector3d::Random().normalized().eval();
+    auto const beta1 = qpp::rand(0., 2.*pi);
+
+    auto const n2 = Eigen::Vector3d::Random().normalized().eval();
+    auto const beta2 = qpp::rand(0., 2.*pi);
+
+    auto const [ beta12, n12 ] = single_qubit_operation_composition(beta1, n1, beta2, n2);
+
+    auto const c1 = std::cos(0.5 * beta1);
+    auto const s1 = std::sin(0.5 * beta1);
+    auto const c2 = std::cos(0.5 * beta2);
+    auto const s2 = std::sin(0.5 * beta2);
+    auto const c12 = std::cos(0.5 * beta12);
+    auto const s12 = std::sin(0.5 * beta12);
+
+    auto const computed_c12 = c1 * c2 - s1 * s2 * n1.dot(n2);
+    auto const computed_s12_n12 = ((s1 * c2) * n1 + (c1 * s2) * n2 - s1 * s2 * n2.cross(n1)).eval();
+
+    EXPECT_COMPLEX_CLOSE(computed_c12, c12, 1e-12);
+    EXPECT_MATRIX_CLOSE(computed_s12_n12, (s12 * n12).eval(), 1e-12);
+
+    /* Part 2 */
+    auto const beta = qpp::rand(0., 2.*pi);
+    auto const z = Eigen::Vector3d::UnitZ();
+    auto const n = Eigen::Vector3d::Random().normalized().eval();
+
+    auto const [ betaZ, nZ ] = single_qubit_operation_composition(beta, z, beta, n);
+
+    auto const c = std::cos(0.5 * beta);
+    auto const s = std::sin(0.5 * beta);
+    auto const cZ = std::cos(0.5 * betaZ);
+    auto const sZ = std::sin(0.5 * betaZ);
+
+    auto const computed_cZ = c * c  - s * s * z.dot(n);
+    auto const computed_sZ_nZ = (s * c * (z + n) - s * s * n.cross(z)).eval();
+
+    EXPECT_COMPLEX_CLOSE(computed_cZ, cZ, 1e-12);
+    EXPECT_MATRIX_CLOSE(computed_sZ_nZ, (sZ * nZ).eval(), 1e-12);
 }
