@@ -204,3 +204,25 @@ TEST(chapter4_3, cnot_as_controlled_z_and_h)
         std::cerr << ">> qpp::gt.CNOT:\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.18
+TEST(chapter4_3, controlled_z_flip_invariance)
+{
+    auto circuit_down = qpp::QCircuit{ 2, 0 };
+    circuit_down.CTRL(qpp::gt.Z, { 0 }, { 1 });
+    auto engine_down = qpp::QEngine{ circuit_down };
+    auto const cZ_down = extract_matrix<4>(engine_down);
+
+    auto circuit_up = qpp::QCircuit{ 2, 0 };
+    circuit_up.CTRL(qpp::gt.Z, { 1 }, { 0 });
+    auto engine_up = qpp::QEngine{ circuit_up };
+    auto const cZ_up = extract_matrix<4>(engine_up);
+
+    EXPECT_MATRIX_CLOSE(cZ_down, cZ_up, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> cZ_down:\n" << qpp::disp(cZ_down) << "\n\n";
+        std::cerr << ">> cZ_up:\n" << qpp::disp(cZ_up) << "\n\n";
+    }
+}
