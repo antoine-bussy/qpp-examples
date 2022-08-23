@@ -118,6 +118,22 @@ TEST(chapter4_3, controlled_u)
     }
 }
 
+namespace
+{
+    //! @brief Extract circuit matrix from engine
+    template < unsigned int Dim >
+    auto extract_matrix(qpp::QEngine& engine, unsigned int dim = Dim)
+    {
+        auto matrix = Eigen::Matrix<Eigen::dcomplex, Dim, Dim>::Zero(dim, dim).eval();
+        for(auto&& i : std::views::iota(0u, dim))
+        {
+            engine.reset().set_psi(Eigen::Vector<Eigen::dcomplex, Dim>::Unit(dim, i)).execute();
+            matrix.col(i) = engine.get_psi();
+        }
+        return matrix;
+    }
+}
+
 //! @brief Exercise 4.16
 TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
 {
@@ -138,12 +154,7 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
     circuit_H_up.gate_joint(qpp::gt.H, { 1 });
     auto engine_H_up = qpp::QEngine{ circuit_H_up };
 
-    auto circuit_H_up_matrix = Eigen::Matrix4cd::Zero().eval();
-    for(auto&& i : std::views::iota(0u, 4u))
-    {
-        engine_H_up.reset().set_psi(Eigen::Vector4cd::Unit(i)).execute();
-        circuit_H_up_matrix.col(i) = engine_H_up.get_psi();
-    }
+    auto const circuit_H_up_matrix = extract_matrix<4>(engine_H_up);
     EXPECT_MATRIX_CLOSE(H_up, circuit_H_up_matrix, 1e-12);
 
     if constexpr (print_text)
@@ -165,12 +176,7 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
     circuit_H_down.gate_joint(qpp::gt.H, { 0 });
     auto engine_H_down = qpp::QEngine{ circuit_H_down };
 
-    auto circuit_H_down_matrix = Eigen::Matrix4cd::Zero().eval();
-    for(auto&& i : std::views::iota(0u, 4u))
-    {
-        engine_H_down.reset().set_psi(Eigen::Vector4cd::Unit(i)).execute();
-        circuit_H_down_matrix.col(i) = engine_H_down.get_psi();
-    }
+    auto const circuit_H_down_matrix = extract_matrix<4>(engine_H_down);
     EXPECT_MATRIX_CLOSE(H_down, circuit_H_down_matrix, 1e-12);
 
     if constexpr (print_text)
