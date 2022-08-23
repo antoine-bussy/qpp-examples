@@ -674,9 +674,11 @@ TEST(chapter4_2, H_abc_decomposition)
     EXPECT_MATRIX_CLOSE(expected_C, C, 1e-12);
 }
 
-//! @brief Exercise 4.13
+//! @brief Exercises 4.13 and 4.14
 TEST(chapter4_2, circuit_identites)
 {
+    using namespace std::numbers;
+
     auto const HXH = (qpp::gt.H * qpp::gt.X * qpp::gt.H).eval();
     EXPECT_MATRIX_CLOSE(HXH, qpp::gt.Z, 1e-12);
 
@@ -686,10 +688,15 @@ TEST(chapter4_2, circuit_identites)
     auto const HZH = (qpp::gt.H * qpp::gt.Z * qpp::gt.H).eval();
     EXPECT_MATRIX_CLOSE(HZH, qpp::gt.X, 1e-12);
 
+    auto const HTH = (qpp::gt.H * qpp::gt.T * qpp::gt.H).eval();
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(HTH, qpp::gt.RX(0.25 * pi), 1e-12);
+
     if constexpr (print_text)
     {
         std::cerr << ">> HXH:\n" << qpp::disp(HXH) << "\n\n";
         std::cerr << ">> -HYH:\n" << qpp::disp(_HYH) << "\n\n";
         std::cerr << ">> HZH:\n" << qpp::disp(HZH) << "\n\n";
+        std::cerr << ">> HTH:\n" << qpp::disp(HTH) << "\n\n";
+        std::cerr << ">> Rx(pi/4):\n" << qpp::disp(qpp::gt.RX(0.25 * pi)) << "\n\n";
     }
 }
