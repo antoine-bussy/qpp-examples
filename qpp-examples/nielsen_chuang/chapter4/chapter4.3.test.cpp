@@ -73,8 +73,14 @@ TEST(chapter4_3, controlled_u)
 
     auto const U = qpp::randU();
 
-    auto cU = Eigen::Matrix4cd::Identity().eval();
-    cU({ 2, 3 }, { 2, 3 }) = U;
+    auto const cU = Eigen::Matrix4cd
+    {
+        { 1., 0.,     0.,     0. },
+        { 0., 1.,     0.,     0. },
+        { 0., 0., U(0,0), U(0,1) },
+        { 0., 0., U(1,0), U(1,1) },
+    };
+
     auto const controlled_U = qpp::gt.CTRL(U, { 0 }, { 1 }, 2);
     EXPECT_MATRIX_EQ(cU, controlled_U);
 
