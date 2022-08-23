@@ -117,3 +117,65 @@ TEST(chapter4_3, controlled_u)
         std::cerr << ">> expected_out: " << qpp::disp(expected_out.transpose()) << "\n";
     }
 }
+
+//! @brief Exercise 4.16
+TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
+{
+    auto const& H = qpp::gt.H;
+
+    /* Remember rule: (AxB)(CxD) = (AC)x(BD) */
+
+    /* Part 1 */
+    auto const H_up = Eigen::Matrix4cd
+    {
+        { H(0,0), H(0,1),     0.,     0. },
+        { H(1,0), H(1,1),     0.,     0. },
+        {     0.,     0., H(0,0), H(0,1) },
+        {     0.,     0., H(1,0), H(1,1) },
+    };
+
+    auto circuit_H_up = qpp::QCircuit{ 2, 0 };
+    circuit_H_up.gate_joint(qpp::gt.H, { 1 });
+    auto engine_H_up = qpp::QEngine{ circuit_H_up };
+
+    auto circuit_H_up_matrix = Eigen::Matrix4cd::Zero().eval();
+    for(auto&& i : std::views::iota(0u, 4u))
+    {
+        engine_H_up.reset().set_psi(Eigen::Vector4cd::Unit(i)).execute();
+        circuit_H_up_matrix.col(i) = engine_H_up.get_psi();
+    }
+    EXPECT_MATRIX_CLOSE(H_up, circuit_H_up_matrix, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> H_up:\n" << qpp::disp(H_up) << "\n\n";
+        std::cerr << ">> circuit_H_up_matrix:\n" << qpp::disp(circuit_H_up_matrix) << "\n\n";
+    }
+
+    /* Part 2 */
+    auto const H_down = Eigen::Matrix4cd
+    {
+        { H(0,0),     0., H(0,1),     0. },
+        {     0., H(0,0),     0., H(0,1) },
+        { H(1,0),     0., H(1,1),     0. },
+        {     0., H(1,0),     0., H(1,1) },
+    };
+
+    auto circuit_H_down = qpp::QCircuit{ 2, 0 };
+    circuit_H_down.gate_joint(qpp::gt.H, { 0 });
+    auto engine_H_down = qpp::QEngine{ circuit_H_down };
+
+    auto circuit_H_down_matrix = Eigen::Matrix4cd::Zero().eval();
+    for(auto&& i : std::views::iota(0u, 4u))
+    {
+        engine_H_down.reset().set_psi(Eigen::Vector4cd::Unit(i)).execute();
+        circuit_H_down_matrix.col(i) = engine_H_down.get_psi();
+    }
+    EXPECT_MATRIX_CLOSE(H_down, circuit_H_down_matrix, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> H_down:\n" << qpp::disp(H_down) << "\n\n";
+        std::cerr << ">> circuit_H_down_matrix:\n" << qpp::disp(circuit_H_down_matrix) << "\n\n";
+    }
+}
