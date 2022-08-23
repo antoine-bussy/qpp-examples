@@ -673,3 +673,23 @@ TEST(chapter4_2, H_abc_decomposition)
     };
     EXPECT_MATRIX_CLOSE(expected_C, C, 1e-12);
 }
+
+//! @brief Exercise 4.13
+TEST(chapter4_2, circuit_identites)
+{
+    auto const HXH = (qpp::gt.H * qpp::gt.X * qpp::gt.H).eval();
+    EXPECT_MATRIX_CLOSE(HXH, qpp::gt.Z, 1e-12);
+
+    auto const _HYH = (-qpp::gt.H * qpp::gt.Y * qpp::gt.H).eval();
+    EXPECT_MATRIX_CLOSE(_HYH, qpp::gt.Y, 1e-12);
+
+    auto const HZH = (qpp::gt.H * qpp::gt.Z * qpp::gt.H).eval();
+    EXPECT_MATRIX_CLOSE(HZH, qpp::gt.X, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> HXH:\n" << qpp::disp(HXH) << "\n\n";
+        std::cerr << ">> -HYH:\n" << qpp::disp(_HYH) << "\n\n";
+        std::cerr << ">> HZH:\n" << qpp::disp(HZH) << "\n\n";
+    }
+}
