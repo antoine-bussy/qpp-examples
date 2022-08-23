@@ -315,6 +315,67 @@ namespace
         return res;
     }
 
+    //! @brief Compute Euler generalized decomposition of a rotation matrix R
+    //! @details The unit axis of rotation are not necessarily orthogonal
+    //! Such a decomposition does not always exist (see necessary and sufficient condition in the code)
+    //! Return NaN if the condition is not met
+    //! Computed from "On Coordinate-Free Rotation Decomposition: Euler Angles about Arbitrary Axes" by Giulia Piovan and Francesco Bullo
+    auto generalized_euler_decomposition(
+        qpp_e::maths::Matrix auto const& R
+        , qpp_e::maths::Matrix auto const& r1
+        , qpp_e::maths::Matrix auto const& r2
+        , qpp_e::maths::Matrix auto const& r3)
+    {
+        auto theta = Eigen::Vector3d::Zero().eval();
+
+        auto const r2xr3 = r2.cross(r3).eval();
+        auto const r2xr2xr3 = r2.cross(r2xr3).eval();
+
+        auto const a = -r1.dot(r2xr2xr3);
+        auto const b = r1.dot(r2xr3);
+        auto const c = r1.dot(R * r3 - r3 - r2xr2xr3);
+
+        theta[1] = std::atan2(b, a) + std::atan2(std::sqrt(a * a + b * b - c * c), c);
+
+        auto const collinear = qpp_e::maths::collinear((R.transpose() * r1).eval(), r3, 1e-12, true);
+
+        if(collinear)
+        {
+            auto const w2 = (R.transpose() * r2).eval();
+            theta[2] = -std::atan2(w2.dot(r3.cross(r2)), r2.dot(w2) - r2.dot(r3) * w2.dot(r3));
+        }
+        else
+        {
+            auto const r2xr1 = r2.cross(r1).eval();
+            auto const r2xr2xr1 = r2.cross(r2xr1).eval();
+
+            auto const cos = std::cos(theta[1]);
+            auto const sin = std::sin(theta[1]);
+            auto const v1 = (r3 + sin * r2xr3 + (1. - cos) * r2xr2xr3).eval();
+            auto const w1 = (R * r3).eval();
+            auto const v3 = (r1 - sin * r2xr1 + (1. - cos) * r2xr2xr1).eval();
+            auto const w3 = (R.transpose() * r1).eval();
+
+            theta[0] =  std::atan2(w1.dot(r1.cross(v1)), v1.dot(w1) - v1.dot(r1) * w1.dot(r1));
+            theta[2] = -std::atan2(w3.dot(r3.cross(v3)), v3.dot(w3) - v3.dot(r3) * w3.dot(r3));
+        }
+
+        auto const condition_left = std::abs(r1.dot((R - r2 * r2.transpose()) * r3));
+        auto const condition_right = std::sqrt((1. - std::pow(r1.dot(r2), 2)) * (1. - std::pow(r3.dot(r2), 2)));
+
+        EXPECT_EQ((condition_left > condition_right), theta.hasNaN());
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> condition_left : " << condition_left << "\n";
+            std::cerr << ">> condition_right : " << condition_right << "\n";
+            std::cerr << ">> condition met : " << std::boolalpha << (condition_left <= condition_right) << "\n";
+            std::cerr << ">> theta : " << qpp::disp(theta.transpose()) << "\n";
+        }
+
+        return theta;
+    }
+
 }
 
 //! @brief Exercise 4.8 and Equations 4.9 and 4.10
