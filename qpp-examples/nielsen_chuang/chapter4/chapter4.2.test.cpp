@@ -9,9 +9,7 @@
 #include <unsupported/Eigen/EulerAngles>
 #include <unsupported/Eigen/MatrixFunctions>
 
-#include <execution>
 #include <numbers>
-#include <ranges>
 
 namespace
 {
