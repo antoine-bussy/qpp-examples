@@ -185,3 +185,22 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
         std::cerr << ">> circuit_H_down_matrix:\n" << qpp::disp(circuit_H_down_matrix) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.17
+TEST(chapter4_3, cnot_as_controlled_z_and_h)
+{
+    auto circuit = qpp::QCircuit{ 2, 0 };
+    circuit.gate(qpp::gt.H, 1);
+    circuit.CTRL(qpp::gt.Z, { 0 }, { 1 });
+    circuit.gate(qpp::gt.H, 1);
+    auto engine = qpp::QEngine{ circuit };
+
+    auto const cnot = extract_matrix<4>(engine);
+    EXPECT_MATRIX_CLOSE(cnot, qpp::gt.CNOT, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> cnot:\n" << qpp::disp(cnot) << "\n\n";
+        std::cerr << ">> qpp::gt.CNOT:\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
+    }
+}
