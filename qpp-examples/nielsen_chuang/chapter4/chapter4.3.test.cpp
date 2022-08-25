@@ -247,3 +247,69 @@ TEST(chapter4_3, cnot_action_on_density_matrices)
         std::cerr << ">> expected_rho:\n" << qpp::disp(expected_rho) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.20 and Equations 4.24 through 4.27
+TEST(chapter4_3, cnot_basis_transformations)
+{
+    using namespace qpp::literals;
+
+    /* Part 1 */
+    auto circuit_HxH_cnot_HxH = qpp::QCircuit{ 2, 0 };
+    circuit_HxH_cnot_HxH.gate_fan(qpp::gt.H, { 0, 1 });
+    circuit_HxH_cnot_HxH.gate(qpp::gt.CNOT, { 0 }, { 1 });
+    circuit_HxH_cnot_HxH.gate_fan(qpp::gt.H, { 0, 1 });
+    auto engine_HxH_cnot_HxH = qpp::QEngine{ circuit_HxH_cnot_HxH };
+    auto const HxH_cnot_HxH = extract_matrix<4>(engine_HxH_cnot_HxH);
+
+    auto circuit_cnot_flipped = qpp::QCircuit{ 2, 0 };
+    circuit_cnot_flipped.gate(qpp::gt.CNOT, { 1 }, { 0 });
+    auto engine_cnot_flipped = qpp::QEngine{ circuit_cnot_flipped };
+    auto const cnot_flipped = extract_matrix<4>(engine_cnot_flipped);
+
+    EXPECT_MATRIX_CLOSE(HxH_cnot_HxH, cnot_flipped, 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::gt.CNOTba, cnot_flipped, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> HxH_cnot_HxH:\n" << qpp::disp(HxH_cnot_HxH) << "\n\n";
+        std::cerr << ">> cnot_flipped:\n" << qpp::disp(cnot_flipped) << "\n\n";
+        std::cerr << ">> CNOTba (qpp):\n" << qpp::disp(qpp::gt.CNOTba) << "\n\n";
+    }
+
+    /* Part 2 */
+    auto const HxH = qpp::kronpow(qpp::gt.H, 2);
+    auto const& CNOT = qpp::gt.CNOT;
+    auto const& CNOTba = qpp::gt.CNOTba;
+    auto const pp_ket = qpp::st.plus(2u);
+    auto const mp_ket = qpp::kron(qpp::st.minus(), qpp::st.plus());
+    auto const pm_ket = qpp::kron(qpp::st.plus(), qpp::st.minus());
+    auto const mm_ket = qpp::st.minus(2u);
+
+    /* |00> ==> CNOTba ==> |00> */
+    EXPECT_MATRIX_CLOSE((CNOTba * 00_ket).eval(), 00_ket, 1e-12);
+    /* |00> ==> HxH ==> |++> ==> CNOT ==> |++> ==> HxH ==> |00> */
+    EXPECT_MATRIX_CLOSE((HxH * 00_ket).eval(), pp_ket, 1e-12);
+    EXPECT_MATRIX_CLOSE((CNOT * pp_ket).eval(), pp_ket, 1e-12);
+    EXPECT_MATRIX_CLOSE((HxH * pp_ket).eval(), 00_ket, 1e-12);
+
+    /* |01> ==> CNOTba ==> |11> */
+    EXPECT_MATRIX_CLOSE((CNOTba * 01_ket).eval(), 11_ket, 1e-12);
+    /* |01> ==> HxH ==> |+-> ==> CNOT ==> |--> ==> HxH ==> |11> */
+    EXPECT_MATRIX_CLOSE((HxH * 01_ket).eval(), pm_ket, 1e-12);
+    EXPECT_MATRIX_CLOSE((CNOT * pm_ket).eval(), mm_ket, 1e-12);
+    EXPECT_MATRIX_CLOSE((HxH * mm_ket).eval(), 11_ket, 1e-12);
+
+    /* |10> ==> CNOTba ==> |10> */
+    EXPECT_MATRIX_CLOSE((CNOTba * 10_ket).eval(), 10_ket, 1e-12);
+    /* |10> ==> HxH ==> |-+> ==> CNOT ==> |-+> ==> HxH ==> |10> */
+    EXPECT_MATRIX_CLOSE((HxH * 10_ket).eval(), mp_ket, 1e-12);
+    EXPECT_MATRIX_CLOSE((CNOT * mp_ket).eval(), mp_ket, 1e-12);
+    EXPECT_MATRIX_CLOSE((HxH * mp_ket).eval(), 10_ket, 1e-12);
+
+    /* |11> ==> CNOTba ==> |01> */
+    EXPECT_MATRIX_CLOSE((CNOTba * 11_ket).eval(), 01_ket, 1e-12);
+    /* |11> ==> HxH ==> |--> ==> CNOT ==> |+-> ==> HxH ==> |01> */
+    EXPECT_MATRIX_CLOSE((HxH * 11_ket).eval(), mm_ket, 1e-12);
+    EXPECT_MATRIX_CLOSE((CNOT * mm_ket).eval(), pm_ket, 1e-12);
+    EXPECT_MATRIX_CLOSE((HxH * pm_ket).eval(), 01_ket, 1e-12);
+}
