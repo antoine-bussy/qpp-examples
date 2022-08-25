@@ -205,7 +205,7 @@ namespace qpp_e::qube
             std::cerr << ">> eiaAXBXC:\n" << qpp::disp(eiaAXBXC) << "\n\n";
         }
 
-        return std::tuple{ alpha, A, B, C };
+        return std::tuple{ e[0], A, B, C };
     }
 
 } /* namespace qpp_e::qube */
