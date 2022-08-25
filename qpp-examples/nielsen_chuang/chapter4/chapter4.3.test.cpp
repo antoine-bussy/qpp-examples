@@ -358,11 +358,11 @@ TEST(chapter4_3, controlled_phase_shift)
     };
 
     auto const circuit_controlled_exp_ia_id = qpp::QCircuit{ 2, 0 }
-        .CTRL(exp_ia_id, { 1 }, { 0 });
+        .CTRL(exp_ia_id, { 0 }, { 1 });
     auto const controlled_exp_ia_id = extract_matrix<4>(circuit_controlled_exp_ia_id);
 
     auto const circuit_one_exp_ia_x_I = qpp::QCircuit{ 2, 0 }
-        .gate(one_exp_ia, 1);
+        .gate(one_exp_ia, 0);
     auto const one_exp_ia_x_I = extract_matrix<4>(circuit_one_exp_ia_x_I);
 
     EXPECT_MATRIX_CLOSE(controlled_exp_ia_id, one_exp_ia_x_I, 1e-12);
