@@ -5,6 +5,7 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
+#include <qpp-examples/qube/decompositions.hpp>
 
 #include <execution>
 #include <numbers>
@@ -371,5 +372,48 @@ TEST(chapter4_3, controlled_phase_shift)
     {
         std::cerr << ">> controlled-(exp(ia)I):\n" << qpp::disp(controlled_exp_ia_id) << "\n\n";
         std::cerr << ">> (1.,exp(ia)) x I :\n" << qpp::disp(one_exp_ia_x_I) << "\n\n";
+    }
+}
+
+//! @brief Figure 4.6
+TEST(chapter4_3, controlled_u_built_circuit)
+{
+    using namespace std::literals::complex_literals;
+
+    qpp_e::maths::seed();
+    auto const U = qpp::randU();
+
+    auto const circuit_controlled_u = qpp::QCircuit{ 2, 0 }
+        .CTRL(U, { 0 }, { 1 });
+    auto const controlled_U = extract_matrix<4>(circuit_controlled_u);
+
+    auto const [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z, print_text>(U);
+
+    auto const aAXBXC = (std::exp(1.i * alpha) * A * qpp::gt.X * B * qpp::gt.X * C).eval();
+    EXPECT_MATRIX_CLOSE(aAXBXC, U, 1e-12);
+
+    auto const one_exp_ia = Eigen::Matrix2cd
+    {
+        { 1., 0. },
+        { 0., std::exp(1.i * alpha)}
+    };
+
+    auto const built_circuit = qpp::QCircuit{ 2, 0 }
+        .gate(C, 1)
+        .CTRL(qpp::gt.X, { 0 }, { 1 })
+        .gate(B, 1)
+        .CTRL(qpp::gt.X, { 0 }, { 1 })
+        .gate(A, 1)
+        .gate(one_exp_ia, 0);
+    auto const built_controlled_U = extract_matrix<4>(built_circuit);
+
+    EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
+        std::cerr << ">> exp(ia) * A * X * B * X * C:\n" << qpp::disp(aAXBXC) << "\n\n";
+        std::cerr << ">> built controlled-U:\n" << qpp::disp(built_controlled_U) << "\n\n";
+        std::cerr << ">> controlled-U:\n" << qpp::disp(controlled_U) << "\n\n";
     }
 }
