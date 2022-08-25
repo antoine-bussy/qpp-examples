@@ -313,3 +313,16 @@ TEST(chapter4_3, cnot_basis_transformations)
     EXPECT_MATRIX_CLOSE((CNOT * mm_ket).eval(), pm_ket, 1e-12);
     EXPECT_MATRIX_CLOSE((HxH * pm_ket).eval(), 01_ket, 1e-12);
 }
+
+//! @brief Reminder: CNOT = CTRL(X)
+TEST(chapter4_3, cnot_is_controlled_x)
+{
+    auto const controlled_X = qpp::gt.CTRL(qpp::gt.X, { 0 }, { 1 }, 2);
+    EXPECT_MATRIX_CLOSE(controlled_X, qpp::gt.CNOT, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> CNOT:\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
+        std::cerr << ">> controlled-X:\n" << qpp::disp(controlled_X) << "\n\n";
+    }
+}
