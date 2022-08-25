@@ -142,7 +142,7 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
     /* Remember rule: (AxB)(CxD) = (AC)x(BD) */
 
     /* Part 1 */
-    auto const H_up = Eigen::Matrix4cd
+    auto const IxH = Eigen::Matrix4cd
     {
         { H(0,0), H(0,1),     0.,     0. },
         { H(1,0), H(1,1),     0.,     0. },
@@ -150,21 +150,21 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
         {     0.,     0., H(1,0), H(1,1) },
     };
 
-    auto circuit_H_up = qpp::QCircuit{ 2, 0 };
-    circuit_H_up.gate_joint(qpp::gt.H, { 1 });
-    auto engine_H_up = qpp::QEngine{ circuit_H_up };
+    auto circuit_IxH = qpp::QCircuit{ 2, 0 };
+    circuit_IxH.gate_joint(qpp::gt.H, { 1 });
+    auto engine_IxH = qpp::QEngine{ circuit_IxH };
 
-    auto const circuit_H_up_matrix = extract_matrix<4>(engine_H_up);
-    EXPECT_MATRIX_CLOSE(H_up, circuit_H_up_matrix, 1e-12);
+    auto const circuit_IxH_matrix = extract_matrix<4>(engine_IxH);
+    EXPECT_MATRIX_CLOSE(IxH, circuit_IxH_matrix, 1e-12);
 
     if constexpr (print_text)
     {
-        std::cerr << ">> H_up:\n" << qpp::disp(H_up) << "\n\n";
-        std::cerr << ">> circuit_H_up_matrix:\n" << qpp::disp(circuit_H_up_matrix) << "\n\n";
+        std::cerr << ">> IxH:\n" << qpp::disp(IxH) << "\n\n";
+        std::cerr << ">> circuit_IxH_matrix:\n" << qpp::disp(circuit_IxH_matrix) << "\n\n";
     }
 
     /* Part 2 */
-    auto const H_down = Eigen::Matrix4cd
+    auto const HxI = Eigen::Matrix4cd
     {
         { H(0,0),     0., H(0,1),     0. },
         {     0., H(0,0),     0., H(0,1) },
@@ -172,17 +172,17 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
         {     0., H(1,0),     0., H(1,1) },
     };
 
-    auto circuit_H_down = qpp::QCircuit{ 2, 0 };
-    circuit_H_down.gate_joint(qpp::gt.H, { 0 });
-    auto engine_H_down = qpp::QEngine{ circuit_H_down };
+    auto circuit_HxI = qpp::QCircuit{ 2, 0 };
+    circuit_HxI.gate_joint(qpp::gt.H, { 0 });
+    auto engine_HxI = qpp::QEngine{ circuit_HxI };
 
-    auto const circuit_H_down_matrix = extract_matrix<4>(engine_H_down);
-    EXPECT_MATRIX_CLOSE(H_down, circuit_H_down_matrix, 1e-12);
+    auto const circuit_HxI_matrix = extract_matrix<4>(engine_HxI);
+    EXPECT_MATRIX_CLOSE(HxI, circuit_HxI_matrix, 1e-12);
 
     if constexpr (print_text)
     {
-        std::cerr << ">> H_down:\n" << qpp::disp(H_down) << "\n\n";
-        std::cerr << ">> circuit_H_down_matrix:\n" << qpp::disp(circuit_H_down_matrix) << "\n\n";
+        std::cerr << ">> HxI:\n" << qpp::disp(HxI) << "\n\n";
+        std::cerr << ">> circuit_HxI_matrix:\n" << qpp::disp(circuit_HxI_matrix) << "\n\n";
     }
 }
 
