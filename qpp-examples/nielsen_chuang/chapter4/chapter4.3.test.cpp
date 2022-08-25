@@ -226,3 +226,24 @@ TEST(chapter4_3, controlled_z_flip_invariance)
         std::cerr << ">> cZ_up:\n" << qpp::disp(cZ_up) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.19
+TEST(chapter4_3, cnot_action_on_density_matrices)
+{
+    qpp_e::maths::seed();
+
+    auto const rho = qpp::randrho(4);
+    auto const rho_out = qpp::apply(rho, qpp::gt.CNOT, { 0, 1 });
+
+    auto expected_rho = rho;
+    expected_rho({0, 1}, {2, 3}).colwise().reverseInPlace();
+    expected_rho({2, 3}, {0, 1}).rowwise().reverseInPlace();
+    expected_rho({2, 3}, {2, 3}).reverseInPlace();
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> rho:\n" << qpp::disp(rho) << "\n\n";
+        std::cerr << ">> rho_out:\n" << qpp::disp(rho_out) << "\n\n";
+        std::cerr << ">> expected_rho:\n" << qpp::disp(expected_rho) << "\n\n";
+    }
+}
