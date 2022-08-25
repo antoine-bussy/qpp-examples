@@ -132,6 +132,14 @@ namespace
         }
         return matrix;
     }
+
+    //! @brief Extract circuit matrix from circuit
+    template < unsigned int Dim >
+    auto extract_matrix(qpp::QCircuit const& circuit, unsigned int dim = Dim)
+    {
+        auto engine = qpp::QEngine{ circuit };
+        return extract_matrix<Dim>(engine, dim);
+    }
 }
 
 //! @brief Exercise 4.16
@@ -324,5 +332,44 @@ TEST(chapter4_3, cnot_is_controlled_x)
     {
         std::cerr << ">> CNOT:\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
         std::cerr << ">> controlled-X:\n" << qpp::disp(controlled_X) << "\n\n";
+    }
+}
+
+//! @brief Equation 4.28 and Figure 4.5
+TEST(chapter4_3, controlled_phase_shift)
+{
+    using namespace std::literals::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed();
+
+    auto const alpha = qpp::rand(0., 2.*pi);
+    auto const exp_ia = std::exp(1.i * alpha);
+
+    auto const one_exp_ia = Eigen::Matrix2cd
+    {
+        { 1., 0. },
+        { 0., exp_ia}
+    };
+    auto const exp_ia_id = Eigen::Matrix2cd
+    {
+        { exp_ia, 0. },
+        { 0., exp_ia}
+    };
+
+    auto const circuit_controlled_exp_ia_id = qpp::QCircuit{ 2, 0 }
+        .CTRL(exp_ia_id, { 1 }, { 0 });
+    auto const controlled_exp_ia_id = extract_matrix<4>(circuit_controlled_exp_ia_id);
+
+    auto const circuit_one_exp_ia_x_I = qpp::QCircuit{ 2, 0 }
+        .gate(one_exp_ia, 1);
+    auto const one_exp_ia_x_I = extract_matrix<4>(circuit_one_exp_ia_x_I);
+
+    EXPECT_MATRIX_CLOSE(controlled_exp_ia_id, one_exp_ia_x_I, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> controlled-(exp(ia)I):\n" << qpp::disp(controlled_exp_ia_id) << "\n\n";
+        std::cerr << ">> (1.,exp(ia)) x I :\n" << qpp::disp(one_exp_ia_x_I) << "\n\n";
     }
 }
