@@ -417,3 +417,71 @@ TEST(chapter4_3, controlled_u_built_circuit)
         std::cerr << ">> controlled-U:\n" << qpp::disp(controlled_U) << "\n\n";
     }
 }
+
+//! @brief Equation 4.29
+TEST(chapter4_3, n_controlled_k_operation)
+{
+    qpp_e::maths::seed(958u);
+
+    auto constexpr n_controlled_k = []<unsigned int n, unsigned int k, bool ctrl>(auto&& x, auto&& U)
+    {
+        auto constexpr range_n = std::views::iota(0u, n) | std::views::common;
+        auto constexpr _2_pow_k = qpp_e::maths::pow(2u, k);
+        auto constexpr range_nk = std::views::iota(n, n+k) | std::views::common;
+
+        EXPECT_EQ(U.rows(), _2_pow_k);
+        EXPECT_EQ(U.cols(), _2_pow_k);
+
+        EXPECT_EQ(x.rows(), n);
+        EXPECT_EQ(x.cols(), 1);
+
+        auto const x_idx = x.template cast<qpp::idx>().eval();
+        auto const x_ket = qpp::mket({ x_idx.cbegin(), x_idx.cend() });
+        auto const x_int = std::accumulate(x_idx.cbegin(), x_idx.cend(), 0, [](int a, int b) { return (a << 1) + b; });
+
+        auto const psi = qpp::randket(_2_pow_k);
+        auto const n_controlled_U = qpp::gt.CTRL(U
+                                            , { range_n.begin(), range_n.end() }
+                                            , { range_nk.begin(), range_nk.end() }
+                                            , n + k);
+        auto const n_controlled_U_x_phi = (n_controlled_U * qpp::kron(x_ket, psi)).eval();
+        auto const x_controlled_U_phi = qpp::kron(x_ket, (qpp::powm(U, x.prod()) * psi).eval());
+
+        EXPECT_MATRIX_CLOSE(n_controlled_U_x_phi, x_controlled_U_phi, 1e-12);
+
+        if constexpr (ctrl)
+        {
+            EXPECT_EQ(x_idx.prod(), 1u);
+            auto const x_U_phi = qpp::kron(x_ket, (U * psi).eval());
+            EXPECT_MATRIX_CLOSE(n_controlled_U_x_phi, x_U_phi, 1e-12);
+        }
+        else
+        {
+            EXPECT_EQ(x_idx.prod(), 0u);
+            auto const x_phi = qpp::kron(x_ket, psi);
+            EXPECT_MATRIX_CLOSE(n_controlled_U_x_phi, x_phi, 1e-12);
+        }
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> ctrl: " << std::boolalpha << ctrl << "\n";
+            std::cerr << ">> x: " << x_idx.format(Eigen::IOFormat{ Eigen::StreamPrecision, Eigen::DontAlignCols, "", "", "", "", "", "" }) << "\n";
+            std::cerr << ">> x int: " << x_int << "\n";
+            std::cerr << ">> x product: " << x_idx.prod() << "\n\n";
+
+            std::cerr << ">> n_controlled_U_x_phi: " << qpp::disp(n_controlled_U_x_phi.transpose()) << "\n\n";
+            std::cerr << ">> x_controlled_U_phi: " << qpp::disp(x_controlled_U_phi.transpose()) << "\n\n";
+
+            using namespace Eigen::indexing;
+            std::cerr << ">> n_controlled_U_x_phi:\n" << qpp::disp(n_controlled_U_x_phi(seqN(_2_pow_k * x_int, _2_pow_k), all).transpose()) << "\n";
+            std::cerr << ">> x_controlled_U_phi:\n" << qpp::disp(x_controlled_U_phi(seqN(_2_pow_k * x_int, _2_pow_k), all).transpose()) << "\n\n";
+        }
+    };
+
+    auto constexpr n = 4u;
+    auto constexpr k = 3u;
+    auto constexpr _2_pow_k = qpp_e::maths::pow(2u, k);
+    auto const U = qpp::randU(_2_pow_k);
+    n_controlled_k.template operator()<n, k, false>(Eigen::Vector<bool, n>::Random().eval(), U);
+    n_controlled_k.template operator()<n, k, true>(Eigen::Vector<bool, n>::Ones(), U);
+}
