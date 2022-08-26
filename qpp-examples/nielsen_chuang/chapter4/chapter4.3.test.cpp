@@ -485,3 +485,41 @@ TEST(chapter4_3, n_controlled_k_operation)
     n_controlled_k.template operator()<n, k, false>(Eigen::Vector<bool, n>::Random().eval(), U);
     n_controlled_k.template operator()<n, k, true>(Eigen::Vector<bool, n>::Ones(), U);
 }
+
+//! @brief Figure 4.7
+TEST(chapter4_3, n_controlled_k_operation_circuit)
+{
+    qpp_e::maths::seed(95658u);
+
+    auto constexpr n = 4u;
+    auto constexpr range_n = std::views::iota(0u, n) | std::views::common;
+
+    auto constexpr k = 3u;
+    auto constexpr _2_pow_k = qpp_e::maths::pow(2u, k);
+    auto constexpr range_nk = std::views::iota(n, n+k) | std::views::common;
+
+    auto const U = qpp::randU(_2_pow_k);
+    auto const psi = qpp::randket(_2_pow_k);
+
+    auto const circuit = qpp::QCircuit{ n + k }
+        .CTRL_joint(U, { range_n.begin(), range_n.end() }, { range_nk.begin(), range_nk.end() });
+
+    auto engine = qpp::QEngine{ circuit };
+
+    {
+        auto const x = Eigen::Vector<bool, n>::Random().cast<qpp::idx>().eval();
+        auto const x_ket = qpp::mket({ x.cbegin(), x.cend() });
+        engine.reset().set_psi(qpp::kron(x_ket, psi)).execute();
+
+        auto const expected_out = qpp::kron(x_ket, psi);
+        EXPECT_MATRIX_CLOSE(engine.get_psi(), expected_out, 1e-12);
+    }
+    {
+        auto const x = Eigen::Vector<bool, n>::Ones().cast<qpp::idx>().eval();
+        auto const x_ket = qpp::mket({ x.cbegin(), x.cend() });
+        engine.reset().set_psi(qpp::kron(x_ket, psi)).execute();
+
+        auto const expected_out = qpp::kron(x_ket, (U * psi).eval());
+        EXPECT_MATRIX_CLOSE(engine.get_psi(), expected_out, 1e-12);
+    }
+}
