@@ -727,3 +727,42 @@ TEST(chapter4_3, controlled_rx_circuit)
         std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.23, Part 2
+TEST(chapter4_3, controlled_ry_circuit)
+{
+    using namespace std::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed(3141592u);
+    auto const theta = qpp::rand(0., 2.*pi);
+
+    auto const U = qpp::gt.RY(theta);
+    auto const circuit_U = qpp::QCircuit{ 2u }
+        .CTRL(U, { 0 }, { 1 });
+    auto const controlled_U = extract_matrix<4>(circuit_U);
+
+    auto [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z, print_text>(U);
+
+    /* RY is exactly at the singularity of the euler system */
+    ASSERT_LT(std::abs(alpha), 1e-12);
+
+    EXPECT_MATRIX_CLOSE(C, Eigen::Matrix2cd::Identity(), 1e-12);
+
+    auto const& X = qpp::gt.X;
+
+    auto const built_circuit_U = qpp::QCircuit{ 2u }
+        .CTRL(X, { 0 }, { 1 })
+        .gate(B, 1)
+        .CTRL(X, { 0 }, { 1 })
+        .gate(A, 1)
+    ;
+    auto const built_controlled_U = extract_matrix<4>(built_circuit_U);
+    EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
+        std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
+    }
+}
