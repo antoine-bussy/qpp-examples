@@ -558,6 +558,8 @@ TEST(chapter4_3, _2_controlled_1_U)
             std::cerr << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
             std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
         }
+
+        return built_controlled_U;
     };
     {
         auto const U = qpp::randU();
@@ -567,7 +569,8 @@ TEST(chapter4_3, _2_controlled_1_U)
     {
         auto const& U = qpp::gt.X;
         auto const V = (0.5 * (1. - 1.i) * (qpp::gt.Id2 + 1.i * qpp::gt.X)).eval();
-        _2_controlled_1_U_circuit(U, V);
+        auto const built_controlled_U = _2_controlled_1_U_circuit(U, V);
+        EXPECT_MATRIX_CLOSE(built_controlled_U, qpp::gt.TOF, 1e-12);
     }
 }
 
