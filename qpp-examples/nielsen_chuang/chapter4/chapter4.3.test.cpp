@@ -630,3 +630,57 @@ TEST(chapter4_3, diagonal_gate_and_cnot)
         std::cerr << ">> built_CNOT_DxI:\n" << qpp::disp(built_CNOT_DxI) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.22
+TEST(chapter4_3, simplified_2_controlled_1_U)
+{
+    using namespace std::complex_literals;
+
+    qpp_e::maths::seed();
+
+    auto const U = qpp::randU();
+
+    auto const circuit_U = qpp::QCircuit{ 3u }
+        .CTRL(U, { 0, 1 }, { 2 });
+    auto const controlled_U = extract_matrix<8>(circuit_U);
+
+    auto const V = qpp::sqrtm(U);
+    EXPECT_MATRIX_CLOSE((V * V).eval(), U, 1e-12);
+    EXPECT_MATRIX_CLOSE((V * V.adjoint()).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
+    EXPECT_MATRIX_CLOSE((V.adjoint() * V).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
+
+    auto const [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z, print_text>(V);
+    auto const exp_ia = Eigen::Matrix2cd
+    {
+        { 1., 0. },
+        { 0., std::exp(1.i * alpha) },
+    };
+    auto const& X = qpp::gt.X;
+
+    auto const built_circuit_U = qpp::QCircuit{ 3u }
+        .gate(C, 2)
+        .CTRL(X, { 1 }, { 2 })
+        .gate(B, 2)
+        .CTRL(X, { 0 }, { 2 })
+        .gate(B.adjoint(), 2)
+        .CTRL(X, { 1 }, { 2 })
+        .gate(B, 2)
+        .CTRL(X, { 0 }, { 2 })
+        .gate(A, 2)
+
+        .gate(exp_ia, 0)
+        .gate(exp_ia, 1)
+        .CTRL(X, { 0 }, { 1 })
+        .gate(exp_ia.adjoint(), 1)
+        .CTRL(X, { 0 }, { 1 })
+    ;
+    auto const built_controlled_U = extract_matrix<8>(built_circuit_U);
+
+    EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
+        std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
+    }
+}
