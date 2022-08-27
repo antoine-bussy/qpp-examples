@@ -174,6 +174,12 @@ namespace qpp_e::qube
     {
         using namespace std::literals::complex_literals;
 
+        static_assert(
+            _AlphaAxis == Eigen::EULER_Z
+            && _BetaAxis == Eigen::EULER_Y
+            && _GammaAxis == Eigen::EULER_Z,
+            "abc_decomposition is only implemented for ZYZ euler anlges");
+
         auto const [alpha, theta, n] = unitary_to_rotation(U);
 
         auto const e = euler_decomposition<_AlphaAxis, _BetaAxis, _GammaAxis>(alpha, theta, n);
