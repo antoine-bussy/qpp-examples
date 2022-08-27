@@ -684,3 +684,46 @@ TEST(chapter4_3, simplified_2_controlled_1_U)
         std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.23, Part 1
+TEST(chapter4_3, controlled_rx_circuit)
+{
+    using namespace std::complex_literals;
+    using namespace std::numbers;
+
+    qpp_e::maths::seed();
+    auto const theta = qpp::rand(0., 2.*pi);
+
+    auto const U = qpp::gt.RX(theta);
+    auto const circuit_U = qpp::QCircuit{ 2u }
+        .CTRL(U, { 0 }, { 1 });
+    auto const controlled_U = extract_matrix<4>(circuit_U);
+
+    /* Force special values for A, B, C */
+    auto const A = (qpp::gt.RZ(-0.5 * pi) * qpp::gt.RY(0.5 * theta)).eval();
+    auto const B = qpp::gt.RY(-0.5 * theta);
+    auto const C = qpp::gt.RZ(0.5 * pi);
+
+    auto const& X = qpp::gt.X;
+
+    auto const ABC = (A * B * C).eval();
+    EXPECT_MATRIX_CLOSE(ABC, Eigen::Matrix2cd::Identity(), 1e-12);
+    auto const AXBXC = (A * X * B * X * C).eval();
+    EXPECT_MATRIX_CLOSE(AXBXC, U, 1e-12);
+
+    auto const built_circuit_U = qpp::QCircuit{ 2u }
+        .gate(C, 1)
+        .CTRL(X, { 0 }, { 1 })
+        .gate(B, 1)
+        .CTRL(X, { 0 }, { 1 })
+        .gate(A, 1)
+    ;
+    auto const built_controlled_U = extract_matrix<4>(built_circuit_U);
+    EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
+        std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
+    }
+}
