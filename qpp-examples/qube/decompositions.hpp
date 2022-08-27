@@ -28,7 +28,10 @@ namespace qpp_e::qube
         EXPECT_MATRIX_CLOSE(H, H.adjoint(), 1e-12);
 
         auto const alpha_c = 0.5 * H.diagonal().sum();
-        EXPECT_COMPLEX_CLOSE(alpha_c, alpha_c.real(), 1e-12);
+        if(std::abs(alpha_c.real()) > 1e-12)
+        {
+            EXPECT_COMPLEX_CLOSE(alpha_c, alpha_c.real(), 1e-12);
+        }
         auto const alpha = std::remainder(alpha_c.real(), 2. * pi);
 
         auto const H_2 = (H - Eigen::Vector2cd::Constant(alpha_c).asDiagonal().toDenseMatrix()).eval();
