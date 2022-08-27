@@ -805,3 +805,70 @@ TEST(chapter4_3, abc_decomposition_of_v_adjoint)
         std::cerr << ">> V.adjoint():\n" << qpp::disp(V.adjoint()) << "\n\n";
     }
 }
+
+//! @brief Figure 4.8 and Exercise 4.24
+TEST(chapter4_3, toffoli_circuit)
+{
+    auto const& X = qpp::gt.X;
+    auto const& H = qpp::gt.H;
+    auto const& T = qpp::gt.T;
+    auto const& S = qpp::gt.S;
+
+    auto const circuit_toffoli = qpp::QCircuit{ 3, 0 }
+        .gate(qpp::gt.TOF, 0, 1, 2);
+    auto const toffoli = extract_matrix<8>(circuit_toffoli);
+    EXPECT_MATRIX_CLOSE(toffoli, qpp::gt.TOF, 1e-12);
+
+    auto const built_circuit_toffoli = qpp::QCircuit{ 3, 0 }
+        .gate(H, 2)
+        .CTRL(X, { 1 }, { 2 })
+        .gate(T.adjoint(), 2)
+        .CTRL(X, { 0 }, { 2 })
+        .gate(T, 2)
+        .CTRL(X, { 1 }, { 2 })
+        .gate(T.adjoint(), 2)
+        .CTRL(X, { 0 }, { 2 })
+        .gate(T, 2)
+        .gate(H, 2)
+
+        .gate(T.adjoint(), 1)
+        .CTRL(X, { 0 }, { 1 })
+        .gate(T.adjoint(), 1)
+        .CTRL(X, { 0 }, { 1 })
+        .gate(S, 1)
+
+        .gate(T, 0)
+    ;
+    auto const built_toffoli = extract_matrix<8>(built_circuit_toffoli);
+    EXPECT_MATRIX_CLOSE(built_toffoli, toffoli, 1e-12);
+
+    auto const built_circuit_toffoli_b = qpp::QCircuit{ 3, 0 }
+        .gate(H, 2)
+        .CTRL(X, { 1 }, { 2 })
+        .gate(T.adjoint(), 2)
+        .CTRL(X, { 0 }, { 2 })
+        .gate(T, 2)
+        .CTRL(X, { 1 }, { 2 })
+        .gate(T.adjoint(), 2)
+        .CTRL(X, { 0 }, { 2 })
+        .gate(T, 2)
+        .gate(H, 2)
+
+        .gate(T, 1)
+        .CTRL(X, { 0 }, { 1 })
+        .gate(T.adjoint(), 1)
+        .CTRL(X, { 0 }, { 1 })
+
+        .gate(T, 0)
+    ;
+    auto const built_toffoli_b = extract_matrix<8>(built_circuit_toffoli_b);
+    EXPECT_MATRIX_CLOSE(built_toffoli_b, toffoli, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> toffoli (qpp):\n" << qpp::disp(qpp::gt.TOF) << "\n\n";
+        std::cerr << ">> toffoli:\n" << qpp::disp(toffoli) << "\n\n";
+        std::cerr << ">> built_toffoli:\n" << qpp::disp(built_toffoli) << "\n\n";
+        std::cerr << ">> built_toffoli_b:\n" << qpp::disp(built_toffoli_b) << "\n\n";
+    }
+}
