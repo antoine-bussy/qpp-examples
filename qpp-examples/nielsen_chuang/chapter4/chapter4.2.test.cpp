@@ -378,17 +378,17 @@ TEST(chapter4_2, n_m_decomposition)
     auto const n1 = Eigen::Vector3d::Random().normalized().eval();
     auto const n2 = Eigen::Vector3d::Random().normalized().eval();
 
-    auto theta = qpp_e::qube::generalized_euler_decomposition<print_text>(R, n1, n2, n1);
-    auto const computed_Q = Eigen::AngleAxisd(theta[0], n1) * Eigen::AngleAxisd(theta[1], n2) * Eigen::AngleAxisd(theta[2], n1);
+    auto const theta = qpp_e::qube::generalized_euler_decomposition<print_text>(alpha_U, theta_U, n_U, n1, n2, n1);
+    auto const computed_Q = Eigen::AngleAxisd(theta[1], n1) * Eigen::AngleAxisd(theta[2], n2) * Eigen::AngleAxisd(theta[3], n1);
     auto const computed_R = computed_Q.toRotationMatrix();
     EXPECT_MATRIX_CLOSE(computed_R, R, 1e-12);
 
-    auto const alpha = Q.isApprox(computed_Q, 1e-12) ? alpha_U : (alpha_U + pi);
+    auto const& alpha = theta[0];
 
     auto const computed_U = (std::exp(1.i * alpha)
-        * qpp::gt.Rn(theta[0], { n1[0], n1[1], n1[2]})
-        * qpp::gt.Rn(theta[1], { n2[0], n2[1], n2[2]})
-        * qpp::gt.Rn(theta[2], { n1[0], n1[1], n1[2]})).eval();
+        * qpp::gt.Rn(theta[1], { n1[0], n1[1], n1[2]})
+        * qpp::gt.Rn(theta[2], { n2[0], n2[1], n2[2]})
+        * qpp::gt.Rn(theta[3], { n1[0], n1[1], n1[2]})).eval();
     EXPECT_MATRIX_CLOSE(computed_U, U, 1e-12);
 
     if constexpr (print_text)

@@ -27,7 +27,7 @@ namespace qpp_e::qube
         auto const H = Eigen::Matrix2cd{ -1.i * U.log() };
         EXPECT_MATRIX_CLOSE(H, H.adjoint(), 1e-12);
 
-        auto const alpha_c = 0.5 * H.diagonal().sum();
+        auto const alpha_c = 0.5 * H.trace();
         if(std::abs(alpha_c.real()) > 1e-12)
         {
             EXPECT_COMPLEX_CLOSE(alpha_c, alpha_c.real(), 1e-12);
@@ -90,18 +90,25 @@ namespace qpp_e::qube
 
     //! @brief Compute Euler decomposition and phase from phase, angle and unit axis
     //! @see unitary_to_rotation (output)
-    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis, bool print_text = false>
+    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis, bool print_text = false, bool reentering = false>
     auto euler_decomposition(qpp_e::maths::RealNumber auto const& alpha, qpp_e::maths::RealNumber auto const& theta, qpp_e::maths::Matrix auto const& n)
     {
         using namespace std::numbers;
 
         auto const q = Eigen::Quaterniond{ Eigen::AngleAxisd{theta, n} };
         auto const euler = euler_angles<_AlphaAxis, _BetaAxis, _GammaAxis>(q);
-        auto const qq = Eigen::Quaterniond{ euler };
+
+        if constexpr (!reentering)
+        {
+            if (!Eigen::Quaterniond{ euler }.isApprox(q, 1e-12))
+            {
+                auto const new_alpha = std::remainder(alpha + pi, 2. * pi);
+                return euler_decomposition<_AlphaAxis, _BetaAxis, _GammaAxis, print_text, true>(new_alpha, theta + 2.*pi, n);
+            }
+        }
 
         auto res = Eigen::Vector4d{};
-        /* Eigen Euler Angles module performs range conversion, which messes up with the "single-qubit Euler decomposition" */
-        res[0] = qq.isApprox(q, 1e-12) ? alpha : (alpha + pi);
+        res[0] = alpha;
         res.tail<3>() = euler.angles();
 
         return res;
@@ -169,6 +176,37 @@ namespace qpp_e::qube
         return theta;
     }
 
+    //! @brief Compute Euler generalized decomposition from phase, angle and unit axis
+    //! @see generalized_euler_decomposition
+    template < bool print_text = false, bool reentering = false >
+    auto generalized_euler_decomposition(
+        qpp_e::maths::RealNumber auto const& alpha, qpp_e::maths::RealNumber auto const& theta, qpp_e::maths::Matrix auto const& n
+        , qpp_e::maths::Matrix auto const& r1
+        , qpp_e::maths::Matrix auto const& r2
+        , qpp_e::maths::Matrix auto const& r3)
+    {
+        using namespace std::numbers;
+
+        auto const q = Eigen::Quaterniond{ Eigen::AngleAxisd{theta, n} };
+        auto const euler = generalized_euler_decomposition<print_text>(q.toRotationMatrix(), r1, r2, r3);
+
+        if constexpr (!reentering)
+        {
+            auto const computed_q = Eigen::AngleAxisd(euler[0], r1) * Eigen::AngleAxisd(euler[1], r2) * Eigen::AngleAxisd(euler[2], r3);
+            if (!computed_q.isApprox(q, 1e-12))
+            {
+                auto const new_alpha = std::remainder(alpha + pi, 2. * pi);
+                return generalized_euler_decomposition<print_text, true>(new_alpha, theta + 2.*pi, n, r1, r2, r3);
+            }
+        }
+
+        auto res = Eigen::Vector4d{};
+        res[0] = alpha;
+        res.tail<3>() = euler;
+
+        return res;
+    }
+
     template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis, bool print_text = false>
     auto abc_decomposition(qpp_e::maths::Matrix auto const& U)
     {
@@ -182,7 +220,7 @@ namespace qpp_e::qube
 
         auto const [alpha, theta, n] = unitary_to_rotation(U);
 
-        auto const e = euler_decomposition<_AlphaAxis, _BetaAxis, _GammaAxis>(alpha, theta, n);
+        auto const e = euler_decomposition<_AlphaAxis, _BetaAxis, _GammaAxis, print_text>(alpha, theta, n);
 
         auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RZ(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RZ(e[3])).eval();
         EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
