@@ -769,3 +769,39 @@ TEST(chapter4_3, controlled_ry_circuit)
         std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
     }
 }
+
+//! @brief Figure 4.8 and Exercise 4.24
+TEST(chapter4_3, abc_decomposition_of_v_adjoint)
+{
+    using namespace std::complex_literals;
+    using namespace std::numbers;
+
+    auto const& I = qpp::gt.Id2;
+    auto const& X = qpp::gt.X;
+    auto const& H = qpp::gt.H;
+    auto const& T = qpp::gt.T;
+
+    auto const V = (0.5 * (1.-1.i) * (I + 1.i * X)).eval();
+
+    auto const alpha = 0.25 * pi;
+    auto const A = (H * T).eval();
+    auto const B = T.adjoint();
+    auto const& C = H;
+
+    auto const eiaAXBXC = (std::exp(1.i * alpha) * A * X * B * X * C).eval();
+    EXPECT_MATRIX_CLOSE(eiaAXBXC, V.adjoint(), 1e-12);
+    auto const ABC = (A * B * C).eval();
+    EXPECT_MATRIX_CLOSE(ABC, I, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> alpha: " << qpp::disp(alpha) << "\n";
+        std::cerr << ">> A:\n" << qpp::disp(A) << "\n";
+        std::cerr << ">> B:\n" << qpp::disp(B) << "\n";
+        std::cerr << ">> C:\n" << qpp::disp(C) << "\n";
+
+        std::cerr << ">> ABC:\n" << qpp::disp(ABC) << "\n\n";
+        std::cerr << ">> eiaAXBXC:\n" << qpp::disp(eiaAXBXC) << "\n\n";
+        std::cerr << ">> V.adjoint():\n" << qpp::disp(V.adjoint()) << "\n\n";
+    }
+}
