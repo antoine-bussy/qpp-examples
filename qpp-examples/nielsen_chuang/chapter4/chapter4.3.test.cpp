@@ -523,3 +523,50 @@ TEST(chapter4_3, n_controlled_k_operation_circuit)
         EXPECT_MATRIX_CLOSE(engine.get_psi(), expected_out, 1e-12);
     }
 }
+
+//! @brief Figure 4.8 and Exercise 4.21
+TEST(chapter4_3, _2_controlled_1_U)
+{
+    using namespace std::complex_literals;
+
+    qpp_e::maths::seed();
+
+    auto constexpr _2_controlled_1_U_circuit = [](auto&& U, auto&& V)
+    {
+        EXPECT_MATRIX_CLOSE((V * V).eval(), U, 1e-12);
+        EXPECT_MATRIX_CLOSE((V * V.adjoint()).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
+        EXPECT_MATRIX_CLOSE((V.adjoint() * V).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
+
+        auto const circuit_U = qpp::QCircuit{ 3u }
+            .CTRL(U, { 0, 1 }, { 2 });
+        auto const controlled_U = extract_matrix<8>(circuit_U);
+
+        auto const& X = qpp::gt.X;
+
+        auto const built_circuit_U = qpp::QCircuit{ 3u }
+            .CTRL(V, { 1 }, { 2 })
+            .CTRL(X, { 0 }, { 1 })
+            .CTRL(V.adjoint(), { 1 }, { 2 })
+            .CTRL(X, { 0 }, { 1 })
+            .CTRL(V, { 0 }, { 2 });
+        auto const built_controlled_U = extract_matrix<8>(built_circuit_U);
+
+        EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
+            std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
+        }
+    };
+    {
+        auto const U = qpp::randU();
+        auto const V = qpp::sqrtm(U);
+        _2_controlled_1_U_circuit(U, V);
+    }
+    {
+        auto const& U = qpp::gt.X;
+        auto const V = (0.5 * (1. - 1.i) * (qpp::gt.Id2 + 1.i * qpp::gt.X)).eval();
+        _2_controlled_1_U_circuit(U, V);
+    }
+}
