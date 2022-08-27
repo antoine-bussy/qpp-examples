@@ -570,3 +570,63 @@ TEST(chapter4_3, _2_controlled_1_U)
         _2_controlled_1_U_circuit(U, V);
     }
 }
+
+//! @brief Check that diagonal operators and CNOT can be switched
+//! @details It applies in particular to phase gates
+TEST(chapter4_3, diagonal_gate_and_cnot)
+{
+    qpp_e::maths::seed();
+
+    auto const D = Eigen::Vector2cd::Random().asDiagonal().toDenseMatrix().eval();
+    auto const& I = qpp::gt.Id2;
+    auto const& CNOT = qpp::gt.CNOT;
+
+    auto const DxI = qpp::kron(D, I);
+
+    auto const expected_DxI = Eigen::Matrix4cd
+    {
+        { D(0,0), 0., 0., 0.},
+        { 0., D(0,0), 0., 0.},
+        { 0., 0., D(1,1), 0.},
+        { 0., 0., 0., D(1,1)},
+    };
+    EXPECT_MATRIX_CLOSE(DxI, expected_DxI, 1e-12);
+
+    auto const DxI_CNOT = (DxI * CNOT).eval();
+    auto const CNOT_DxI = (CNOT * DxI).eval();
+    EXPECT_MATRIX_CLOSE(DxI_CNOT, CNOT_DxI, 1e-12);
+
+    auto const expected_DxI_CNOT = Eigen::Matrix4cd
+    {
+        { D(0,0), 0., 0., 0.},
+        { 0., D(0,0), 0., 0.},
+        { 0., 0., 0., D(1,1)},
+        { 0., 0., D(1,1), 0.},
+    };
+    EXPECT_MATRIX_CLOSE(DxI_CNOT, expected_DxI_CNOT, 1e-12);
+
+    auto const& X = qpp::gt.X;
+    auto const circuit_DxI_CNOT = qpp::QCircuit{ 2u }
+        .CTRL(X, { 0 }, { 1 })
+        .gate(D, 0);
+    auto const built_DxI_CNOT = extract_matrix<4>(circuit_DxI_CNOT);
+    EXPECT_MATRIX_CLOSE(built_DxI_CNOT, DxI_CNOT, 1e-12);
+
+    auto const circuit_CNOT_DxI = qpp::QCircuit{ 2u }
+        .gate(D, 0)
+        .CTRL(X, { 0 }, { 1 });
+    auto const built_CNOT_DxI = extract_matrix<4>(circuit_CNOT_DxI);
+    EXPECT_MATRIX_CLOSE(built_CNOT_DxI, CNOT_DxI, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> D:\n" << qpp::disp(D) << "\n\n";
+        std::cerr << ">> I:\n" << qpp::disp(I) << "\n\n";
+        std::cerr << ">> CNOT:\n" << qpp::disp(CNOT) << "\n\n";
+        std::cerr << ">> DxI:\n" << qpp::disp(DxI) << "\n\n";
+        std::cerr << ">> DxI_CNOT:\n" << qpp::disp(DxI_CNOT) << "\n\n";
+        std::cerr << ">> CNOT_DxI:\n" << qpp::disp(CNOT_DxI) << "\n\n";
+        std::cerr << ">> built_DxI_CNOT:\n" << qpp::disp(built_DxI_CNOT) << "\n\n";
+        std::cerr << ">> built_CNOT_DxI:\n" << qpp::disp(built_CNOT_DxI) << "\n\n";
+    }
+}
