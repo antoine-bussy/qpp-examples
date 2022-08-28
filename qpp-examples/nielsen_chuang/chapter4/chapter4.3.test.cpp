@@ -948,3 +948,40 @@ TEST(chapter4_3, fredkin_circuit)
         std::cerr << ">> fredkin_5_gates:\n" << qpp::disp(fredkin_5_gates) << "\n\n";
     }
 }
+
+//! @brief Check that U, V commute => ctrl-U, ctrl-V commute
+TEST(chapter4_3, ctrl_commute)
+{
+    qpp_e::maths::seed();
+
+    auto const P = qpp::randU();
+    EXPECT_MATRIX_CLOSE((P * P.adjoint()).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
+    auto const U = (P * Eigen::Vector2cd::Random().asDiagonal().toDenseMatrix() * P.adjoint()).eval();
+    auto const V = (P * Eigen::Vector2cd::Random().asDiagonal().toDenseMatrix() * P.adjoint()).eval();
+
+    auto const UV = (U * V).eval();
+    auto const VU = (V * U).eval();
+    EXPECT_MATRIX_CLOSE(UV, VU, 1e-12);
+
+    auto const circuit_UV = qpp::QCircuit{ 3, 0 }
+        .CTRL(V, 0, 2)
+        .CTRL(U, 1, 2)
+        ;
+    auto const ctrl_UV = extract_matrix<8>(circuit_UV);
+
+    auto const circuit_VU = qpp::QCircuit{ 3, 0 }
+        .CTRL(U, 1, 2)
+        .CTRL(V, 0, 2)
+        ;
+    auto const ctrl_VU = extract_matrix<8>(circuit_VU);
+
+    EXPECT_MATRIX_CLOSE(ctrl_UV, ctrl_VU, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> UV:\n" << qpp::disp(UV) << "\n\n";
+        std::cerr << ">> VU:\n" << qpp::disp(VU) << "\n\n";
+        std::cerr << ">> ctrl_UV:\n" << qpp::disp(ctrl_UV) << "\n\n";
+        std::cerr << ">> ctrl_VU:\n" << qpp::disp(ctrl_VU) << "\n\n";
+    }
+}
