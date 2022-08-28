@@ -1056,3 +1056,38 @@ TEST(chapter4_3, toffoli_up_to_phase)
         std::cerr << ">> expected_toffoli_up_to_phase:\n" << qpp::disp(expected_toffoli_up_to_phase) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.27 and Equation 4.31
+TEST(chapter4_3, permutation_circuit)
+{
+    auto const& X = qpp::gt.X;
+    auto const& TOF = qpp::gt.TOF;
+
+    auto const circuit = qpp::QCircuit{ 3, 0 }
+        .gate(TOF, 1, 2, 0)
+        .CTRL(X, 2, 1)
+        .CTRL(X, 0, 2)
+        .CTRL(X, 1, 2)
+        .gate(TOF, 0, 1, 2)
+        ;
+    auto const perm = extract_matrix<8>(circuit);
+
+    auto const expected_perm = Eigen::Matrix<Eigen::dcomplex, 8, 8>
+    {
+        { 1., 0., 0., 0., 0., 0., 0., 0. },
+        { 0., 0., 0., 0., 0., 0., 0., 1. },
+        { 0., 1., 0., 0., 0., 0., 0., 0. },
+        { 0., 0., 1., 0., 0., 0., 0., 0. },
+        { 0., 0., 0., 1., 0., 0., 0., 0. },
+        { 0., 0., 0., 0., 1., 0., 0., 0. },
+        { 0., 0., 0., 0., 0., 1., 0., 0. },
+        { 0., 0., 0., 0., 0., 0., 1., 0. },
+    };
+    EXPECT_MATRIX_CLOSE(perm, expected_perm, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> perm:\n" << qpp::disp(perm) << "\n\n";
+        std::cerr << ">> expected_perm:\n" << qpp::disp(expected_perm) << "\n\n";
+    }
+}
