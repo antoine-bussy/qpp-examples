@@ -872,3 +872,79 @@ TEST(chapter4_3, toffoli_circuit)
         std::cerr << ">> built_toffoli_b:\n" << qpp::disp(built_toffoli_b) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.25
+TEST(chapter4_3, fredkin_circuit)
+{
+    using namespace Eigen::indexing;
+    using namespace std::complex_literals;
+
+    auto const& I = qpp::gt.Id2;
+    auto const& X = qpp::gt.X;
+    auto const& TOF = qpp::gt.TOF;
+
+    auto fredkin_matrix = Eigen::Matrix<Eigen::dcomplex, 8, 8>::Identity().eval();
+    fredkin_matrix({5,6}, {5,6}) = X;
+    EXPECT_MATRIX_EQ(fredkin_matrix, qpp::gt.FRED);
+
+    auto const circuit_fredkin = qpp::QCircuit{ 3, 0 }
+        .gate(qpp::gt.FRED, 0, 1, 2);
+    auto const fredkin = extract_matrix<8>(circuit_fredkin);
+    EXPECT_MATRIX_CLOSE(fredkin, qpp::gt.FRED, 1e-12);
+
+    /* Part 1 */
+    auto const circuit_fredkin_as_tof = qpp::QCircuit{ 3, 0 }
+        .gate(TOF, 0, 2, 1)
+        .gate(TOF, 0, 1, 2)
+        .gate(TOF, 0, 2, 1)
+        ;
+    auto const fredkin_as_tof = extract_matrix<8>(circuit_fredkin_as_tof);
+    EXPECT_MATRIX_CLOSE(fredkin_as_tof, fredkin, 1e-12);
+
+    /* Part 2 */
+    auto const circuit_fredkin_as_tof_and_cnot = qpp::QCircuit{ 3, 0 }
+        .CTRL(X, 2, 1)
+        .gate(TOF, 0, 1, 2)
+        .CTRL(X, 2, 1)
+        ;
+    auto const fredkin_as_tof_and_cnot = extract_matrix<8>(circuit_fredkin_as_tof_and_cnot);
+    EXPECT_MATRIX_CLOSE(fredkin_as_tof_and_cnot, fredkin, 1e-12);
+
+    /* Part 3 */
+    auto const V = (0.5 * (1.-1.i) * (I + 1.i * X)).eval();
+    auto const A = (qpp::gt.CTRL(V, {0}, {1}, 2) * qpp::gt.CNOTba).eval();
+
+    auto const circuit_fredkin_6_gates = qpp::QCircuit{ 3, 0 }
+        .gate(A, 1, 2)
+        .CTRL(X, 0, 1)
+        .CTRL(V.adjoint(), 1, 2)
+        .CTRL(X, 0, 1)
+        .CTRL(V, 0, 2)
+        .CTRL(X, 2, 1)
+        ;
+    auto const fredkin_6_gates = extract_matrix<8>(circuit_fredkin_6_gates);
+    EXPECT_MATRIX_CLOSE(fredkin_6_gates, fredkin, 1e-12);
+
+    /* Part 4 */
+    auto const B = (qpp::gt.CNOTba * qpp::gt.CTRL(V.adjoint(), {0}, {1}, 2)).eval();
+    EXPECT_MATRIX_CLOSE(B, A.adjoint(), 1e-12);
+
+    auto const circuit_fredkin_5_gates = qpp::QCircuit{ 3, 0 }
+        .gate(A, 1, 2)
+        .CTRL(V, 0, 2)
+        .CTRL(X, 0, 1)
+        .gate(B, 1, 2)
+        .CTRL(X, 0, 1)
+        ;
+    auto const fredkin_5_gates = extract_matrix<8>(circuit_fredkin_5_gates);
+    EXPECT_MATRIX_CLOSE(fredkin_5_gates, fredkin, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> fredkin:\n" << qpp::disp(fredkin) << "\n\n";
+        std::cerr << ">> fredkin_as_tof:\n" << qpp::disp(fredkin_as_tof) << "\n\n";
+        std::cerr << ">> fredkin_as_tof_and_cnot:\n" << qpp::disp(fredkin_as_tof_and_cnot) << "\n\n";
+        std::cerr << ">> fredkin_6_gates:\n" << qpp::disp(fredkin_6_gates) << "\n\n";
+        std::cerr << ">> fredkin_5_gates:\n" << qpp::disp(fredkin_5_gates) << "\n\n";
+    }
+}
