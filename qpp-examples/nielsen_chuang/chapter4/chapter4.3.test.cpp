@@ -985,3 +985,74 @@ TEST(chapter4_3, ctrl_commute)
         std::cerr << ">> ctrl_VU:\n" << qpp::disp(ctrl_VU) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.26
+TEST(chapter4_3, toffoli_up_to_phase)
+{
+    using namespace std::numbers;
+
+    auto const theta = 0.25 * pi;
+    auto const Ry = qpp::gt.RY(theta);
+    auto const& X = qpp::gt.X;
+
+    auto const toffoli_up_to_phase_circuit = qpp::QCircuit{ 3, 0 }
+        .gate(Ry, 2)
+        .CTRL(X, 1, 2)
+        .gate(Ry, 2)
+        .CTRL(X, 0, 2)
+        .gate(Ry.adjoint(), 2)
+        .CTRL(X, 1, 2)
+        .gate(Ry.adjoint(), 2)
+        ;
+
+    auto constexpr relative_phase = [](auto&& c1, auto&& c2, auto&& t)
+    {
+        if (c1 == 1
+            && c2 == 0
+            && t == 1
+        )
+            return -1.;
+
+        return 1.;
+    };
+
+    auto relative_phase_vector = Eigen::Vector<Eigen::dcomplex, 8>::Zero().eval();
+    auto engine = qpp::QEngine{ toffoli_up_to_phase_circuit };
+
+    for (auto&& c1 : { 0u, 1u })
+        for (auto&& c2 : { 0u, 1u })
+            for (auto&& t : { 0u, 1u })
+            {
+                auto const ket_in = qpp::mket({ c1, c2, t });
+                engine.reset().set_psi(ket_in).execute();
+                auto const expected_ket_out = engine.get_psi();
+
+                auto const phase = relative_phase(c1, c2, t);
+                auto const ket_out = (phase * qpp::gt.TOF * ket_in).eval();
+                EXPECT_MATRIX_CLOSE(ket_out, expected_ket_out, 1e-12);
+
+                auto const i = (c1 << 2) + (c2 << 1) + t;
+                EXPECT_MATRIX_EQ(ket_in, (Eigen::Vector<Eigen::dcomplex, 8>::Unit(i)));
+                relative_phase_vector[i] = phase;
+
+                if constexpr (print_text)
+                {
+                    std::cerr << ">> | c1, c2, t >: " << c1 << c2 << t << "\n";
+                    std::cerr << ">> ket_in:           " << qpp::disp(ket_in.transpose()) << "\n";
+                    std::cerr << ">> ket_out:          " << qpp::disp(ket_out.transpose()) << "\n";
+                    std::cerr << ">> expected_ket_out: " << qpp::disp(expected_ket_out.transpose()) << "\n\n";
+                }
+            }
+
+
+    auto const toffoli_up_to_phase = extract_matrix<8>(engine);
+    auto const expected_toffoli_up_to_phase = (relative_phase_vector.asDiagonal().toDenseMatrix() * qpp::gt.TOF).eval();
+    EXPECT_MATRIX_CLOSE(toffoli_up_to_phase, expected_toffoli_up_to_phase, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> toffolli:\n" << qpp::disp(qpp::gt.TOF) << "\n\n";
+        std::cerr << ">> toffoli_up_to_phase:\n" << qpp::disp(toffoli_up_to_phase) << "\n\n";
+        std::cerr << ">> expected_toffoli_up_to_phase:\n" << qpp::disp(expected_toffoli_up_to_phase) << "\n\n";
+    }
+}
