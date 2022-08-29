@@ -7,6 +7,7 @@
 #include <qpp-examples/maths/random.hpp>
 #include <qpp-examples/qube/decompositions.hpp>
 
+#include <chrono>
 #include <execution>
 #include <numbers>
 #include <ranges>
@@ -124,7 +125,67 @@ namespace
 
     //! @brief Extract indices of non-work qubits in a mket
     template < int NbOfOutputQubits = Eigen::Dynamic >
-    auto extract_indices(unsigned int nb_of_qubits, Eigen::VectorX<unsigned int> const& work_qubits_zero = {}
+    auto extract_indices(unsigned long int nb_of_qubits, Eigen::VectorX<unsigned int> const& work_qubits_zero = {}
+                                                  , Eigen::VectorX<unsigned int> const& work_qubits_one = {})
+    {
+        auto const nb_of_work_qubits_zero = work_qubits_zero.size();
+        auto const nb_of_work_qubits_one = work_qubits_one.size();
+        EXPECT_GE(nb_of_qubits, nb_of_work_qubits_zero + nb_of_work_qubits_one);
+        auto const nb_of_non_work_qubits = nb_of_qubits - nb_of_work_qubits_zero - nb_of_work_qubits_one;
+
+        if constexpr (NbOfOutputQubits != Eigen::Dynamic)
+        {
+            EXPECT_EQ(nb_of_non_work_qubits, NbOfOutputQubits);
+        }
+
+        auto mask = std::vector<qpp::idx>(nb_of_qubits, 2u);
+        for(auto&& i : work_qubits_zero)
+            mask[i] = 0u;
+        for(auto&& i : work_qubits_one)
+            mask[i] = 1u;
+
+        auto constexpr OuputDim = (NbOfOutputQubits == Eigen::Dynamic)
+                                    ? Eigen::Dynamic
+                                    : qpp_e::maths::pow(2l, static_cast<unsigned long int>(NbOfOutputQubits));
+        auto const output_dim = qpp_e::maths::pow(2l, nb_of_non_work_qubits);
+
+        auto indices = Eigen::Vector<unsigned long int, OuputDim>::Zero(output_dim).eval();
+        auto array = indices.array();
+
+        auto J = Eigen::seqN(0, 1);
+
+        for (auto&& i : mask)
+        {
+            array(J) *= 2;
+
+            switch (i)
+            {
+                case 0:
+                    break;
+                case 1:
+                    array(J) += 1;
+                    break;
+                case 2:
+                default:
+                    auto const _2J = Eigen::seqN(J.size(), J.size());
+                    array(_2J) = array(J) + 1;
+                    J = Eigen::seqN(0, 2 * J.size());
+                    break;
+            }
+        }
+        std::sort(indices.begin(), indices.end());
+
+        if constexpr (print_text)
+        {
+            std::cerr << "indices: " << qpp::disp(indices.transpose()) << "\n";
+        }
+
+        return indices;
+    }
+
+    //! @brief Extract indices of non-work qubits in a mket
+    template < int NbOfOutputQubits = Eigen::Dynamic >
+    auto extract_indices_2(unsigned long int nb_of_qubits, Eigen::VectorX<unsigned int> const& work_qubits_zero = {}
                                                   , Eigen::VectorX<unsigned int> const& work_qubits_one = {})
     {
         auto const nb_of_work_qubits_zero = work_qubits_zero.size();
@@ -146,10 +207,10 @@ namespace
 
         auto constexpr OuputDim = (NbOfOutputQubits == Eigen::Dynamic)
                                     ? Eigen::Dynamic
-                                    : qpp_e::maths::pow(2u, static_cast<unsigned int>(NbOfOutputQubits));
-        auto const output_dim = qpp_e::maths::pow(2u, nb_of_non_work_qubits);
+                                    : qpp_e::maths::pow(2l, static_cast<unsigned long int>(NbOfOutputQubits));
+        auto const output_dim = qpp_e::maths::pow(2l, nb_of_non_work_qubits);
 
-        auto indices = Eigen::Vector<unsigned int, OuputDim>::Zero(output_dim).eval();
+        auto indices = Eigen::Vector<unsigned long int, OuputDim>::Zero(output_dim).eval();
 
         auto constexpr fill_indices = [](auto&& callback, auto& mask, auto const& dims, auto& it_indices, auto const i) -> void
         {
@@ -179,7 +240,6 @@ namespace
         auto it_indices = indices.begin();
         fill_indices(fill_indices, mask, dims, it_indices, 0u);
         EXPECT_EQ(it_indices, indices.end());
-        std::sort(indices.begin(), indices.end());
 
         if constexpr (print_text)
         {
@@ -1214,8 +1274,18 @@ TEST(chapter4_3, n_controlled_U)
     circuit.gate(TOF, 0u, 1u, n);
 
     auto const work_qubits_zero = Eigen::VectorX<unsigned int>::LinSpaced(n - 1u, n, 2u * n - 2u).eval();
+
+    auto t0 = std::chrono::high_resolution_clock::now();
     auto const indices = extract_indices<n + 1u>(2u * n, work_qubits_zero);
+    auto tf = std::chrono::high_resolution_clock::now();
+    if constexpr (print_text)
+        std::cerr << "extract_indices: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
+
+    t0 = std::chrono::high_resolution_clock::now();
     auto const ctrl_U = extract_matrix<_2_pow_n_1>(circuit, indices);
+    tf = std::chrono::high_resolution_clock::now();
+    if constexpr (print_text)
+        std::cerr << "extract_matrix: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
 
     EXPECT_MATRIX_CLOSE(ctrl_U, expected_ctrl_U, 1e-12);
 
@@ -1225,5 +1295,35 @@ TEST(chapter4_3, n_controlled_U)
         std::cerr << ">> work_qubits_zero:\n" << qpp::disp(work_qubits_zero.transpose()) << "\n";
         std::cerr << ">> ctrl_U:\n" << qpp::disp(ctrl_U) << "\n\n";
         std::cerr << ">> expected_ctrl_U:\n" << qpp::disp(expected_ctrl_U) << "\n\n";
+    }
+}
+
+//! @brief Benchmark of extract_indices
+TEST(chapter4_3, DISABLED_benchmark_extract_indices)
+{
+    auto constexpr n = 20l;
+    auto const work_qubits_zero = Eigen::VectorX<unsigned int>::LinSpaced(n - 1u, n, 2u * n - 2u).eval();
+
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto const indices = extract_indices<>(2l * n, work_qubits_zero);
+    auto tf = std::chrono::high_resolution_clock::now();
+
+    std::cerr << ">> extract_indices: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+
+    t0 = std::chrono::high_resolution_clock::now();
+    auto const indices_2 = extract_indices_2<>(2l * n, work_qubits_zero);
+    tf = std::chrono::high_resolution_clock::now();
+
+    std::cerr << ">> extract_indices_2: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+
+    EXPECT_EQ(indices.size(), indices_2.size());
+    EXPECT_TRUE(indices == indices_2);
+
+    if constexpr (print_text)
+    {
+        auto const m = std::min(20l, indices.size());
+        auto const format = Eigen::IOFormat{ Eigen::FullPrecision, Eigen::DontAlignCols };
+        std::cerr << ">> indices:\n" << indices.head(m).transpose().format(format) << "\n";
+        std::cerr << ">> indices_2:\n" << indices_2.head(m).transpose().format(format) << "\n";
     }
 }
