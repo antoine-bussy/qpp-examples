@@ -1183,3 +1183,47 @@ TEST(chapter4_3, permutation_circuit)
         std::cerr << ">> expected_perm:\n" << qpp::disp(expected_perm) << "\n\n";
     }
 }
+
+//! @brief Figure 4.10
+TEST(chapter4_3, n_controlled_U)
+{
+    qpp_e::maths::seed();
+
+    auto constexpr n = 4u;
+    ASSERT_GE(n, 2u);
+    auto constexpr _2_pow_n_1 = qpp_e::maths::pow(2u, n + 1u);
+    auto const U = qpp::randU();
+    auto constexpr ctrl = std::views::iota(0u, n) | std::views::common;
+
+    auto const expected_circuit = qpp::QCircuit{ n + 1 }
+        .CTRL(U, { ctrl.begin(), ctrl.end() }, n)
+        ;
+    auto const expected_ctrl_U = extract_matrix<_2_pow_n_1>(expected_circuit);
+
+    auto const& TOF = qpp::gt.TOF;
+    auto circuit = qpp::QCircuit{ 2u * n };
+
+    circuit.gate(TOF, 0u, 1u, n);
+    for (auto&& i : std::views::iota(2u, n))
+        circuit.gate(TOF, i, i + n - 2u, i +  n - 1u);
+
+    circuit.CTRL(U, 2u * n - 2u, 2u * n - 1u);
+
+    for (auto&& i : std::views::iota(2u, n) | std::views::reverse)
+        circuit.gate(TOF, i, i + n - 2u, i +  n - 1u);
+    circuit.gate(TOF, 0u, 1u, n);
+
+    auto const work_qubits_zero = Eigen::VectorX<unsigned int>::LinSpaced(n - 1u, n, 2u * n - 2u).eval();
+    auto const indices = extract_indices<n + 1u>(2u * n, work_qubits_zero);
+    auto const ctrl_U = extract_matrix<_2_pow_n_1>(circuit, indices);
+
+    EXPECT_MATRIX_CLOSE(ctrl_U, expected_ctrl_U, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> indices:\n" << qpp::disp(indices.transpose()) << "\n";
+        std::cerr << ">> work_qubits_zero:\n" << qpp::disp(work_qubits_zero.transpose()) << "\n";
+        std::cerr << ">> ctrl_U:\n" << qpp::disp(ctrl_U) << "\n\n";
+        std::cerr << ">> expected_ctrl_U:\n" << qpp::disp(expected_ctrl_U) << "\n\n";
+    }
+}
