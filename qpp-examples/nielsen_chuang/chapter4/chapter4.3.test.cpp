@@ -1327,3 +1327,119 @@ TEST(chapter4_3, DISABLED_benchmark_extract_indices)
         std::cerr << ">> indices_2:\n" << indices_2.head(m).transpose().format(format) << "\n";
     }
 }
+
+namespace
+{
+    using n_controlled_data_t = std::tuple<unsigned int, unsigned int, qpp::QCircuit>;
+
+    auto n_controlled_X_no_work_qubit_circuit(unsigned int n) -> n_controlled_data_t&;
+    auto n_controlled_U_no_work_qubit_circuit(Eigen::MatrixXcd const& U, unsigned int n, bool input_is_sqrt = false) -> n_controlled_data_t;
+
+    auto n_controlled_X_no_work_qubit_circuit(unsigned int n) -> n_controlled_data_t&
+    {
+        using namespace std::literals::complex_literals;
+        assert(n >= 1);
+
+        static auto n_controlled_X = std::vector<n_controlled_data_t>(2u, { 1u, 1u, qpp::QCircuit{ 2u }.CTRL(qpp::gt.X, { 0u }, { 1u }) });
+
+        if (n_controlled_X.size() <= n)
+            n_controlled_X.resize(n + 1, { 0u, 0u, qpp::QCircuit{} });
+
+        auto& [ gates, gates_tof, circuit ] = n_controlled_X[n];
+
+        auto const V = (0.5 * (1. - 1.i) * (qpp::gt.Id2 + 1.i * qpp::gt.X)).eval();
+        EXPECT_MATRIX_CLOSE((V * V).eval(), qpp::gt.X, 1e-12);
+        if (gates == 0)
+            n_controlled_X[n] = n_controlled_U_no_work_qubit_circuit(V, n, true);
+
+        return n_controlled_X[n];
+    }
+
+    auto n_controlled_U_no_work_qubit_circuit(Eigen::MatrixXcd const& U, unsigned int n, bool input_is_sqrt /*= false*/) -> n_controlled_data_t
+    {
+        assert(n >= 1);
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> building ctrl-" << n << "\n";
+            std::cerr << ">> U: " << (input_is_sqrt ? "(sqrt)" : "") << "\n" << qpp::disp(U) << "\n\n";
+        }
+
+        if (n == 1)
+        {
+            auto const UU = input_is_sqrt ? (U * U).eval() : U;
+            auto const circuit_1 = qpp::QCircuit{ 2u }.CTRL(UU, { 0u }, { 1u });
+
+            return { 1u, 1u, circuit_1 };
+        }
+
+        static auto targets = std::vector<qpp::idx>{};
+
+        auto& [ gates_X, gates_tof_X, circuit_X ] = n_controlled_X_no_work_qubit_circuit(n - 1);
+        auto const V = input_is_sqrt ? U : qpp::sqrtm(U);
+        auto const [ gates_V, gates_tof_V, circuit_V ] = n_controlled_U_no_work_qubit_circuit(V, n - 1);
+
+        auto const s = targets.size();
+        targets.resize(n);
+        if (s < n)
+            std::iota(targets.begin() + s, targets.end(), s);
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> aggregating ctrl-" << n << "\n";
+            std::cerr << ">> U: " << (input_is_sqrt ? "(sqrt)" : "") << "\n" << qpp::disp(U) << "\n\n";
+        }
+
+        ++targets[n-1];
+
+        auto const circuit = qpp::QCircuit{ n + 1 }
+            .CTRL(V, { n-1 }, { n })
+            .add_circuit(circuit_X, 0)
+            .CTRL(V.adjoint(), { n-1 }, { n })
+            .add_circuit(circuit_X, 0)
+            .match_circuit_right(circuit_V, targets)
+            ;
+
+        --targets[n-1];
+
+        auto const gates = 2u + 2u * gates_X + gates_V;
+        auto const gates_tof = 4u + gates_tof_V;
+
+        return { gates, gates_tof, circuit };
+    }
+}
+
+//! @brief Exercises 4.28, 4.29 and 4.30
+TEST(chapter4_3, n_controlled_U_no_work_qubit)
+{
+    auto constexpr n = 4u;
+    auto constexpr range_n = std::views::iota(0u, n) | std::views::common;
+
+    for(auto&& i : range_n)
+    {
+        auto const& [ gates, gates_tof, CnX ] = n_controlled_X_no_work_qubit_circuit(i+1);
+
+        auto const expected_gates = 2 * qpp_e::maths::pow(3u, i) - 1;
+        EXPECT_EQ(gates, expected_gates);
+
+        auto const expected_gates_tof = 4 * (i+1) - 3;
+        EXPECT_EQ(gates_tof, expected_gates_tof);
+
+        auto const matrix = extract_matrix<>(CnX, qpp_e::maths::pow(2u, i + 2));
+        auto const ctrl = qpp::gt.CTRL(qpp::gt.X, { range_n.begin(), range_n.begin() + i + 1 }, { i+1 }, i+2);
+        EXPECT_MATRIX_CLOSE(matrix, ctrl, 1e-12);
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> number of ctrl: " << i+1 << "\n";
+            std::cerr << ">> gates: " << gates << "\n";
+            std::cerr << ">> expected_gates: " << expected_gates << "\n";
+            std::cerr << ">> gates_tof: " << gates_tof << "\n";
+            std::cerr << ">> expected_gates_tof: " << expected_gates_tof << "\n";
+            std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
+            std::cerr << ">> ctrl:\n" << qpp::disp(ctrl) << "\n\n";
+        }
+    }
+
+}
+
