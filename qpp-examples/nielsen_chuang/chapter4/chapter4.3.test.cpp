@@ -1443,3 +1443,31 @@ TEST(chapter4_3, n_controlled_U_no_work_qubit)
 
 }
 
+//! @brief Exercise 4.20 flipped
+//! @details We show that the circuit equality is preserved by flipping the circuits vertically
+TEST(chapter4_3, cnot_basis_transformations_flipped)
+{
+    using namespace qpp::literals;
+
+    /* Part 1 */
+    auto const circuit_HxH_cnot_flipped_HxH = qpp::QCircuit{ 2, 0 }
+        .gate_fan(qpp::gt.H, { 0, 1 })
+        .gate(qpp::gt.CNOT, { 1 }, { 0 })
+        .gate_fan(qpp::gt.H, { 0, 1 });
+    auto const HxH_cnot_flipped_HxH = extract_matrix<4>(circuit_HxH_cnot_flipped_HxH);
+
+    auto const circuit_cnot = qpp::QCircuit{ 2, 0 }
+        .gate(qpp::gt.CNOT, { 0 }, { 1 });
+    auto engine_cnot_flipped = qpp::QEngine{ circuit_cnot };
+    auto const cnot = extract_matrix<4>(circuit_cnot);
+
+    EXPECT_MATRIX_CLOSE(HxH_cnot_flipped_HxH, cnot, 1e-12);
+    EXPECT_MATRIX_CLOSE(qpp::gt.CNOT, cnot, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> circuit_HxH_cnot_flipped_HxH:\n" << qpp::disp(HxH_cnot_flipped_HxH) << "\n\n";
+        std::cerr << ">> cnot:\n" << qpp::disp(cnot) << "\n\n";
+        std::cerr << ">> cnot (qpp):\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
+    }
+}
