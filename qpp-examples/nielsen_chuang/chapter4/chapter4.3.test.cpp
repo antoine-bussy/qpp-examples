@@ -1545,6 +1545,34 @@ namespace
 
         return tof;
     }
+
+    //! @brief Based on "Elementary gates for quantum computation" by Barenco et al., Lemma 7.5 and Corollary 7.6
+    //! @details https://arxiv.org/pdf/quant-ph/9503016.pdf
+    auto n_controlled_U_quadratic(qpp::QCircuit& circuit, Eigen::MatrixXcd const& U, qpp::idx target, std::vector<qpp::idx>& ctrl) -> unsigned int
+    {
+        /* For the case of C5, we could have used the result of n_controlled_U_no_work_qubit_circuit_exp.
+        However, we use the built-in circuit for simplicity and performance.
+        Note that it doesn't really matter since we are interested in asymptotic performance. */
+        if (ctrl.size() == 5)
+        {
+            circuit.CTRL(U, ctrl, { target });
+            return 1u;
+        }
+
+        auto const V = qpp::sqrtm(U);
+
+        auto gates = 2u;
+        auto const x = ctrl.back();
+        ctrl.pop_back();
+
+        circuit.CTRL(V, x, target);
+        gates += n_controlled_X_corollary_7_4(circuit, x, ctrl, target);
+        circuit.CTRL(V.adjoint(), x, target);
+        gates += n_controlled_X_corollary_7_4(circuit, x, ctrl, target);
+        gates += n_controlled_U_quadratic(circuit, V, target, ctrl);
+
+        return gates;
+    }
 }
 
 //! @brief Test of Lemma 7.2, "Elementary gates for quantum computation" by Barenco et al.
@@ -1627,5 +1655,62 @@ TEST(chapter4_3, n_control_linear_one_work_qubit)
         std::cerr << ">> expected_gates_tof: " << expected_gates_tof << "\n";
         // std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
         // std::cerr << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
+    }
+}
+
+//! @brief Exercises 4.29 and 4.30
+//! @brief Test of Corollary 7.4, "Elementary gates for quantum computation" by Barenco et al.
+//! @details https://arxiv.org/pdf/quant-ph/9503016.pdf
+TEST(chapter4_3, n_controlled_U_no_work_qubit_quadratic)
+{
+    using namespace Eigen::indexing;
+#ifdef NDEBUG
+    auto constexpr n = 8u;
+#else
+    auto constexpr n = 7u;
+#endif
+
+    auto const U = qpp::randU();
+
+    auto circuit = qpp::QCircuit{ n };
+    auto ctrl = std::vector<qpp::idx>(n - 1u);
+    std::iota(ctrl.begin(), ctrl.end(), 0u);
+
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto const ctrl_matrix = qpp::gt.CTRL(U, ctrl, { n - 1u }, n);
+    auto tf = std::chrono::high_resolution_clock::now();
+    if constexpr (print_text)
+        std::cerr << "qpp::gt.CTRL: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+
+    t0 = std::chrono::high_resolution_clock::now();
+    auto const gates = n_controlled_U_quadratic(circuit, U, n - 1u, ctrl);
+    tf = std::chrono::high_resolution_clock::now();
+    if constexpr (print_text)
+        std::cerr << "n_controlled_U_quadratic: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    auto const expected_gates = 1u + 2u * (n - 6u) * (4u * n - 11u);
+    EXPECT_EQ(gates, expected_gates);
+
+    t0 = std::chrono::high_resolution_clock::now();
+    auto const matrix = extract_matrix<>(circuit, qpp_e::maths::pow(2u, n));
+    tf = std::chrono::high_resolution_clock::now();
+    if constexpr (print_text)
+        std::cerr << "extract_matrix: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    EXPECT_MATRIX_CLOSE(matrix, ctrl_matrix, 1e-12);
+
+    EXPECT_TRUE(matrix(seq(0,last-2),seq(0,last-2)).isIdentity(1e-12));
+    EXPECT_TRUE(ctrl_matrix(seq(0,last-2),seq(0,last-2)).isIdentity(1e-12));
+
+    EXPECT_MATRIX_CLOSE(matrix(lastN(2), lastN(2)), ctrl_matrix(lastN(2), lastN(2)), 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> number of qubits: " << n << "\n";
+        std::cerr << ">> number of ctrl: " << n - 1u << "\n";
+        std::cerr << ">> gates: " << gates << "\n";
+        std::cerr << ">> expected_gates: " << expected_gates << "\n";
+        // std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
+        // std::cerr << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
+        std::cerr << ">> matrix(lastN(2), lastN(2)):\n" << qpp::disp(matrix(lastN(2), lastN(2))) << "\n";
+        std::cerr << ">> ctrl(lastN(2), lastN(2)):\n" << qpp::disp(ctrl_matrix(lastN(2), lastN(2))) << "\n\n";
     }
 }
