@@ -1514,6 +1514,37 @@ namespace
 
         return tof;
     }
+
+    //! @brief Based on "Elementary gates for quantum computation" by Barenco et al., Corollary 7.4
+    //! @details https://arxiv.org/pdf/quant-ph/9503016.pdf
+    auto n_controlled_X_corollary_7_4(qpp::QCircuit& circuit, qpp::idx target, std::vector<qpp::idx> const& ctrl, qpp::idx work)
+    {
+        auto const n = ctrl.size() + 2u;
+        assert(n >= 7);
+        assert(n <= circuit.get_nq());
+
+        /* Here, floor should be used instead of ceil.
+           It yields a more balanced split and works when n = 7 */
+        auto const m1 = std::floor(0.5 * n);
+        auto const m2 = n - m1 - 1u;
+        assert(m1 + m2 == ctrl.size() + 1u);
+        static_cast<void>(m2);
+
+        auto const ctrl1 = std::vector<qpp::idx>{ ctrl.cbegin(), ctrl.cbegin() + m1 };
+        auto ctrl2 = std::vector<qpp::idx>{ ctrl.cbegin() + m1, ctrl.cend() };
+        ctrl2.emplace_back(work);
+
+        auto work1 = ctrl2;
+        work1.back() = target;
+
+        auto tof = 0u;
+        tof += n_controlled_X_lemma_7_2(circuit, work, ctrl1, work1);
+        tof += n_controlled_X_lemma_7_2(circuit, target, ctrl2, ctrl1);
+        tof += n_controlled_X_lemma_7_2(circuit, work, ctrl1, work1);
+        tof += n_controlled_X_lemma_7_2(circuit, target, ctrl2, ctrl1);
+
+        return tof;
+    }
 }
 
 //! @brief Test of Lemma 7.2, "Elementary gates for quantum computation" by Barenco et al.
@@ -1546,6 +1577,52 @@ TEST(chapter4_3, lemma_7_2)
     {
         std::cerr << ">> number of qubits: " << n << "\n";
         std::cerr << ">> number of ctrl: " << m << "\n";
+        std::cerr << ">> gates_tof: " << gates_tof << "\n";
+        std::cerr << ">> expected_gates_tof: " << expected_gates_tof << "\n";
+        // std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
+        // std::cerr << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
+    }
+}
+
+//! @brief Test of Corollary 7.4, "Elementary gates for quantum computation" by Barenco et al.
+//! @details https://arxiv.org/pdf/quant-ph/9503016.pdf
+TEST(chapter4_3, n_control_linear_one_work_qubit)
+{
+#ifdef NDEBUG
+    auto constexpr n = 8u;
+#else
+    auto constexpr n = 7u;
+#endif
+
+    auto circuit = qpp::QCircuit{ n };
+    auto ctrl = std::vector<qpp::idx>(n - 2u);
+    std::iota(ctrl.begin(), ctrl.end(), 0u);
+
+    auto t0 = std::chrono::high_resolution_clock::now();
+    auto const gates_tof = n_controlled_X_corollary_7_4(circuit, n - 1u, ctrl, n - 2u);
+    auto tf = std::chrono::high_resolution_clock::now();
+    if constexpr (print_text)
+        std::cerr << "n_controlled_X_corollary_7_4: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    auto const expected_gates_tof = 8u * (n - 5u);
+    EXPECT_EQ(gates_tof, expected_gates_tof);
+
+    t0 = std::chrono::high_resolution_clock::now();
+    auto const matrix = extract_matrix<>(circuit, qpp_e::maths::pow(2u, n));
+    tf = std::chrono::high_resolution_clock::now();
+    if constexpr (print_text)
+        std::cerr << "extract_matrix: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+
+    t0 = std::chrono::high_resolution_clock::now();
+    auto const ctrl_matrix = qpp::gt.CTRL(qpp::gt.X, ctrl, { n - 1u }, n);
+    tf = std::chrono::high_resolution_clock::now();
+    if constexpr (print_text)
+        std::cerr << "qpp::gt.CTRL: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    EXPECT_MATRIX_CLOSE(matrix, ctrl_matrix, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> number of qubits: " << n << "\n";
+        std::cerr << ">> number of ctrl: " << n - 2u << "\n";
         std::cerr << ">> gates_tof: " << gates_tof << "\n";
         std::cerr << ">> expected_gates_tof: " << expected_gates_tof << "\n";
         // std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
