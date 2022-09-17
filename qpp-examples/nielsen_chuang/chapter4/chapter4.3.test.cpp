@@ -1332,10 +1332,11 @@ namespace
 {
     using n_controlled_data_t = std::tuple<unsigned int, unsigned int, qpp::QCircuit>;
 
-    auto n_controlled_X_no_work_qubit_circuit(unsigned int n) -> n_controlled_data_t&;
-    auto n_controlled_U_no_work_qubit_circuit(Eigen::MatrixXcd const& U, unsigned int n, bool input_is_sqrt = false) -> n_controlled_data_t;
+    /* n-controlled gate with no work qubit, exponential complexity */
+    auto n_controlled_X_no_work_qubit_circuit_exp(unsigned int n) -> n_controlled_data_t&;
+    auto n_controlled_U_no_work_qubit_circuit_exp(Eigen::MatrixXcd const& U, unsigned int n, bool input_is_sqrt = false) -> n_controlled_data_t;
 
-    auto n_controlled_X_no_work_qubit_circuit(unsigned int n) -> n_controlled_data_t&
+    auto n_controlled_X_no_work_qubit_circuit_exp(unsigned int n) -> n_controlled_data_t&
     {
         using namespace std::literals::complex_literals;
         assert(n >= 1);
@@ -1350,12 +1351,12 @@ namespace
         auto const V = (0.5 * (1. - 1.i) * (qpp::gt.Id2 + 1.i * qpp::gt.X)).eval();
         EXPECT_MATRIX_CLOSE((V * V).eval(), qpp::gt.X, 1e-12);
         if (gates == 0)
-            n_controlled_X[n] = n_controlled_U_no_work_qubit_circuit(V, n, true);
+            n_controlled_X[n] = n_controlled_U_no_work_qubit_circuit_exp(V, n, true);
 
         return n_controlled_X[n];
     }
 
-    auto n_controlled_U_no_work_qubit_circuit(Eigen::MatrixXcd const& U, unsigned int n, bool input_is_sqrt /*= false*/) -> n_controlled_data_t
+    auto n_controlled_U_no_work_qubit_circuit_exp(Eigen::MatrixXcd const& U, unsigned int n, bool input_is_sqrt /*= false*/) -> n_controlled_data_t
     {
         assert(n >= 1);
 
@@ -1375,9 +1376,9 @@ namespace
 
         static auto targets = std::vector<qpp::idx>{};
 
-        auto& [ gates_X, gates_tof_X, circuit_X ] = n_controlled_X_no_work_qubit_circuit(n - 1);
+        auto& [ gates_X, gates_tof_X, circuit_X ] = n_controlled_X_no_work_qubit_circuit_exp(n - 1);
         auto const V = input_is_sqrt ? U : qpp::sqrtm(U);
-        auto const [ gates_V, gates_tof_V, circuit_V ] = n_controlled_U_no_work_qubit_circuit(V, n - 1);
+        auto const [ gates_V, gates_tof_V, circuit_V ] = n_controlled_U_no_work_qubit_circuit_exp(V, n - 1);
 
         auto const s = targets.size();
         targets.resize(n);
@@ -1410,14 +1411,14 @@ namespace
 }
 
 //! @brief Exercises 4.28, 4.29 and 4.30
-TEST(chapter4_3, n_controlled_U_no_work_qubit)
+TEST(chapter4_3, n_controlled_U_no_work_qubit_exp)
 {
     auto constexpr n = 4u;
     auto constexpr range_n = std::views::iota(0u, n) | std::views::common;
 
     for(auto&& i : range_n)
     {
-        auto const& [ gates, gates_tof, CnX ] = n_controlled_X_no_work_qubit_circuit(i+1);
+        auto const& [ gates, gates_tof, CnX ] = n_controlled_X_no_work_qubit_circuit_exp(i+1);
 
         auto const expected_gates = 2 * qpp_e::maths::pow(3u, i) - 1;
         EXPECT_EQ(gates, expected_gates);
