@@ -1472,3 +1472,83 @@ TEST(chapter4_3, cnot_basis_transformations_flipped)
         std::cerr << ">> cnot (qpp):\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
     }
 }
+
+namespace
+{
+    //! @brief Based on "Elementary gates for quantum computation" by Barenco et al., Lemma 7.2
+    //! @details https://arxiv.org/pdf/quant-ph/9503016.pdf
+    auto n_controlled_X_lemma_7_2(qpp::QCircuit& circuit, qpp::idx target, std::vector<qpp::idx> const& ctrl, std::vector<qpp::idx> const& work)
+    {
+        auto const n = circuit.get_nq();
+        auto const m = ctrl.size();
+        auto const s = work.size();
+        assert(n >= 5);
+        assert(m >= 3);
+        assert(m <= std::ceil(n));
+        assert(m + s < n);
+        assert(s >= m - 2u);
+        static_cast<void>(n);
+        static_cast<void>(s);
+
+        auto const helper = [&]()
+        {
+            auto const range = std::views::iota(2u, m - 1u);
+
+            for(auto&& i : range | std::views::reverse)
+                circuit.gate(qpp::gt.TOF, ctrl[i], work[i-2u], work[i-1u]);
+
+            circuit.gate(qpp::gt.TOF, ctrl[0u], ctrl[1u], work[0u]);
+
+            for(auto&& i : range)
+                circuit.gate(qpp::gt.TOF, ctrl[i], work[i-2u], work[i-1u]);
+
+            return 2u * range.size() + 1u;
+        };
+
+        auto tof = 2u;
+
+        circuit.gate(qpp::gt.TOF, ctrl[m-1u], work[m-3u], target);
+        tof += helper();
+        circuit.gate(qpp::gt.TOF, ctrl[m-1u], work[m-3u], target);
+        tof += helper();
+
+        return tof;
+    }
+}
+
+//! @brief Test of Lemma 7.2, "Elementary gates for quantum computation" by Barenco et al.
+//! @details https://arxiv.org/pdf/quant-ph/9503016.pdf
+TEST(chapter4_3, lemma_7_2)
+{
+#ifdef NDEBUG
+    auto constexpr n = 9u;
+    auto constexpr m = 5u;
+#else
+    auto constexpr n = 5u;
+    auto constexpr m = 3u;
+#endif
+
+    auto circuit = qpp::QCircuit{ n };
+    auto ctrl = std::vector<qpp::idx>(m);
+    std::iota(ctrl.begin(), ctrl.end(), 0u);
+    auto work = std::vector<qpp::idx>(m - 2u);
+    std::iota(work.begin(), work.end(), m);
+
+    auto const gates_tof = n_controlled_X_lemma_7_2(circuit, n - 1u, ctrl, work);
+    auto const expected_gates_tof = 4u * (m - 2u);
+    EXPECT_EQ(gates_tof, expected_gates_tof);
+
+    auto const matrix = extract_matrix<>(circuit, qpp_e::maths::pow(2u, n));
+    auto const ctrl_matrix = qpp::gt.CTRL(qpp::gt.X, ctrl, { n - 1u }, n);
+    EXPECT_MATRIX_CLOSE(matrix, ctrl_matrix, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> number of qubits: " << n << "\n";
+        std::cerr << ">> number of ctrl: " << m << "\n";
+        std::cerr << ">> gates_tof: " << gates_tof << "\n";
+        std::cerr << ">> expected_gates_tof: " << expected_gates_tof << "\n";
+        // std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
+        // std::cerr << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
+    }
+}
