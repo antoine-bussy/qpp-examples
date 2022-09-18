@@ -1714,3 +1714,29 @@ TEST(chapter4_3, n_controlled_U_no_work_qubit_quadratic)
         std::cerr << ">> ctrl(lastN(2), lastN(2)):\n" << qpp::disp(ctrl_matrix(lastN(2), lastN(2))) << "\n\n";
     }
 }
+
+//! @brief Figure 4.11
+TEST(chapter4_3, zero_cnot)
+{
+    auto const zero_cnot = Eigen::Matrix4cd
+    {
+        { 0., 1., 0., 0. },
+        { 1., 0., 0., 0. },
+        { 0., 0., 1., 0. },
+        { 0., 0., 0., 1. },
+    };
+
+    auto const circuit = qpp::QCircuit{ 2u }
+        .gate(qpp::gt.X, 0u)
+        .gate(qpp::gt.CNOT, 0u, 1u)
+        .gate(qpp::gt.X, 0u)
+        ;
+    auto const matrix = extract_matrix<4>(circuit);
+    EXPECT_MATRIX_CLOSE(zero_cnot, matrix, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> zero_cnot:\n" << qpp::disp(zero_cnot) << "\n\n";
+        std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
+    }
+}
