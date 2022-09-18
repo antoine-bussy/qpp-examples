@@ -1764,3 +1764,30 @@ TEST(chapter4_3, zero_toffoli)
         std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
     }
 }
+
+//! @brief Figure 4.13
+//! @details QPP is bugged, so we disable the test
+//! @see https://github.com/softwareQinc/qpp/issues/130
+TEST(chapter4_3, DISABLED_multiple_target_ctrl)
+{
+    auto const& X = qpp::gt.X;
+
+    auto const circuit = qpp::QCircuit{ 3u }
+        .CTRL(X, { 0u }, { 1u, 2u })
+        ;
+    auto const matrix = extract_matrix<8>(circuit);
+
+    auto const expected_circuit = qpp::QCircuit{ 3u }
+        .CTRL(X, 0u, 1u)
+        .CTRL(X, 0u, 2u)
+        ;
+    auto const expected_matrix = extract_matrix<8>(expected_circuit);
+
+    EXPECT_MATRIX_CLOSE(matrix, expected_matrix, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
+        std::cerr << ">> expected_matrix:\n" << qpp::disp(expected_matrix) << "\n\n";
+    }
+}
