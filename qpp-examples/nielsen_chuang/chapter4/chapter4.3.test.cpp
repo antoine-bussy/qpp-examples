@@ -1740,3 +1740,27 @@ TEST(chapter4_3, zero_cnot)
         std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
     }
 }
+
+//! @brief Figure 4.12
+TEST(chapter4_3, zero_toffoli)
+{
+    qpp_e::maths::seed();
+
+    auto const U = qpp::randU();
+    auto zero_toffoli = Eigen::MatrixXcd::Identity(16, 16).eval();
+    zero_toffoli({ 4, 5 }, { 4, 5 }) = U;
+
+    auto const circuit = qpp::QCircuit{ 4u }
+        .gate_fan(qpp::gt.X, { 0u, 2u })
+        .CTRL(U, { 0u, 1u, 2u }, 3u)
+        .gate_fan(qpp::gt.X, { 0u, 2u })
+        ;
+    auto const matrix = extract_matrix<>(circuit, 16);
+    EXPECT_MATRIX_CLOSE(zero_toffoli, matrix, 1e-12);
+
+    if constexpr (print_text)
+    {
+        std::cerr << ">> zero_toffoli:\n" << qpp::disp(zero_toffoli) << "\n\n";
+        std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
+    }
+}
