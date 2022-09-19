@@ -1791,3 +1791,62 @@ TEST(chapter4_3, DISABLED_multiple_target_ctrl)
         std::cerr << ">> expected_matrix:\n" << qpp::disp(expected_matrix) << "\n\n";
     }
 }
+
+//! @brief Exercise 4.31 and Equations 4.32 through 4.39
+TEST(chapter4_3, more_circuit_identities)
+{
+    using namespace std::numbers;
+
+    qpp_e::maths::seed();
+
+    auto constexpr test = [](qpp_e::maths::Matrix auto const& gate, auto const qubit
+                            , qpp_e::maths::Matrix auto const& gate1
+                            , qpp_e::maths::Matrix auto const& gate2
+                            , bool up_to_phase = false)
+    {
+        auto const ctrl_circuit = qpp::QCircuit{ 2u }
+            .CTRL(qpp::gt.X, 0u, 1u)
+            .gate(gate, qubit)
+            .CTRL(qpp::gt.X, 0u, 1u);
+        auto const ctrl_matrix = extract_matrix<4>(ctrl_circuit);
+
+        auto const circuit = qpp::QCircuit{ 2u }
+            .gate(gate1, 0u)
+            .gate(gate2, 1u);
+        auto const matrix = extract_matrix<4>(circuit);
+
+        if(up_to_phase)
+        {
+            EXPECT_MATRIX_NOT_CLOSE(ctrl_matrix, matrix, 1e-1);
+            EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(ctrl_matrix, matrix, 1e-12);
+        }
+        else
+        {
+            EXPECT_MATRIX_CLOSE(ctrl_matrix, matrix, 1e-12);
+        }
+
+        if constexpr (print_text)
+        {
+            std::cerr << ">> ctrl_matrix:\n" << qpp::disp(ctrl_matrix) << "\n\n";
+            std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
+        }
+    };
+
+    auto const& X = qpp::gt.X;
+    auto const& Y = qpp::gt.Y;
+    auto const& Z = qpp::gt.Z;
+    auto const& I = qpp::gt.Id2;
+
+    auto const theta = qpp::rand(0., 2.*pi);
+    auto const Rz = qpp::gt.RZ(theta);
+    auto const Rx = qpp::gt.RX(theta);
+
+    test(X, 0u, X, X);
+    test(Y, 0u, Y, X);
+    test(Z, 0u, Z, I);
+    test(X, 1u, I, X);
+    test(Y, 1u, Z, Y);
+    test(Z, 1u, Z, Z);
+    test(Rz, 0u, Rz, I);
+    test(Rx, 1u, I, Rx);
+}
