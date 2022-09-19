@@ -20,6 +20,7 @@ parser.add_argument('-d', '--debug', help="build in debug", action='store_const'
 parser.add_argument('-r', '--release', help="build in release", action='store_const', const='Release', dest='config')
 parser.add_argument('--skip-cmake', help="skip cmake configuration step", action='store_true')
 parser.add_argument('-bf', '--build-folder', help="build folder path", type=str, default="")
+parser.add_argument('-s', '--debug-stream', help="enable debug stream", action='store_true')
 parser.add_argument("extra_options", nargs=argparse.REMAINDER, help="additional options")
 args = parser.parse_args()
 
@@ -52,6 +53,7 @@ else:
 for config in configs:
     conan_command_config = conan_command + [ "-s", f"build_type={config}" ]
     conan_command_config += [ "." ]
+    conan_command_config += [ "-o", f"cmake_extra_options=-DDEBUG_STREAM={'on' if args.debug_stream else 'off'}" ]
     conan_command_config += args.extra_options
     print(' '.join(conan_command_config))
     subprocess.run(' '.join(conan_command_config), shell=True, check=True)

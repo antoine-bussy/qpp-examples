@@ -5,16 +5,14 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <chrono>
 #include <execution>
 #include <numbers>
 #include <ranges>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 //! @brief Figure 4.14
 TEST(chapter4_4, projective_measurment_circuit)
@@ -42,15 +40,12 @@ TEST(chapter4_4, projective_measurment_circuit)
     EXPECT_MATRIX_CLOSE(out_psi, expected_out, 1e-12);
     EXPECT_COMPLEX_CLOSE(probs[0], expected_probs[measured], 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> psi: " << qpp::disp(psi.transpose()) << "\n";
-        std::cerr << ">> measured: " << measured << "\n\n";
+    debug() << ">> psi: " << qpp::disp(psi.transpose()) << "\n";
+    debug() << ">> measured: " << measured << "\n\n";
 
-        std::cerr << ">> out_psi: " << qpp::disp(out_psi.transpose()) << "\n";
-        std::cerr << ">> expected_out: " << qpp::disp(expected_out.transpose()) << "\n\n";
+    debug() << ">> out_psi: " << qpp::disp(out_psi.transpose()) << "\n";
+    debug() << ">> expected_out: " << qpp::disp(expected_out.transpose()) << "\n\n";
 
-        std::cerr << ">> probs: " << qpp::disp(probs.transpose()) << "\n";
-        std::cerr << ">> expected_probs: " << qpp::disp(expected_probs.transpose()) << "\n";
-    }
+    debug() << ">> probs: " << qpp::disp(probs.transpose()) << "\n";
+    debug() << ">> expected_probs: " << qpp::disp(expected_probs.transpose()) << "\n";
 }
