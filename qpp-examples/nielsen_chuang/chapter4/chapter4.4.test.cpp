@@ -100,3 +100,34 @@ TEST(chapter4_4, quantum_teleportation_with_deferred_measurement)
     debug() << ">> dits:\n" << qpp::disp(dits) << '\n';
     debug() << ">> deferred dits:\n" << qpp::disp(deferred_dits) << '\n';
 }
+
+//! @brief Exercise 4.32 (with formulas)
+TEST(chapter4_4, implicit_measurement_formulas)
+{
+    using namespace qpp::literals;
+
+    qpp_e::maths::seed();
+
+    auto const& I = qpp::gt.Id2;
+
+    auto const P = std::vector<qpp::cmat>{ 0_prj, 1_prj };
+    auto const P_tilde = std::vector<qpp::cmat>{ qpp::kron(I, P[0]), qpp::kron(I, P[1]) };
+
+    auto const rho = qpp::randrho(4);
+
+    auto const [result, p, rho_out] = qpp::measure(rho, P, { 1 }, { 2 }, false);
+
+    auto const rho_prime = (p[0] * rho_out[0] + p[1] * rho_out[1]).eval();
+    auto const expectel_rho_prime = (P_tilde[0] * rho * P_tilde[0] + P_tilde[1] * rho * P_tilde[1]).eval();
+
+    EXPECT_MATRIX_CLOSE(rho_prime, expectel_rho_prime, 1e-12);
+
+    debug() << ">> rho:\n" << qpp::disp(rho) << '\n';
+    debug() << ">> rho':\n" << qpp::disp(rho_prime) << '\n';
+    debug() << ">> expected rho':\n" << qpp::disp(expectel_rho_prime) << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(p, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& r : rho_out)
+        debug() << qpp::disp(r) << "\n\n";
+}
