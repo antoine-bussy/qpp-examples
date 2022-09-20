@@ -131,3 +131,45 @@ TEST(chapter4_4, implicit_measurement_formulas)
     for (auto&& r : rho_out)
         debug() << qpp::disp(r) << "\n\n";
 }
+
+//! @brief Exercise 4.32 (with circuit)
+TEST(chapter4_4, implicit_measurement_circuit)
+{
+    qpp_e::maths::seed();
+
+    auto const U = qpp::randU(4);
+    auto circuit = qpp::QCircuit{ 2, 2 }
+        .gate(U, 0, 1)
+        .measureZ(0, 0)
+        ;
+    auto engine = qpp::QEngine{ circuit };
+
+    auto const psi = qpp::randket(4);
+
+    engine.reset().set_psi(psi).execute();
+    auto const p1 = engine.get_probs();
+    auto const probs1 = Eigen::VectorXd::Map(p1.data(), p1.size());
+    auto const dits1 = engine.get_dits();
+
+    debug() << ">> probs 1: " << qpp::disp(probs1.transpose()) << "\n";
+    debug() << ">> dits 1: " << qpp::disp(dits1, ", ") << '\n';
+
+    circuit.measureZ(1, 1);
+
+    engine.reset().set_psi(psi).execute();
+    auto const p2 = engine.get_probs();
+    auto const probs2 = Eigen::VectorXd::Map(p2.data(), p2.size());
+    auto const dits2 = engine.get_dits();
+
+    debug() << ">> probs 2: " << qpp::disp(probs2.transpose()) << "\n";
+    debug() << ">> dits 2: " << qpp::disp(dits2, ", ") << '\n';
+
+    if(dits1[0] == dits2[0])
+    {
+        EXPECT_COMPLEX_CLOSE(probs2[0], probs1[0], 1e-12);
+    }
+    else
+    {
+        EXPECT_COMPLEX_CLOSE(probs2[0], 1. - probs1[0], 1e-12);
+    }
+}
