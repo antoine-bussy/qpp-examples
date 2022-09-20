@@ -49,3 +49,54 @@ TEST(chapter4_4, projective_measurment_circuit)
     debug() << ">> probs: " << qpp::disp(probs.transpose()) << "\n";
     debug() << ">> expected_probs: " << qpp::disp(expected_probs.transpose()) << "\n";
 }
+
+//! @brief Figure 4.15 (and Figure 1.13)
+TEST(chapter4_4, quantum_teleportation_with_deferred_measurement)
+{
+    qpp_e::maths::seed();
+
+    auto const& b00 = qpp::st.b00;
+
+    auto const& X = qpp::gt.X;
+    auto const& Z = qpp::gt.Z;
+    auto const& H = qpp::gt.H;
+
+    auto const circuit = qpp::QCircuit{ 3, 2 }
+        .CTRL(X, 0, 1)
+        .gate(H, 0)
+        .measureZ(0, 0)
+        .measureZ(1, 1)
+        .cCTRL(X, 1, 2)
+        .cCTRL(Z, 0, 2)
+    ;
+
+    auto const deferred_circuit = qpp::QCircuit{ 3, 2 }
+        .CTRL(X, 0, 1)
+        .gate(H, 0)
+        .CTRL(X, 1, 2)
+        .CTRL(Z, 0, 2)
+        .measureZ(0, 0)
+        .measureZ(1, 1)
+    ;
+
+    auto const psi = qpp::randket();
+
+    auto engine = qpp::QEngine{ circuit };
+    engine.reset().set_psi(qpp::kron(psi, b00)).execute();
+    EXPECT_MATRIX_CLOSE(engine.get_psi(), psi, 1e-12);
+
+    auto deferred_engine = qpp::QEngine{ deferred_circuit };
+    deferred_engine.reset().set_psi(qpp::kron(psi, b00)).execute();
+    EXPECT_MATRIX_CLOSE(deferred_engine.get_psi(), psi, 1e-12);
+
+    auto const d = engine.get_dits();
+    auto const dits = Eigen::VectorX<long unsigned int>::Map(d.data(), d.size());
+    auto const dd = deferred_engine.get_dits();
+    auto const deferred_dits = Eigen::VectorX<long unsigned int>::Map(dd.data(), dd.size());
+
+    debug() << ">> psi:\n" << qpp::disp(psi) << '\n';
+    debug() << ">> psi_out:\n" << qpp::disp(engine.get_psi()) << '\n';
+    debug() << ">> deferred psi_out:\n" << qpp::disp(deferred_engine.get_psi()) << '\n';
+    debug() << ">> dits:\n" << qpp::disp(dits) << '\n';
+    debug() << ">> deferred dits:\n" << qpp::disp(deferred_dits) << '\n';
+}
