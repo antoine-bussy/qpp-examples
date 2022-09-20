@@ -5,15 +5,13 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <execution>
 #include <numbers>
 #include <ranges>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 //! @brief Equations 2.92 through 2.95
 TEST(chapter2_2, measurement_operators)
@@ -46,19 +44,16 @@ TEST(chapter2_2, measurement_operators)
         EXPECT_MATRIX_CLOSE(post_measurement_state_m, resulting_state[m], 1e-12);
     }
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> Measurement operators:\n";
-        for (auto&& op : measurement_operators)
-            std::cerr << qpp::disp(op) << "\n\n";
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& st : resulting_state)
-            std::cerr << qpp::disp(st) << "\n\n";
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> Measurement operators:\n";
+    for (auto&& op : measurement_operators)
+        debug() << qpp::disp(op) << "\n\n";
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& st : resulting_state)
+        debug() << qpp::disp(st) << "\n\n";
 }
 
 //! @brief Equations 2.96 through 2.98
@@ -97,18 +92,15 @@ TEST(chapter2_2, measurement_operators_one_qubit)
     EXPECT_MATRIX_CLOSE(post_measurement_state_1, resulting_state[1], 1e-12);
     EXPECT_MATRIX_CLOSE(post_measurement_state_1, state[1] / std::abs(state[1]) * 1_ket, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> M0:\n" << qpp::disp(M0) << "\n\n";
-        std::cerr << ">> M1:\n" << qpp::disp(M1) << "\n\n";
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& st : resulting_state)
-            std::cerr << qpp::disp(st) << "\n\n";
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> M0:\n" << qpp::disp(M0) << "\n\n";
+    debug() << ">> M1:\n" << qpp::disp(M1) << "\n\n";
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& st : resulting_state)
+        debug() << qpp::disp(st) << "\n\n";
 }
 
 //! @brief Exercise 2.57
@@ -184,19 +176,16 @@ TEST(chapter2_2, non_completeness)
     EXPECT_FALSE(completeness(qpp::st.px1, qpp::st.pz0).isIdentity(1e-1));
     EXPECT_FALSE(completeness(qpp::st.px1, qpp::st.pz1).isIdentity(1e-1));
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> PZ0:\n" << qpp::disp(qpp::st.pz0) << "\n\n";
-        std::cerr << ">> PZ1:\n" << qpp::disp(qpp::st.pz1) << "\n\n";
-        std::cerr << ">> PX0:\n" << qpp::disp(qpp::st.px0) << "\n\n";
-        std::cerr << ">> PX1:\n" << qpp::disp(qpp::st.px1) << "\n\n";
-        std::cerr << ">> Completeness Z:\n" << qpp::disp(completeness(qpp::st.pz0, qpp::st.pz1)) << "\n\n";
-        std::cerr << ">> Completeness X:\n" << qpp::disp(completeness(qpp::st.px0, qpp::st.px1)) << "\n\n";
-        std::cerr << ">> Completeness X0Z0:\n" << qpp::disp(completeness(qpp::st.px0, qpp::st.pz0)) << "\n\n";
-        std::cerr << ">> Completeness X0Z1:\n" << qpp::disp(completeness(qpp::st.px0, qpp::st.pz1)) << "\n\n";
-        std::cerr << ">> Completeness X1Z0:\n" << qpp::disp(completeness(qpp::st.px1, qpp::st.pz0)) << "\n\n";
-        std::cerr << ">> Completeness X1Z1:\n" << qpp::disp(completeness(qpp::st.px1, qpp::st.pz1)) << "\n\n";
-    }
+    debug() << ">> PZ0:\n" << qpp::disp(qpp::st.pz0) << "\n\n";
+    debug() << ">> PZ1:\n" << qpp::disp(qpp::st.pz1) << "\n\n";
+    debug() << ">> PX0:\n" << qpp::disp(qpp::st.px0) << "\n\n";
+    debug() << ">> PX1:\n" << qpp::disp(qpp::st.px1) << "\n\n";
+    debug() << ">> Completeness Z:\n" << qpp::disp(completeness(qpp::st.pz0, qpp::st.pz1)) << "\n\n";
+    debug() << ">> Completeness X:\n" << qpp::disp(completeness(qpp::st.px0, qpp::st.px1)) << "\n\n";
+    debug() << ">> Completeness X0Z0:\n" << qpp::disp(completeness(qpp::st.px0, qpp::st.pz0)) << "\n\n";
+    debug() << ">> Completeness X0Z1:\n" << qpp::disp(completeness(qpp::st.px0, qpp::st.pz1)) << "\n\n";
+    debug() << ">> Completeness X1Z0:\n" << qpp::disp(completeness(qpp::st.px1, qpp::st.pz0)) << "\n\n";
+    debug() << ">> Completeness X1Z1:\n" << qpp::disp(completeness(qpp::st.px1, qpp::st.pz1)) << "\n\n";
 }
 
 //! @brief Measurements operators are not necessarily projective measurements
@@ -586,8 +575,7 @@ TEST(chapter2_2, povm_construction)
         auto const [result, probabilities, resulting_state] = qpp::measure(psi.col(i), Ks);
         EXPECT_THAT((std::array{ i, m }), testing::Contains(result));
         EXPECT_LT(probabilities[i], 1.);
-        if (print_text)
-            std::cerr << "Probability for psi[" << i << "]: " << probabilities[i] << '\n';
+        debug() << "Probability for psi[" << i << "]: " << probabilities[i] << '\n';
         EXPECT_GT(probabilities[i], 0.);
         for (auto&& j : range)
             if (i != j)
@@ -688,8 +676,7 @@ TEST(chapter2_2, ancillary_system)
             else
                 U.col(col) = *(it++);
         }
-    if (print_text)
-        std::cerr << "Matrix U:\n" << qpp::disp(U) << "\n\n";
+    debug() << "Matrix U:\n" << qpp::disp(U) << "\n\n";
     EXPECT_MATRIX_CLOSE(U.adjoint() * U, Eigen::MatrixXcd::Identity(D, D), 1e-12);
 
     auto P = std::vector<Eigen::MatrixXcd>(MM);

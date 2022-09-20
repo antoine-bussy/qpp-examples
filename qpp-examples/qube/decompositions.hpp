@@ -4,6 +4,8 @@
 Decomposistion functions.
  */
 
+#include "debug.hpp"
+
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
@@ -17,7 +19,6 @@ namespace qpp_e::qube
 {
 
     //! @brief Compute rotation parameters from unitary matrix
-    template < bool print_text = false >
     auto unitary_to_rotation(qpp_e::maths::Matrix auto const& U)
     {
         using namespace std::literals::complex_literals;
@@ -58,24 +59,21 @@ namespace qpp_e::qube
         auto const rotation = (std::exp(1.i * alpha) * qpp::gt.Rn(theta, { n[0], n[1], n[2] })).eval();
         EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
-            std::cerr << ">> H:\n" << qpp::disp(H) << "\n\n";
-            std::cerr << ">> alpha: " << alpha << "\n\n";
-            std::cerr << ">> H_2:\n" << qpp::disp(H_2) << "\n\n";
-            std::cerr << ">> H_22:\n" << qpp::disp(H_22) << "\n\n";
-            std::cerr << ">> theta: " << theta << "\n\n";
-            std::cerr << ">> n_dot_sigma:\n" << qpp::disp(n_dot_sigma) << "\n\n";
-            std::cerr << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
-            std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
-        }
+        debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+        debug() << ">> H:\n" << qpp::disp(H) << "\n\n";
+        debug() << ">> alpha: " << alpha << "\n\n";
+        debug() << ">> H_2:\n" << qpp::disp(H_2) << "\n\n";
+        debug() << ">> H_22:\n" << qpp::disp(H_22) << "\n\n";
+        debug() << ">> theta: " << theta << "\n\n";
+        debug() << ">> n_dot_sigma:\n" << qpp::disp(n_dot_sigma) << "\n\n";
+        debug() << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
+        debug() << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
 
         return std::tuple{ alpha, theta, n };
     }
 
     //! @brief Compute Euler angles for a compatible input M (rotation matrix, unit quaternion, ...)
-    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis, bool print_text = false>
+    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
     auto euler_angles(auto const& M)
     {
         using scalar_t = std::decay_t<decltype(M)>::Scalar;
@@ -87,7 +85,7 @@ namespace qpp_e::qube
 
     //! @brief Compute Euler decomposition and phase from phase, angle and unit axis
     //! @see unitary_to_rotation (output)
-    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis, bool print_text = false, bool reentering = false>
+    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis, bool reentering = false>
     auto euler_decomposition(qpp_e::maths::RealNumber auto const& alpha, qpp_e::maths::RealNumber auto const& theta, qpp_e::maths::Matrix auto const& n)
     {
         using namespace std::numbers;
@@ -100,7 +98,7 @@ namespace qpp_e::qube
             if (!Eigen::Quaterniond{ euler }.isApprox(q, 1e-12))
             {
                 auto const new_alpha = std::remainder(alpha + pi, 2. * pi);
-                return euler_decomposition<_AlphaAxis, _BetaAxis, _GammaAxis, print_text, true>(new_alpha, theta + 2.*pi, n);
+                return euler_decomposition<_AlphaAxis, _BetaAxis, _GammaAxis, true>(new_alpha, theta + 2.*pi, n);
             }
         }
 
@@ -116,7 +114,6 @@ namespace qpp_e::qube
     //! Such a decomposition does not always exist (see necessary and sufficient condition in the code)
     //! Return NaN if the condition is not met
     //! Computed from "On Coordinate-Free Rotation Decomposition: Euler Angles about Arbitrary Axes" by Giulia Piovan and Francesco Bullo
-    template < bool print_text = false >
     auto generalized_euler_decomposition(
         qpp_e::maths::Matrix auto const& R
         , qpp_e::maths::Matrix auto const& r1
@@ -162,20 +159,17 @@ namespace qpp_e::qube
 
         EXPECT_EQ((condition_left > condition_right), theta.hasNaN());
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> condition_left : " << condition_left << "\n";
-            std::cerr << ">> condition_right : " << condition_right << "\n";
-            std::cerr << ">> condition met : " << std::boolalpha << (condition_left <= condition_right) << "\n";
-            std::cerr << ">> theta : " << qpp::disp(theta.transpose()) << "\n";
-        }
+        debug() << ">> condition_left : " << condition_left << "\n";
+        debug() << ">> condition_right : " << condition_right << "\n";
+        debug() << ">> condition met : " << std::boolalpha << (condition_left <= condition_right) << "\n";
+        debug() << ">> theta : " << qpp::disp(theta.transpose()) << "\n";
 
         return theta;
     }
 
     //! @brief Compute Euler generalized decomposition from phase, angle and unit axis
     //! @see generalized_euler_decomposition
-    template < bool print_text = false, bool reentering = false >
+    template < bool reentering = false >
     auto generalized_euler_decomposition(
         qpp_e::maths::RealNumber auto const& alpha, qpp_e::maths::RealNumber auto const& theta, qpp_e::maths::Matrix auto const& n
         , qpp_e::maths::Matrix auto const& r1
@@ -185,7 +179,7 @@ namespace qpp_e::qube
         using namespace std::numbers;
 
         auto const q = Eigen::Quaterniond{ Eigen::AngleAxisd{theta, n} };
-        auto const euler = generalized_euler_decomposition<print_text>(q.toRotationMatrix(), r1, r2, r3);
+        auto const euler = generalized_euler_decomposition(q.toRotationMatrix(), r1, r2, r3);
 
         if constexpr (!reentering)
         {
@@ -193,7 +187,7 @@ namespace qpp_e::qube
             if (!computed_q.isApprox(q, 1e-12))
             {
                 auto const new_alpha = std::remainder(alpha + pi, 2. * pi);
-                return generalized_euler_decomposition<print_text, true>(new_alpha, theta + 2.*pi, n, r1, r2, r3);
+                return generalized_euler_decomposition<true>(new_alpha, theta + 2.*pi, n, r1, r2, r3);
             }
         }
 
@@ -204,7 +198,7 @@ namespace qpp_e::qube
         return res;
     }
 
-    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis, bool print_text = false>
+    template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
     auto abc_decomposition(qpp_e::maths::Matrix auto const& U)
     {
         using namespace std::literals::complex_literals;
@@ -217,7 +211,7 @@ namespace qpp_e::qube
 
         auto const [alpha, theta, n] = unitary_to_rotation(U);
 
-        auto const e = euler_decomposition<_AlphaAxis, _BetaAxis, _GammaAxis, print_text>(alpha, theta, n);
+        auto const e = euler_decomposition<_AlphaAxis, _BetaAxis, _GammaAxis>(alpha, theta, n);
 
         auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RZ(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RZ(e[3])).eval();
         EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
@@ -236,18 +230,15 @@ namespace qpp_e::qube
         auto const eiaAXBXC = (std::exp(1.i * e[0]) * AXBXC).eval();
         EXPECT_MATRIX_CLOSE(eiaAXBXC, U, 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
-            std::cerr << ">> alpha: " << alpha << "\n\n";
-            std::cerr << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
-            std::cerr << ">> A:\n" << qpp::disp(A) << "\n\n";
-            std::cerr << ">> B:\n" << qpp::disp(B) << "\n\n";
-            std::cerr << ">> C:\n" << qpp::disp(C) << "\n\n";
-            std::cerr << ">> ABC:\n" << qpp::disp(ABC) << "\n\n";
-            std::cerr << ">> AXBXC:\n" << qpp::disp(AXBXC) << "\n\n";
-            std::cerr << ">> eiaAXBXC:\n" << qpp::disp(eiaAXBXC) << "\n\n";
-        }
+        debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+        debug() << ">> alpha: " << alpha << "\n\n";
+        debug() << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
+        debug() << ">> A:\n" << qpp::disp(A) << "\n\n";
+        debug() << ">> B:\n" << qpp::disp(B) << "\n\n";
+        debug() << ">> C:\n" << qpp::disp(C) << "\n\n";
+        debug() << ">> ABC:\n" << qpp::disp(ABC) << "\n\n";
+        debug() << ">> AXBXC:\n" << qpp::disp(AXBXC) << "\n\n";
+        debug() << ">> eiaAXBXC:\n" << qpp::disp(eiaAXBXC) << "\n\n";
 
         return std::tuple{ e[0], A, B, C };
     }

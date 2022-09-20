@@ -5,16 +5,14 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <chrono>
 #include <execution>
 #include <numbers>
 #include <ranges>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 namespace
 {
@@ -55,11 +53,8 @@ TEST(chapter2_5, schmidt_reduced_density_operator)
 
     EXPECT_COMPLEX_CLOSE(qpp::trace(rhoA * rhoA), qpp::trace(rhoB * rhoB), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << "EigsA:\n" << qpp::disp(eigsA) << "\n\n";
-        std::cerr << "EigsB:\n" << qpp::disp(eigsB) << "\n\n";
-    }
+    debug() << "EigsA:\n" << qpp::disp(eigsA) << "\n\n";
+    debug() << "EigsB:\n" << qpp::disp(eigsB) << "\n\n";
 }
 
 //! @brief Theorem 2.7 and equation 2.202
@@ -81,11 +76,8 @@ TEST(chapter2_5, schmidt_reduced_density_operator_example)
     EXPECT_COMPLEX_CLOSE(qpp::trace(rhoA * rhoA), 7./9., 1e-12);
     EXPECT_COMPLEX_CLOSE(qpp::trace(rhoB * rhoB), 7./9., 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << "EigsA:\n" << qpp::disp(eigsA) << "\n\n";
-        std::cerr << "EigsB:\n" << qpp::disp(eigsB) << "\n\n";
-    }
+    debug() << "EigsA:\n" << qpp::disp(eigsA) << "\n\n";
+    debug() << "EigsB:\n" << qpp::disp(eigsB) << "\n\n";
 }
 
 //! @brief Theorem 2.7 and equations 2.203 through 2.205
@@ -194,8 +186,7 @@ TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions)
     auto const  V = svd.matrixV().adjoint();
     auto const tf = std::chrono::high_resolution_clock::now();
 
-    if constexpr (print_text)
-        std::cerr << "All: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
+    debug() << "All: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
 
     EXPECT_MATRIX_CLOSE(A, U.leftCols(_2_pow_m) * D.asDiagonal() * V, 1e-12);
     EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::MatrixXcd::Identity(_2_pow_n, _2_pow_n), 1e-12);
@@ -251,13 +242,10 @@ TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions_qpp)
     auto const V = qpp::schmidtB(psi, { _2_pow_n, _2_pow_m });
     auto const tf = std::chrono::high_resolution_clock::now();
 
-    if constexpr (print_text)
-    {
-        std::cerr << "U:   " << std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() << " us" << std::endl;
-        std::cerr << "D:   " << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << " us" << std::endl;
-        std::cerr << "V:   " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t2).count() << " us" << std::endl;
-        std::cerr << "All: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
-    }
+    debug() << "U:   " << std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0).count() << " us" << std::endl;
+    debug() << "D:   " << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << " us" << std::endl;
+    debug() << "V:   " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t2).count() << " us" << std::endl;
+    debug() << "All: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
 
     EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::MatrixXcd::Identity(_2_pow_n, _2_pow_n), 1e-12);
     EXPECT_MATRIX_CLOSE(V * V.adjoint(), Eigen::MatrixXcd::Identity(_2_pow_m, _2_pow_m), 1e-12);
@@ -431,15 +419,12 @@ TEST(chapter2_5, schmidt_decomposition_two_qubits)
                                     +schmidt_coeffs[1] * qpp::kron(schmidt_basisA.col(1), schmidt_basisB.col(1))).eval();
         EXPECT_MATRIX_CLOSE(state, verification_state, 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << "State:\n" << qpp::disp(state) << "\n";
-            std::cerr << "Schmidt Basis A:\n" << qpp::disp(schmidt_basisA) << "\n";
-            std::cerr << "Schmidt Basis B:\n" << qpp::disp(schmidt_basisB) << "\n";
-            std::cerr << "Schmidt Coeffs:\n" << qpp::disp(schmidt_coeffs) << "\n";
-            std::cerr << "Schmidt Probs:\n" << qpp::disp(schmidt_probs) << "\n";
-            std::cerr << "Verification State:\n" << qpp::disp(verification_state) << "\n\n";
-        }
+        debug() << "State:\n" << qpp::disp(state) << "\n";
+        debug() << "Schmidt Basis A:\n" << qpp::disp(schmidt_basisA) << "\n";
+        debug() << "Schmidt Basis B:\n" << qpp::disp(schmidt_basisB) << "\n";
+        debug() << "Schmidt Coeffs:\n" << qpp::disp(schmidt_coeffs) << "\n";
+        debug() << "Schmidt Probs:\n" << qpp::disp(schmidt_probs) << "\n";
+        debug() << "Verification State:\n" << qpp::disp(verification_state) << "\n\n";
     }
 }
 
@@ -468,16 +453,13 @@ TEST(chapter2_5, same_schmidt_coefficients)
     EXPECT_TRUE(Y.tail(Y.size() - X.size()).isZero(1e-12));
     /* Therefore, for any psi1 and psi2 with the same Schmidt coefficients, we have: X = (U1 x V1) * psi1 = (U2 x V2) * psi2 */
 
-    if constexpr (print_text)
-    {
-        std::cerr << "State:\n" << qpp::disp(psi) << "\n";
-        std::cerr << "Schmidt Basis A:\n" << qpp::disp(schmidt_basisA) << "\n";
-        std::cerr << "Schmidt Basis B:\n" << qpp::disp(schmidt_basisB) << "\n";
-        std::cerr << "Schmidt Coeffs:\n" << qpp::disp(schmidt_coeffs) << "\n";
-        std::cerr << "Schmidt Probs:\n" << qpp::disp(schmidt_probs) << "\n";
-        std::cerr << "X:\n" << qpp::disp(X.transpose()) << "\n";
-        std::cerr << "Y:\n" << qpp::disp(Y.transpose()) << "\n\n";
-    }
+    debug() << "State:\n" << qpp::disp(psi) << "\n";
+    debug() << "Schmidt Basis A:\n" << qpp::disp(schmidt_basisA) << "\n";
+    debug() << "Schmidt Basis B:\n" << qpp::disp(schmidt_basisB) << "\n";
+    debug() << "Schmidt Coeffs:\n" << qpp::disp(schmidt_coeffs) << "\n";
+    debug() << "Schmidt Probs:\n" << qpp::disp(schmidt_probs) << "\n";
+    debug() << "X:\n" << qpp::disp(X.transpose()) << "\n";
+    debug() << "Y:\n" << qpp::disp(Y.transpose()) << "\n\n";
 }
 
 //! @brief Exercice 2.81
@@ -519,11 +501,8 @@ TEST(chapter2_5, freedom_in_purifications)
     EXPECT_MATRIX_CLOSE(X, Y_reshaped.transpose(), 1e-12);
     /* Therefore, for any purification AR1 and AR2, we have: X = (Ia x Ur1) AR1 = (Ia x Ur2) AR2 */
 
-    if constexpr (print_text)
-    {
-        std::cerr << "X:\n" << qpp::disp(X) << "\n\n";
-        std::cerr << "Y_reshaped:\n" << qpp::disp(Y_reshaped.transpose()) << "\n";
-    }
+    debug() << "X:\n" << qpp::disp(X) << "\n\n";
+    debug() << "Y_reshaped:\n" << qpp::disp(Y_reshaped.transpose()) << "\n";
 }
 
 //! @brief Exercice 2.82, part 1 & 2
@@ -602,12 +581,8 @@ TEST(chapter2_5, purification_and_measurement_3)
 
     EXPECT_MATRIX_CLOSE(Eigen::VectorXd::Map(probabilities.data(), probabilities.size()), p, 1e-12);
 
-
-    if constexpr (print_text)
-    {
-        std::cerr << ">> p: " << qpp::disp(p.transpose()) << "\n";
-        std::cerr << ">> Probabilities: " << qpp::disp(probabilities, ", ") << "\n\n";
-    }
+    debug() << ">> p: " << qpp::disp(p.transpose()) << "\n";
+    debug() << ">> Probabilities: " << qpp::disp(probabilities, ", ") << "\n\n";
 
     for (auto&& i : range)
     {
@@ -616,11 +591,8 @@ TEST(chapter2_5, purification_and_measurement_3)
         EXPECT_MATRIX_CLOSE(pi, Eigen::VectorXd::Unit(_2_pow_n, _2_pow_n-1), 1e-12);
         EXPECT_COLLINEAR(iAi(all,last), iA.col(i), 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> pi: " << qpp::disp(pi.transpose()) << "\n";
-            std::cerr << ">> iA, last col: " << qpp::disp(iA.col(i).transpose()) << "\n";
-            std::cerr << ">> iAi, ith col: " << qpp::disp(iAi(all,last).transpose()) << "\n\n";
-        }
+        debug() << ">> pi: " << qpp::disp(pi.transpose()) << "\n";
+        debug() << ">> iA, last col: " << qpp::disp(iA.col(i).transpose()) << "\n";
+        debug() << ">> iAi, ith col: " << qpp::disp(iAi(all,last).transpose()) << "\n\n";
     }
 }

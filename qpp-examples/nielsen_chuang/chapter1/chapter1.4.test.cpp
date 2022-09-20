@@ -4,15 +4,13 @@
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <execution>
 #include <numbers>
 #include <ranges>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 //! @brief Test of Q++ mket function
 TEST(chapter1_4, mket)
@@ -56,8 +54,7 @@ TEST(chapter1_4, toffoli_gate)
     EXPECT_MATRIX_EQ(qpp::gt.TOF, toffoli_matrix);
     EXPECT_MATRIX_EQ(qpp::gt.TOF * qpp::gt.TOF.adjoint(), (Eigen::Matrix<qpp::cplx, 8, 8>::Identity()));
 
-    if constexpr (print_text)
-        std::cerr << ">> Toffoli gate:\n" << qpp::disp(qpp::gt.TOF) << '\n';
+    debug() << ">> Toffoli gate:\n" << qpp::disp(qpp::gt.TOF) << '\n';
 }
 
 //! @brief Figure 1.15
@@ -128,12 +125,9 @@ TEST(chapter1_4, function)
         EXPECT_MATRIX_EQ(Uf * 10_ket, qpp::mket({1u, f[1]}));
         EXPECT_MATRIX_EQ(Uf * 11_ket, qpp::mket({1u, (1u + f[1]) % 2u}));
 
-        if constexpr (print_text)
-        {
-            std::cerr << "-----------------------------\n";
-            std::cerr << ">> F:\n" << qpp::disp(F) << '\n';
-            std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
-        }
+        debug() << "-----------------------------\n";
+        debug() << ">> F:\n" << qpp::disp(F) << '\n';
+        debug() << ">> Uf:\n" << qpp::disp(Uf) << '\n';
     }
 }
 
@@ -154,11 +148,8 @@ TEST(chapter1_4, function_parallelism)
         auto const expected_psi = ((qpp::mket({0u, f[0]}) + qpp::mket({1u, f[1]})) * inv_sqrt2).eval();
         EXPECT_MATRIX_EQ(psi, expected_psi);
 
-        if constexpr (print_text)
-        {
-            std::cerr << "-----------------------------\n";
-            std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
-        }
+        debug() << "-----------------------------\n";
+        debug() << ">> Uf:\n" << qpp::disp(Uf) << '\n';
     }
 }
 
@@ -175,11 +166,8 @@ TEST(chapter1_4, hadamard_transform_2d)
     auto const H2 = qpp::kron(qpp::gt.H, qpp::gt.H);
     EXPECT_MATRIX_CLOSE(hadamard_transform, H2 * 00_ket, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Hadamard transform:\n" << qpp::disp(hadamard_transform) << '\n';
-        std::cerr << ">> H2 matrix:\n" << qpp::disp(H2) << '\n';
-    }
+    debug() << ">> Hadamard transform:\n" << qpp::disp(hadamard_transform) << '\n';
+    debug() << ">> H2 matrix:\n" << qpp::disp(H2) << '\n';
 }
 
 //! @brief Equation 1.39
@@ -193,13 +181,10 @@ TEST(chapter1_4, hadamard_transform)
         auto const Hn = qpp::kronpow(qpp::gt.H, n);
         EXPECT_MATRIX_CLOSE(hadamard_transform, Hn * qpp::mket(std::vector<qpp::idx>(n, 0u)), 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << "-----------------------------\n";
-            std::cerr << ">> Number of Qubits:" << n << '\n';
-            std::cerr << ">> Hadamard transform:\n" << qpp::disp(hadamard_transform) << '\n';
-            std::cerr << ">> Hn matrix:\n" << qpp::disp(Hn) << '\n';
-        }
+        debug() << "-----------------------------\n";
+        debug() << ">> Number of Qubits:" << n << '\n';
+        debug() << ">> Hadamard transform:\n" << qpp::disp(hadamard_transform) << '\n';
+        debug() << ">> Hn matrix:\n" << qpp::disp(Hn) << '\n';
     }
 }
 
@@ -282,14 +267,11 @@ TEST(chapter1_4, function_7d)
     }) / std::sqrt(_2_pow_n)).eval();
     EXPECT_MATRIX_CLOSE(out_state, expected_out_state, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << "-----------------------------\n";
-        std::cerr << ">> F:\n" << qpp::disp(F) << '\n';
-        std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
-        std::cerr << ">> Hadamard state:\n" << qpp::disp(hadamard_state) << '\n';
-        std::cerr << ">> Result state:\n" << qpp::disp(out_state) << '\n';
-    }
+    debug() << "-----------------------------\n";
+    debug() << ">> F:\n" << qpp::disp(F) << '\n';
+    debug() << ">> Uf:\n" << qpp::disp(Uf) << '\n';
+    debug() << ">> Hadamard state:\n" << qpp::disp(hadamard_state) << '\n';
+    debug() << ">> Result state:\n" << qpp::disp(out_state) << '\n';
 }
 
 //! @brief Figure 1.19 and equations 1.41 through 1.45
@@ -321,16 +303,13 @@ TEST(chapter1_4, deutsch_algorithm)
 
         EXPECT_MATRIX_CLOSE(psi3, qpp_e::maths::pow(-1, f[0]) * inv_sqrt2 * qpp::kron(qpp::mket({ (f[0] + f[1]) % 2 }), 0_ket - 1_ket), 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << "-----------------------------\n";
-            std::cerr << ">> f(0) = " << f[0] << ", f(1) = " << f[1] << '\n';
-            std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
-            std::cerr << ">> psi0:\n" << qpp::disp(psi0) << '\n';
-            std::cerr << ">> psi1:\n" << qpp::disp(psi1) << '\n';
-            std::cerr << ">> psi2:\n" << qpp::disp(psi2) << '\n';
-            std::cerr << ">> psi3:\n" << qpp::disp(psi3) << '\n';
-        }
+        debug() << "-----------------------------\n";
+        debug() << ">> f(0) = " << f[0] << ", f(1) = " << f[1] << '\n';
+        debug() << ">> Uf:\n" << qpp::disp(Uf) << '\n';
+        debug() << ">> psi0:\n" << qpp::disp(psi0) << '\n';
+        debug() << ">> psi1:\n" << qpp::disp(psi1) << '\n';
+        debug() << ">> psi2:\n" << qpp::disp(psi2) << '\n';
+        debug() << ">> psi3:\n" << qpp::disp(psi3) << '\n';
     }
 }
 
@@ -460,22 +439,19 @@ TEST(chapter1_4, deutsch_jozsa_algorithm)
             EXPECT_NEAR(probabilities[0], 0., 1e-12);
         }
 
-        if constexpr (print_text)
-        {
-            std::cerr << "-----------------------------\n";
-            std::cerr << ">> f:\n" << Eigen::VectorX<qpp::idx>::Map(f.data(), f.size()) << '\n';
-            std::cerr << ">> Uf:\n" << qpp::disp(Uf) << '\n';
-            std::cerr << ">> psi0:\n" << qpp::disp(psi0) << '\n';
-            std::cerr << ">> psi1:\n" << qpp::disp(psi1) << '\n';
-            std::cerr << ">> psi2:\n" << qpp::disp(psi2) << '\n';
-            std::cerr << ">> psi3:\n" << qpp::disp(psi3) << '\n';
-            std::cerr << ">> Measurement result: " << result << '\n';
-            std::cerr << ">> Probabilities: ";
-            std::cerr << qpp::disp(probabilities, ", ") << '\n';
-            std::cerr << ">> Resulting states:\n";
-            for (auto&& it : resulting_state)
-                std::cerr << qpp::disp(it) << "\n\n";
-        }
+        debug() << "-----------------------------\n";
+        debug() << ">> f:\n" << Eigen::VectorX<qpp::idx>::Map(f.data(), f.size()) << '\n';
+        debug() << ">> Uf:\n" << qpp::disp(Uf) << '\n';
+        debug() << ">> psi0:\n" << qpp::disp(psi0) << '\n';
+        debug() << ">> psi1:\n" << qpp::disp(psi1) << '\n';
+        debug() << ">> psi2:\n" << qpp::disp(psi2) << '\n';
+        debug() << ">> psi3:\n" << qpp::disp(psi3) << '\n';
+        debug() << ">> Measurement result: " << result << '\n';
+        debug() << ">> Probabilities: ";
+        debug() << qpp::disp(probabilities, ", ") << '\n';
+        debug() << ">> Resulting states:\n";
+        for (auto&& it : resulting_state)
+            debug() << qpp::disp(it) << "\n\n";
     }
 }
 
@@ -503,11 +479,8 @@ TEST(chapter1_4, fourier_transform_on_basis)
         }) * inv_sqrt_2_pow_n).eval();
         EXPECT_MATRIX_CLOSE(qft_j, expected_qft_j, 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> j: " << j << '\n';
-            std::cerr << ">> QFT(j):\n" << qpp::disp(qft_j) << '\n';
-        }
+        debug() << ">> j: " << j << '\n';
+        debug() << ">> QFT(j):\n" << qpp::disp(qft_j) << '\n';
     });
 }
 
@@ -540,10 +513,7 @@ TEST(chapter1_4, fourier_transform)
     }) * inv_sqrt_2_pow_n).eval();
     EXPECT_MATRIX_CLOSE(qft_x, expected_qft_x, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> x:\n" << qpp::disp(x) << '\n';
-        std::cerr << ">> QFT:\n" << qpp::disp(QFT) << '\n';
-        std::cerr << ">> QFT(x):\n" << qpp::disp(qft_x) << '\n';
-    }
+    debug() << ">> x:\n" << qpp::disp(x) << '\n';
+    debug() << ">> QFT:\n" << qpp::disp(QFT) << '\n';
+    debug() << ">> QFT(x):\n" << qpp::disp(qft_x) << '\n';
 }

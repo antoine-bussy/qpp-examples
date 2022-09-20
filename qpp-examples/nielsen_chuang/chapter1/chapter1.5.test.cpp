@@ -3,13 +3,11 @@
 
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <numbers>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 //! @brief Figure 1.22 and equations 1.56 through 1.59
 TEST(chapter1_5, stern_gerlach)
@@ -24,16 +22,13 @@ TEST(chapter1_5, stern_gerlach)
     EXPECT_MATRIX_CLOSE(resulting_state1[0], 0_ket, 1e-12);
     EXPECT_MATRIX_CLOSE(resulting_state1[1], 1_ket, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Oven:\n" << qpp::disp(oven) << '\n';
-        std::cerr << ">> Measurement result: " << result1 << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities1, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state1)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> Oven:\n" << qpp::disp(oven) << '\n';
+    debug() << ">> Measurement result: " << result1 << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities1, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state1)
+        debug() << qpp::disp(it) << "\n\n";
 }
 
 //! @brief Figure 1.23 and equations 1.56 through 1.59
@@ -51,17 +46,14 @@ TEST(chapter1_5, cascaded_stern_gerlach)
     EXPECT_MATRIX_CLOSE(resulting_state2[0], (0_ket + 1_ket) * inv_sqrt2, 1e-12);
     EXPECT_MATRIX_CLOSE(resulting_state2[1], (0_ket - 1_ket) * inv_sqrt2, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Oven:\n" << qpp::disp(oven) << '\n';
-        std::cerr << ">> |+Z>:\n" << qpp::disp(resulting_state1[0]) << '\n';
-        std::cerr << ">> Measurement result: " << result2 << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities2, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state2)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> Oven:\n" << qpp::disp(oven) << '\n';
+    debug() << ">> |+Z>:\n" << qpp::disp(resulting_state1[0]) << '\n';
+    debug() << ">> Measurement result: " << result2 << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities2, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state2)
+        debug() << qpp::disp(it) << "\n\n";
 }
 
 //! @brief Figure 1.24 and equations 1.56 through 1.59
@@ -79,16 +71,13 @@ TEST(chapter1_5, three_stage_cascaded_stern_gerlach)
     EXPECT_MATRIX_CLOSE(resulting_state3[0], 0_ket, 1e-12);
     EXPECT_MATRIX_CLOSE(resulting_state3[1], 1_ket, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Oven:\n" << qpp::disp(oven) << '\n';
-        std::cerr << ">> |+Z>:\n" << qpp::disp(resulting_state1[0]) << '\n';
-        std::cerr << ">> |+X>:\n" << qpp::disp(resulting_state2[0]) << '\n';
-        std::cerr << ">> Measurement result: " << result3 << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities3, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state3)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> Oven:\n" << qpp::disp(oven) << '\n';
+    debug() << ">> |+Z>:\n" << qpp::disp(resulting_state1[0]) << '\n';
+    debug() << ">> |+X>:\n" << qpp::disp(resulting_state2[0]) << '\n';
+    debug() << ">> Measurement result: " << result3 << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities3, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state3)
+        debug() << qpp::disp(it) << "\n\n";
 }

@@ -3,13 +3,11 @@
 
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <ranges>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 //! @brief Equations 2.133 through 2.137, figure 2.3 and exercise 2.69
 TEST(chapter2_3, superdense_coding)
@@ -22,8 +20,7 @@ TEST(chapter2_3, superdense_coding)
 
     EXPECT_MATRIX_CLOSE(bell_basis.adjoint() * bell_basis, Eigen::Matrix4cd::Identity(), 1e-12);
 
-    if (print_text)
-        std::cerr << "Bell basis:\n" << bell_basis << "\n\n";
+    debug() << "Bell basis:\n" << bell_basis << "\n\n";
 
     for (auto&& i : std::views::iota(0u, messages.size()))
     {
@@ -33,8 +30,7 @@ TEST(chapter2_3, superdense_coding)
         auto const [result, probabilities, resulting_state] = qpp::measure(sent_state, bell_basis);
         auto const& received_message = messages[result];
         EXPECT_EQ(received_message, sent_message);
-        if (print_text)
-            std::cerr << "Sent message: " << sent_message << ", received: " << received_message << '\n';
+        debug() << "Sent message: " << sent_message << ", received: " << received_message << '\n';
     }
 }
 
@@ -61,7 +57,6 @@ TEST(chapter2_3, superdense_coding_interception)
 
         auto const [result, probabilities, resulting_state] = qpp::measure(sent_state, Mext);
         EXPECT_MATRIX_CLOSE(Eigen::Vector4d::Map(probabilities.data()), probabilities_ref, 1e-12);
-        if (print_text)
-            std::cerr << "Sent message: " << sent_message << ", Eve's probabilites: " << qpp::disp(probabilities, ", ") << '\n';
+        debug() << "Sent message: " << sent_message << ", Eve's probabilites: " << qpp::disp(probabilities, ", ") << '\n';
     }
 }

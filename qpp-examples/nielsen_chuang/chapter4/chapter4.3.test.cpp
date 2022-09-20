@@ -5,6 +5,7 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
+#include <qpp-examples/qube/debug.hpp>
 #include <qpp-examples/qube/decompositions.hpp>
 
 #include <chrono>
@@ -12,10 +13,7 @@
 #include <numbers>
 #include <ranges>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 //! @brief Equation 4.23
 TEST(chapter4_3, cnot_circuit)
@@ -55,15 +53,12 @@ TEST(chapter4_3, cnot_circuit)
     engine.reset().set_psi(qpp::kron(1_ket,t)).execute();
     EXPECT_MATRIX_CLOSE(engine.get_psi(), qpp::kron(1_ket,t.reverse()), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
-        std::cerr << ">> Engine:\n" << engine << "\n\n";
-        std::cerr << ">> c: " << qpp::disp(c.transpose()) << "\n";
-        std::cerr << ">> t: " << qpp::disp(t.transpose()) << "\n";
-        std::cerr << ">> out: " << qpp::disp(out.transpose()) << "\n";
-        std::cerr << ">> expected_out: " << qpp::disp(expected_out.transpose()) << "\n";
-    }
+    debug() << ">> Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
+    debug() << ">> Engine:\n" << engine << "\n\n";
+    debug() << ">> c: " << qpp::disp(c.transpose()) << "\n";
+    debug() << ">> t: " << qpp::disp(t.transpose()) << "\n";
+    debug() << ">> out: " << qpp::disp(out.transpose()) << "\n";
+    debug() << ">> expected_out: " << qpp::disp(expected_out.transpose()) << "\n";
 }
 
 //! @brief Figure 4.4
@@ -109,15 +104,12 @@ TEST(chapter4_3, controlled_u)
     engine.reset().set_psi(qpp::kron(1_ket,t)).execute();
     EXPECT_MATRIX_CLOSE(engine.get_psi(), qpp::kron(1_ket, (U*t).eval()), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
-        std::cerr << ">> Engine:\n" << engine << "\n\n";
-        std::cerr << ">> c: " << qpp::disp(c.transpose()) << "\n";
-        std::cerr << ">> t: " << qpp::disp(t.transpose()) << "\n";
-        std::cerr << ">> out: " << qpp::disp(out.transpose()) << "\n";
-        std::cerr << ">> expected_out: " << qpp::disp(expected_out.transpose()) << "\n";
-    }
+    debug() << ">> Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
+    debug() << ">> Engine:\n" << engine << "\n\n";
+    debug() << ">> c: " << qpp::disp(c.transpose()) << "\n";
+    debug() << ">> t: " << qpp::disp(t.transpose()) << "\n";
+    debug() << ">> out: " << qpp::disp(out.transpose()) << "\n";
+    debug() << ">> expected_out: " << qpp::disp(expected_out.transpose()) << "\n";
 }
 
 namespace
@@ -175,10 +167,7 @@ namespace
         }
         std::sort(indices.begin(), indices.end());
 
-        if constexpr (print_text)
-        {
-            std::cerr << "indices: " << qpp::disp(indices.transpose()) << "\n";
-        }
+        debug() << "indices: " << qpp::disp(indices.transpose()) << "\n";
 
         return indices;
     }
@@ -216,11 +205,8 @@ namespace
         {
             if(i == mask.size())
             {
-                if constexpr (print_text)
-                {
-                    std::cerr << "mask: " << Eigen::VectorX<qpp::idx>::Map(mask.data(), mask.size())
+                debug() << "mask: " << Eigen::VectorX<qpp::idx>::Map(mask.data(), mask.size())
                                 .format(Eigen::IOFormat{ Eigen::StreamPrecision, Eigen::DontAlignCols, "", "", "", "", "", "" }) << "\n";
-                }
                 *it_indices = qpp::multiidx2n(mask, dims);
                 ++it_indices;
                 return;
@@ -241,10 +227,7 @@ namespace
         fill_indices(fill_indices, mask, dims, it_indices, 0u);
         EXPECT_EQ(it_indices, indices.end());
 
-        if constexpr (print_text)
-        {
-            std::cerr << "indices: " << qpp::disp(indices.transpose()) << "\n";
-        }
+        debug() << "indices: " << qpp::disp(indices.transpose()) << "\n";
 
         return indices;
     }
@@ -318,11 +301,8 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
     auto const circuit_IxH_matrix = extract_matrix<4>(engine_IxH);
     EXPECT_MATRIX_CLOSE(IxH, circuit_IxH_matrix, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> IxH:\n" << qpp::disp(IxH) << "\n\n";
-        std::cerr << ">> circuit_IxH_matrix:\n" << qpp::disp(circuit_IxH_matrix) << "\n\n";
-    }
+    debug() << ">> IxH:\n" << qpp::disp(IxH) << "\n\n";
+    debug() << ">> circuit_IxH_matrix:\n" << qpp::disp(circuit_IxH_matrix) << "\n\n";
 
     /* Part 2 */
     auto const HxI = Eigen::Matrix4cd
@@ -340,11 +320,8 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
     auto const circuit_HxI_matrix = extract_matrix<4>(engine_HxI);
     EXPECT_MATRIX_CLOSE(HxI, circuit_HxI_matrix, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> HxI:\n" << qpp::disp(HxI) << "\n\n";
-        std::cerr << ">> circuit_HxI_matrix:\n" << qpp::disp(circuit_HxI_matrix) << "\n\n";
-    }
+    debug() << ">> HxI:\n" << qpp::disp(HxI) << "\n\n";
+    debug() << ">> circuit_HxI_matrix:\n" << qpp::disp(circuit_HxI_matrix) << "\n\n";
 }
 
 //! @brief Exercise 4.17
@@ -359,11 +336,8 @@ TEST(chapter4_3, cnot_as_controlled_z_and_h)
     auto const cnot = extract_matrix<4>(engine);
     EXPECT_MATRIX_CLOSE(cnot, qpp::gt.CNOT, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> cnot:\n" << qpp::disp(cnot) << "\n\n";
-        std::cerr << ">> qpp::gt.CNOT:\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
-    }
+    debug() << ">> cnot:\n" << qpp::disp(cnot) << "\n\n";
+    debug() << ">> qpp::gt.CNOT:\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
 }
 
 //! @brief Exercise 4.18
@@ -381,11 +355,8 @@ TEST(chapter4_3, controlled_z_flip_invariance)
 
     EXPECT_MATRIX_CLOSE(cZ_down, cZ_up, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> cZ_down:\n" << qpp::disp(cZ_down) << "\n\n";
-        std::cerr << ">> cZ_up:\n" << qpp::disp(cZ_up) << "\n\n";
-    }
+    debug() << ">> cZ_down:\n" << qpp::disp(cZ_down) << "\n\n";
+    debug() << ">> cZ_up:\n" << qpp::disp(cZ_up) << "\n\n";
 }
 
 //! @brief Exercise 4.19
@@ -401,12 +372,9 @@ TEST(chapter4_3, cnot_action_on_density_matrices)
     expected_rho({2, 3}, {0, 1}).rowwise().reverseInPlace();
     expected_rho({2, 3}, {2, 3}).reverseInPlace();
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> rho:\n" << qpp::disp(rho) << "\n\n";
-        std::cerr << ">> rho_out:\n" << qpp::disp(rho_out) << "\n\n";
-        std::cerr << ">> expected_rho:\n" << qpp::disp(expected_rho) << "\n\n";
-    }
+    debug() << ">> rho:\n" << qpp::disp(rho) << "\n\n";
+    debug() << ">> rho_out:\n" << qpp::disp(rho_out) << "\n\n";
+    debug() << ">> expected_rho:\n" << qpp::disp(expected_rho) << "\n\n";
 }
 
 //! @brief Exercise 4.20 and Equations 4.24 through 4.27
@@ -430,12 +398,9 @@ TEST(chapter4_3, cnot_basis_transformations)
     EXPECT_MATRIX_CLOSE(HxH_cnot_HxH, cnot_flipped, 1e-12);
     EXPECT_MATRIX_CLOSE(qpp::gt.CNOTba, cnot_flipped, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> HxH_cnot_HxH:\n" << qpp::disp(HxH_cnot_HxH) << "\n\n";
-        std::cerr << ">> cnot_flipped:\n" << qpp::disp(cnot_flipped) << "\n\n";
-        std::cerr << ">> CNOTba (qpp):\n" << qpp::disp(qpp::gt.CNOTba) << "\n\n";
-    }
+    debug() << ">> HxH_cnot_HxH:\n" << qpp::disp(HxH_cnot_HxH) << "\n\n";
+    debug() << ">> cnot_flipped:\n" << qpp::disp(cnot_flipped) << "\n\n";
+    debug() << ">> CNOTba (qpp):\n" << qpp::disp(qpp::gt.CNOTba) << "\n\n";
 
     /* Part 2 */
     auto const HxH = qpp::kronpow(qpp::gt.H, 2);
@@ -481,11 +446,8 @@ TEST(chapter4_3, cnot_is_controlled_x)
     auto const controlled_X = qpp::gt.CTRL(qpp::gt.X, { 0 }, { 1 }, 2);
     EXPECT_MATRIX_CLOSE(controlled_X, qpp::gt.CNOT, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> CNOT:\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
-        std::cerr << ">> controlled-X:\n" << qpp::disp(controlled_X) << "\n\n";
-    }
+    debug() << ">> CNOT:\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
+    debug() << ">> controlled-X:\n" << qpp::disp(controlled_X) << "\n\n";
 }
 
 //! @brief Equation 4.28 and Figure 4.5
@@ -520,11 +482,8 @@ TEST(chapter4_3, controlled_phase_shift)
 
     EXPECT_MATRIX_CLOSE(controlled_exp_ia_id, one_exp_ia_x_I, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> controlled-(exp(ia)I):\n" << qpp::disp(controlled_exp_ia_id) << "\n\n";
-        std::cerr << ">> (1.,exp(ia)) x I :\n" << qpp::disp(one_exp_ia_x_I) << "\n\n";
-    }
+    debug() << ">> controlled-(exp(ia)I):\n" << qpp::disp(controlled_exp_ia_id) << "\n\n";
+    debug() << ">> (1.,exp(ia)) x I :\n" << qpp::disp(one_exp_ia_x_I) << "\n\n";
 }
 
 //! @brief Figure 4.6
@@ -539,7 +498,7 @@ TEST(chapter4_3, controlled_u_built_circuit)
         .CTRL(U, { 0 }, { 1 });
     auto const controlled_U = extract_matrix<4>(circuit_controlled_u);
 
-    auto const [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z, print_text>(U);
+    auto const [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
 
     auto const aAXBXC = (std::exp(1.i * alpha) * A * qpp::gt.X * B * qpp::gt.X * C).eval();
     EXPECT_MATRIX_CLOSE(aAXBXC, U, 1e-12);
@@ -561,13 +520,10 @@ TEST(chapter4_3, controlled_u_built_circuit)
 
     EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
-        std::cerr << ">> exp(ia) * A * X * B * X * C:\n" << qpp::disp(aAXBXC) << "\n\n";
-        std::cerr << ">> built controlled-U:\n" << qpp::disp(built_controlled_U) << "\n\n";
-        std::cerr << ">> controlled-U:\n" << qpp::disp(controlled_U) << "\n\n";
-    }
+    debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+    debug() << ">> exp(ia) * A * X * B * X * C:\n" << qpp::disp(aAXBXC) << "\n\n";
+    debug() << ">> built controlled-U:\n" << qpp::disp(built_controlled_U) << "\n\n";
+    debug() << ">> controlled-U:\n" << qpp::disp(controlled_U) << "\n\n";
 }
 
 //! @brief Equation 4.29
@@ -614,20 +570,17 @@ TEST(chapter4_3, n_controlled_k_operation)
             EXPECT_MATRIX_CLOSE(n_controlled_U_x_phi, x_phi, 1e-12);
         }
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> ctrl: " << std::boolalpha << ctrl << "\n";
-            std::cerr << ">> x: " << x_idx.format(Eigen::IOFormat{ Eigen::StreamPrecision, Eigen::DontAlignCols, "", "", "", "", "", "" }) << "\n";
-            std::cerr << ">> x int: " << x_int << "\n";
-            std::cerr << ">> x product: " << x_idx.prod() << "\n\n";
+        debug() << ">> ctrl: " << std::boolalpha << ctrl << "\n";
+        debug() << ">> x: " << x_idx.format(Eigen::IOFormat{ Eigen::StreamPrecision, Eigen::DontAlignCols, "", "", "", "", "", "" }) << "\n";
+        debug() << ">> x int: " << x_int << "\n";
+        debug() << ">> x product: " << x_idx.prod() << "\n\n";
 
-            std::cerr << ">> n_controlled_U_x_phi: " << qpp::disp(n_controlled_U_x_phi.transpose()) << "\n\n";
-            std::cerr << ">> x_controlled_U_phi: " << qpp::disp(x_controlled_U_phi.transpose()) << "\n\n";
+        debug() << ">> n_controlled_U_x_phi: " << qpp::disp(n_controlled_U_x_phi.transpose()) << "\n\n";
+        debug() << ">> x_controlled_U_phi: " << qpp::disp(x_controlled_U_phi.transpose()) << "\n\n";
 
-            using namespace Eigen::indexing;
-            std::cerr << ">> n_controlled_U_x_phi:\n" << qpp::disp(n_controlled_U_x_phi(seqN(_2_pow_k * x_int, _2_pow_k), all).transpose()) << "\n";
-            std::cerr << ">> x_controlled_U_phi:\n" << qpp::disp(x_controlled_U_phi(seqN(_2_pow_k * x_int, _2_pow_k), all).transpose()) << "\n\n";
-        }
+        using namespace Eigen::indexing;
+        debug() << ">> n_controlled_U_x_phi:\n" << qpp::disp(n_controlled_U_x_phi(seqN(_2_pow_k * x_int, _2_pow_k), all).transpose()) << "\n";
+        debug() << ">> x_controlled_U_phi:\n" << qpp::disp(x_controlled_U_phi(seqN(_2_pow_k * x_int, _2_pow_k), all).transpose()) << "\n\n";
     };
 
     auto constexpr n = 4u;
@@ -705,11 +658,8 @@ TEST(chapter4_3, _2_controlled_1_U)
 
         EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
-            std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
-        }
+        debug() << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
+        debug() << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
 
         return built_controlled_U;
     };
@@ -773,17 +723,14 @@ TEST(chapter4_3, diagonal_gate_and_cnot)
     auto const built_CNOT_DxI = extract_matrix<4>(circuit_CNOT_DxI);
     EXPECT_MATRIX_CLOSE(built_CNOT_DxI, CNOT_DxI, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> D:\n" << qpp::disp(D) << "\n\n";
-        std::cerr << ">> I:\n" << qpp::disp(I) << "\n\n";
-        std::cerr << ">> CNOT:\n" << qpp::disp(CNOT) << "\n\n";
-        std::cerr << ">> DxI:\n" << qpp::disp(DxI) << "\n\n";
-        std::cerr << ">> DxI_CNOT:\n" << qpp::disp(DxI_CNOT) << "\n\n";
-        std::cerr << ">> CNOT_DxI:\n" << qpp::disp(CNOT_DxI) << "\n\n";
-        std::cerr << ">> built_DxI_CNOT:\n" << qpp::disp(built_DxI_CNOT) << "\n\n";
-        std::cerr << ">> built_CNOT_DxI:\n" << qpp::disp(built_CNOT_DxI) << "\n\n";
-    }
+    debug() << ">> D:\n" << qpp::disp(D) << "\n\n";
+    debug() << ">> I:\n" << qpp::disp(I) << "\n\n";
+    debug() << ">> CNOT:\n" << qpp::disp(CNOT) << "\n\n";
+    debug() << ">> DxI:\n" << qpp::disp(DxI) << "\n\n";
+    debug() << ">> DxI_CNOT:\n" << qpp::disp(DxI_CNOT) << "\n\n";
+    debug() << ">> CNOT_DxI:\n" << qpp::disp(CNOT_DxI) << "\n\n";
+    debug() << ">> built_DxI_CNOT:\n" << qpp::disp(built_DxI_CNOT) << "\n\n";
+    debug() << ">> built_CNOT_DxI:\n" << qpp::disp(built_CNOT_DxI) << "\n\n";
 }
 
 //! @brief Exercise 4.22
@@ -804,7 +751,7 @@ TEST(chapter4_3, simplified_2_controlled_1_U)
     EXPECT_MATRIX_CLOSE((V * V.adjoint()).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
     EXPECT_MATRIX_CLOSE((V.adjoint() * V).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
 
-    auto const [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z, print_text>(V);
+    auto const [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(V);
     auto const exp_ia = Eigen::Matrix2cd
     {
         { 1., 0. },
@@ -833,11 +780,8 @@ TEST(chapter4_3, simplified_2_controlled_1_U)
 
     EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
-        std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
-    }
+    debug() << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
+    debug() << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
 }
 
 //! @brief Exercise 4.23, Part 1
@@ -876,11 +820,8 @@ TEST(chapter4_3, controlled_rx_circuit)
     auto const built_controlled_U = extract_matrix<4>(built_circuit_U);
     EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
-        std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
-    }
+    debug() << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
+    debug() << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
 }
 
 //! @brief Exercise 4.23, Part 2
@@ -897,7 +838,7 @@ TEST(chapter4_3, controlled_ry_circuit)
         .CTRL(U, { 0 }, { 1 });
     auto const controlled_U = extract_matrix<4>(circuit_U);
 
-    auto [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z, print_text>(U);
+    auto [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
 
     /* RY is exactly at the singularity of the euler system */
     ASSERT_LT(std::abs(alpha), 1e-12);
@@ -915,11 +856,8 @@ TEST(chapter4_3, controlled_ry_circuit)
     auto const built_controlled_U = extract_matrix<4>(built_circuit_U);
     EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
-        std::cerr << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
-    }
+    debug() << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
+    debug() << ">> built_controlled_U:\n" << qpp::disp(built_controlled_U) << "\n\n";
 }
 
 //! @brief Figure 4.8 and Exercise 4.24
@@ -945,17 +883,14 @@ TEST(chapter4_3, abc_decomposition_of_v_adjoint)
     auto const ABC = (A * B * C).eval();
     EXPECT_MATRIX_CLOSE(ABC, I, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> alpha: " << qpp::disp(alpha) << "\n";
-        std::cerr << ">> A:\n" << qpp::disp(A) << "\n";
-        std::cerr << ">> B:\n" << qpp::disp(B) << "\n";
-        std::cerr << ">> C:\n" << qpp::disp(C) << "\n";
+    debug() << ">> alpha: " << qpp::disp(alpha) << "\n";
+    debug() << ">> A:\n" << qpp::disp(A) << "\n";
+    debug() << ">> B:\n" << qpp::disp(B) << "\n";
+    debug() << ">> C:\n" << qpp::disp(C) << "\n";
 
-        std::cerr << ">> ABC:\n" << qpp::disp(ABC) << "\n\n";
-        std::cerr << ">> eiaAXBXC:\n" << qpp::disp(eiaAXBXC) << "\n\n";
-        std::cerr << ">> V.adjoint():\n" << qpp::disp(V.adjoint()) << "\n\n";
-    }
+    debug() << ">> ABC:\n" << qpp::disp(ABC) << "\n\n";
+    debug() << ">> eiaAXBXC:\n" << qpp::disp(eiaAXBXC) << "\n\n";
+    debug() << ">> V.adjoint():\n" << qpp::disp(V.adjoint()) << "\n\n";
 }
 
 //! @brief Figure 4.8 and Exercise 4.24
@@ -1016,13 +951,10 @@ TEST(chapter4_3, toffoli_circuit)
     auto const built_toffoli_b = extract_matrix<8>(built_circuit_toffoli_b);
     EXPECT_MATRIX_CLOSE(built_toffoli_b, toffoli, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> toffoli (qpp):\n" << qpp::disp(qpp::gt.TOF) << "\n\n";
-        std::cerr << ">> toffoli:\n" << qpp::disp(toffoli) << "\n\n";
-        std::cerr << ">> built_toffoli:\n" << qpp::disp(built_toffoli) << "\n\n";
-        std::cerr << ">> built_toffoli_b:\n" << qpp::disp(built_toffoli_b) << "\n\n";
-    }
+    debug() << ">> toffoli (qpp):\n" << qpp::disp(qpp::gt.TOF) << "\n\n";
+    debug() << ">> toffoli:\n" << qpp::disp(toffoli) << "\n\n";
+    debug() << ">> built_toffoli:\n" << qpp::disp(built_toffoli) << "\n\n";
+    debug() << ">> built_toffoli_b:\n" << qpp::disp(built_toffoli_b) << "\n\n";
 }
 
 //! @brief Exercise 4.25
@@ -1091,14 +1023,11 @@ TEST(chapter4_3, fredkin_circuit)
     auto const fredkin_5_gates = extract_matrix<8>(circuit_fredkin_5_gates);
     EXPECT_MATRIX_CLOSE(fredkin_5_gates, fredkin, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> fredkin:\n" << qpp::disp(fredkin) << "\n\n";
-        std::cerr << ">> fredkin_as_tof:\n" << qpp::disp(fredkin_as_tof) << "\n\n";
-        std::cerr << ">> fredkin_as_tof_and_cnot:\n" << qpp::disp(fredkin_as_tof_and_cnot) << "\n\n";
-        std::cerr << ">> fredkin_6_gates:\n" << qpp::disp(fredkin_6_gates) << "\n\n";
-        std::cerr << ">> fredkin_5_gates:\n" << qpp::disp(fredkin_5_gates) << "\n\n";
-    }
+    debug() << ">> fredkin:\n" << qpp::disp(fredkin) << "\n\n";
+    debug() << ">> fredkin_as_tof:\n" << qpp::disp(fredkin_as_tof) << "\n\n";
+    debug() << ">> fredkin_as_tof_and_cnot:\n" << qpp::disp(fredkin_as_tof_and_cnot) << "\n\n";
+    debug() << ">> fredkin_6_gates:\n" << qpp::disp(fredkin_6_gates) << "\n\n";
+    debug() << ">> fredkin_5_gates:\n" << qpp::disp(fredkin_5_gates) << "\n\n";
 }
 
 //! @brief Check that U, V commute => ctrl-U, ctrl-V commute
@@ -1129,13 +1058,10 @@ TEST(chapter4_3, ctrl_commute)
 
     EXPECT_MATRIX_CLOSE(ctrl_UV, ctrl_VU, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> UV:\n" << qpp::disp(UV) << "\n\n";
-        std::cerr << ">> VU:\n" << qpp::disp(VU) << "\n\n";
-        std::cerr << ">> ctrl_UV:\n" << qpp::disp(ctrl_UV) << "\n\n";
-        std::cerr << ">> ctrl_VU:\n" << qpp::disp(ctrl_VU) << "\n\n";
-    }
+    debug() << ">> UV:\n" << qpp::disp(UV) << "\n\n";
+    debug() << ">> VU:\n" << qpp::disp(VU) << "\n\n";
+    debug() << ">> ctrl_UV:\n" << qpp::disp(ctrl_UV) << "\n\n";
+    debug() << ">> ctrl_VU:\n" << qpp::disp(ctrl_VU) << "\n\n";
 }
 
 //! @brief Exercise 4.26
@@ -1187,13 +1113,10 @@ TEST(chapter4_3, toffoli_up_to_phase)
                 EXPECT_MATRIX_EQ(ket_in, (Eigen::Vector<Eigen::dcomplex, 8>::Unit(i)));
                 relative_phase_vector[i] = phase;
 
-                if constexpr (print_text)
-                {
-                    std::cerr << ">> | c1, c2, t >: " << c1 << c2 << t << "\n";
-                    std::cerr << ">> ket_in:           " << qpp::disp(ket_in.transpose()) << "\n";
-                    std::cerr << ">> ket_out:          " << qpp::disp(ket_out.transpose()) << "\n";
-                    std::cerr << ">> expected_ket_out: " << qpp::disp(expected_ket_out.transpose()) << "\n\n";
-                }
+                debug() << ">> | c1, c2, t >: " << c1 << c2 << t << "\n";
+                debug() << ">> ket_in:           " << qpp::disp(ket_in.transpose()) << "\n";
+                debug() << ">> ket_out:          " << qpp::disp(ket_out.transpose()) << "\n";
+                debug() << ">> expected_ket_out: " << qpp::disp(expected_ket_out.transpose()) << "\n\n";
             }
 
 
@@ -1201,12 +1124,9 @@ TEST(chapter4_3, toffoli_up_to_phase)
     auto const expected_toffoli_up_to_phase = (relative_phase_vector.asDiagonal().toDenseMatrix() * qpp::gt.TOF).eval();
     EXPECT_MATRIX_CLOSE(toffoli_up_to_phase, expected_toffoli_up_to_phase, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> toffolli:\n" << qpp::disp(qpp::gt.TOF) << "\n\n";
-        std::cerr << ">> toffoli_up_to_phase:\n" << qpp::disp(toffoli_up_to_phase) << "\n\n";
-        std::cerr << ">> expected_toffoli_up_to_phase:\n" << qpp::disp(expected_toffoli_up_to_phase) << "\n\n";
-    }
+    debug() << ">> toffolli:\n" << qpp::disp(qpp::gt.TOF) << "\n\n";
+    debug() << ">> toffoli_up_to_phase:\n" << qpp::disp(toffoli_up_to_phase) << "\n\n";
+    debug() << ">> expected_toffoli_up_to_phase:\n" << qpp::disp(expected_toffoli_up_to_phase) << "\n\n";
 }
 
 //! @brief Exercise 4.27 and Equation 4.31
@@ -1237,11 +1157,8 @@ TEST(chapter4_3, permutation_circuit)
     };
     EXPECT_MATRIX_CLOSE(perm, expected_perm, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> perm:\n" << qpp::disp(perm) << "\n\n";
-        std::cerr << ">> expected_perm:\n" << qpp::disp(expected_perm) << "\n\n";
-    }
+    debug() << ">> perm:\n" << qpp::disp(perm) << "\n\n";
+    debug() << ">> expected_perm:\n" << qpp::disp(expected_perm) << "\n\n";
 }
 
 //! @brief Figure 4.10
@@ -1278,24 +1195,19 @@ TEST(chapter4_3, n_controlled_U)
     auto t0 = std::chrono::high_resolution_clock::now();
     auto const indices = extract_indices<n + 1u>(2u * n, work_qubits_zero);
     auto tf = std::chrono::high_resolution_clock::now();
-    if constexpr (print_text)
-        std::cerr << "extract_indices: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
+    debug() << "extract_indices: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
 
     t0 = std::chrono::high_resolution_clock::now();
     auto const ctrl_U = extract_matrix<_2_pow_n_1>(circuit, indices);
     tf = std::chrono::high_resolution_clock::now();
-    if constexpr (print_text)
-        std::cerr << "extract_matrix: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
+    debug() << "extract_matrix: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
 
     EXPECT_MATRIX_CLOSE(ctrl_U, expected_ctrl_U, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> indices:\n" << qpp::disp(indices.transpose()) << "\n";
-        std::cerr << ">> work_qubits_zero:\n" << qpp::disp(work_qubits_zero.transpose()) << "\n";
-        std::cerr << ">> ctrl_U:\n" << qpp::disp(ctrl_U) << "\n\n";
-        std::cerr << ">> expected_ctrl_U:\n" << qpp::disp(expected_ctrl_U) << "\n\n";
-    }
+    debug() << ">> indices:\n" << qpp::disp(indices.transpose()) << "\n";
+    debug() << ">> work_qubits_zero:\n" << qpp::disp(work_qubits_zero.transpose()) << "\n";
+    debug() << ">> ctrl_U:\n" << qpp::disp(ctrl_U) << "\n\n";
+    debug() << ">> expected_ctrl_U:\n" << qpp::disp(expected_ctrl_U) << "\n\n";
 }
 
 //! @brief Benchmark of extract_indices
@@ -1319,13 +1231,10 @@ TEST(chapter4_3, DISABLED_benchmark_extract_indices)
     EXPECT_EQ(indices.size(), indices_2.size());
     EXPECT_TRUE(indices == indices_2);
 
-    if constexpr (print_text)
-    {
-        auto const m = std::min(20l, indices.size());
-        auto const format = Eigen::IOFormat{ Eigen::FullPrecision, Eigen::DontAlignCols };
-        std::cerr << ">> indices:\n" << indices.head(m).transpose().format(format) << "\n";
-        std::cerr << ">> indices_2:\n" << indices_2.head(m).transpose().format(format) << "\n";
-    }
+    auto const m = std::min(20l, indices.size());
+    auto const format = Eigen::IOFormat{ Eigen::FullPrecision, Eigen::DontAlignCols };
+    debug() << ">> indices:\n" << indices.head(m).transpose().format(format) << "\n";
+    debug() << ">> indices_2:\n" << indices_2.head(m).transpose().format(format) << "\n";
 }
 
 namespace
@@ -1360,11 +1269,8 @@ namespace
     {
         assert(n >= 1);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> building ctrl-" << n << "\n";
-            std::cerr << ">> U: " << (input_is_sqrt ? "(sqrt)" : "") << "\n" << qpp::disp(U) << "\n\n";
-        }
+        debug() << ">> building ctrl-" << n << "\n";
+        debug() << ">> U: " << (input_is_sqrt ? "(sqrt)" : "") << "\n" << qpp::disp(U) << "\n\n";
 
         if (n == 1)
         {
@@ -1385,11 +1291,8 @@ namespace
         if (s < n)
             std::iota(targets.begin() + s, targets.end(), s);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> aggregating ctrl-" << n << "\n";
-            std::cerr << ">> U: " << (input_is_sqrt ? "(sqrt)" : "") << "\n" << qpp::disp(U) << "\n\n";
-        }
+        debug() << ">> aggregating ctrl-" << n << "\n";
+        debug() << ">> U: " << (input_is_sqrt ? "(sqrt)" : "") << "\n" << qpp::disp(U) << "\n\n";
 
         ++targets[n-1];
 
@@ -1430,16 +1333,13 @@ TEST(chapter4_3, n_controlled_U_no_work_qubit_exp)
         auto const ctrl = qpp::gt.CTRL(qpp::gt.X, { range_n.begin(), range_n.begin() + i + 1 }, { i+1 }, i+2);
         EXPECT_MATRIX_CLOSE(matrix, ctrl, 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> number of ctrl: " << i+1 << "\n";
-            std::cerr << ">> gates: " << gates << "\n";
-            std::cerr << ">> expected_gates: " << expected_gates << "\n";
-            std::cerr << ">> gates_tof: " << gates_tof << "\n";
-            std::cerr << ">> expected_gates_tof: " << expected_gates_tof << "\n";
-            std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
-            std::cerr << ">> ctrl:\n" << qpp::disp(ctrl) << "\n\n";
-        }
+        debug() << ">> number of ctrl: " << i+1 << "\n";
+        debug() << ">> gates: " << gates << "\n";
+        debug() << ">> expected_gates: " << expected_gates << "\n";
+        debug() << ">> gates_tof: " << gates_tof << "\n";
+        debug() << ">> expected_gates_tof: " << expected_gates_tof << "\n";
+        debug() << ">> matrix:\n" << qpp::disp(matrix) << "\n";
+        debug() << ">> ctrl:\n" << qpp::disp(ctrl) << "\n\n";
     }
 
 }
@@ -1465,12 +1365,9 @@ TEST(chapter4_3, cnot_basis_transformations_flipped)
     EXPECT_MATRIX_CLOSE(HxH_cnot_flipped_HxH, cnot, 1e-12);
     EXPECT_MATRIX_CLOSE(qpp::gt.CNOT, cnot, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> circuit_HxH_cnot_flipped_HxH:\n" << qpp::disp(HxH_cnot_flipped_HxH) << "\n\n";
-        std::cerr << ">> cnot:\n" << qpp::disp(cnot) << "\n\n";
-        std::cerr << ">> cnot (qpp):\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
-    }
+    debug() << ">> circuit_HxH_cnot_flipped_HxH:\n" << qpp::disp(HxH_cnot_flipped_HxH) << "\n\n";
+    debug() << ">> cnot:\n" << qpp::disp(cnot) << "\n\n";
+    debug() << ">> cnot (qpp):\n" << qpp::disp(qpp::gt.CNOT) << "\n\n";
 }
 
 namespace
@@ -1601,15 +1498,12 @@ TEST(chapter4_3, lemma_7_2)
     auto const ctrl_matrix = qpp::gt.CTRL(qpp::gt.X, ctrl, { n - 1u }, n);
     EXPECT_MATRIX_CLOSE(matrix, ctrl_matrix, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> number of qubits: " << n << "\n";
-        std::cerr << ">> number of ctrl: " << m << "\n";
-        std::cerr << ">> gates_tof: " << gates_tof << "\n";
-        std::cerr << ">> expected_gates_tof: " << expected_gates_tof << "\n";
-        // std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
-        // std::cerr << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
-    }
+    debug() << ">> number of qubits: " << n << "\n";
+    debug() << ">> number of ctrl: " << m << "\n";
+    debug() << ">> gates_tof: " << gates_tof << "\n";
+    debug() << ">> expected_gates_tof: " << expected_gates_tof << "\n";
+    // debug() << ">> matrix:\n" << qpp::disp(matrix) << "\n";
+    // debug() << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
 }
 
 //! @brief Test of Corollary 7.4, "Elementary gates for quantum computation" by Barenco et al.
@@ -1629,33 +1523,27 @@ TEST(chapter4_3, n_control_linear_one_work_qubit)
     auto t0 = std::chrono::high_resolution_clock::now();
     auto const gates_tof = n_controlled_X_corollary_7_4(circuit, n - 1u, ctrl, n - 2u);
     auto tf = std::chrono::high_resolution_clock::now();
-    if constexpr (print_text)
-        std::cerr << "n_controlled_X_corollary_7_4: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    debug() << "n_controlled_X_corollary_7_4: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
     auto const expected_gates_tof = 8u * (n - 5u);
     EXPECT_EQ(gates_tof, expected_gates_tof);
 
     t0 = std::chrono::high_resolution_clock::now();
     auto const matrix = extract_matrix<>(circuit, qpp_e::maths::pow(2u, n));
     tf = std::chrono::high_resolution_clock::now();
-    if constexpr (print_text)
-        std::cerr << "extract_matrix: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    debug() << "extract_matrix: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
 
     t0 = std::chrono::high_resolution_clock::now();
     auto const ctrl_matrix = qpp::gt.CTRL(qpp::gt.X, ctrl, { n - 1u }, n);
     tf = std::chrono::high_resolution_clock::now();
-    if constexpr (print_text)
-        std::cerr << "qpp::gt.CTRL: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    debug() << "qpp::gt.CTRL: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
     EXPECT_MATRIX_CLOSE(matrix, ctrl_matrix, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> number of qubits: " << n << "\n";
-        std::cerr << ">> number of ctrl: " << n - 2u << "\n";
-        std::cerr << ">> gates_tof: " << gates_tof << "\n";
-        std::cerr << ">> expected_gates_tof: " << expected_gates_tof << "\n";
-        // std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
-        // std::cerr << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
-    }
+    debug() << ">> number of qubits: " << n << "\n";
+    debug() << ">> number of ctrl: " << n - 2u << "\n";
+    debug() << ">> gates_tof: " << gates_tof << "\n";
+    debug() << ">> expected_gates_tof: " << expected_gates_tof << "\n";
+    // debug() << ">> matrix:\n" << qpp::disp(matrix) << "\n";
+    // debug() << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
 }
 
 //! @brief Exercises 4.29 and 4.30
@@ -1679,22 +1567,19 @@ TEST(chapter4_3, n_controlled_U_no_work_qubit_quadratic)
     auto t0 = std::chrono::high_resolution_clock::now();
     auto const ctrl_matrix = qpp::gt.CTRL(U, ctrl, { n - 1u }, n);
     auto tf = std::chrono::high_resolution_clock::now();
-    if constexpr (print_text)
-        std::cerr << "qpp::gt.CTRL: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    debug() << "qpp::gt.CTRL: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
 
     t0 = std::chrono::high_resolution_clock::now();
     auto const gates = n_controlled_U_quadratic(circuit, U, n - 1u, ctrl);
     tf = std::chrono::high_resolution_clock::now();
-    if constexpr (print_text)
-        std::cerr << "n_controlled_U_quadratic: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    debug() << "n_controlled_U_quadratic: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
     auto const expected_gates = 1u + 2u * (n - 6u) * (4u * n - 11u);
     EXPECT_EQ(gates, expected_gates);
 
     t0 = std::chrono::high_resolution_clock::now();
     auto const matrix = extract_matrix<>(circuit, qpp_e::maths::pow(2u, n));
     tf = std::chrono::high_resolution_clock::now();
-    if constexpr (print_text)
-        std::cerr << "extract_matrix: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
+    debug() << "extract_matrix: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
     EXPECT_MATRIX_CLOSE(matrix, ctrl_matrix, 1e-12);
 
     EXPECT_TRUE(matrix(seq(0,last-2),seq(0,last-2)).isIdentity(1e-12));
@@ -1702,17 +1587,14 @@ TEST(chapter4_3, n_controlled_U_no_work_qubit_quadratic)
 
     EXPECT_MATRIX_CLOSE(matrix(lastN(2), lastN(2)), ctrl_matrix(lastN(2), lastN(2)), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> number of qubits: " << n << "\n";
-        std::cerr << ">> number of ctrl: " << n - 1u << "\n";
-        std::cerr << ">> gates: " << gates << "\n";
-        std::cerr << ">> expected_gates: " << expected_gates << "\n";
-        // std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n";
-        // std::cerr << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
-        std::cerr << ">> matrix(lastN(2), lastN(2)):\n" << qpp::disp(matrix(lastN(2), lastN(2))) << "\n";
-        std::cerr << ">> ctrl(lastN(2), lastN(2)):\n" << qpp::disp(ctrl_matrix(lastN(2), lastN(2))) << "\n\n";
-    }
+    debug() << ">> number of qubits: " << n << "\n";
+    debug() << ">> number of ctrl: " << n - 1u << "\n";
+    debug() << ">> gates: " << gates << "\n";
+    debug() << ">> expected_gates: " << expected_gates << "\n";
+    // debug() << ">> matrix:\n" << qpp::disp(matrix) << "\n";
+    // debug() << ">> ctrl:\n" << qpp::disp(ctrl_matrix) << "\n\n";
+    debug() << ">> matrix(lastN(2), lastN(2)):\n" << qpp::disp(matrix(lastN(2), lastN(2))) << "\n";
+    debug() << ">> ctrl(lastN(2), lastN(2)):\n" << qpp::disp(ctrl_matrix(lastN(2), lastN(2))) << "\n\n";
 }
 
 //! @brief Figure 4.11
@@ -1734,11 +1616,8 @@ TEST(chapter4_3, zero_cnot)
     auto const matrix = extract_matrix<4>(circuit);
     EXPECT_MATRIX_CLOSE(zero_cnot, matrix, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> zero_cnot:\n" << qpp::disp(zero_cnot) << "\n\n";
-        std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
-    }
+    debug() << ">> zero_cnot:\n" << qpp::disp(zero_cnot) << "\n\n";
+    debug() << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
 }
 
 //! @brief Figure 4.12
@@ -1758,11 +1637,8 @@ TEST(chapter4_3, zero_toffoli)
     auto const matrix = extract_matrix<>(circuit, 16);
     EXPECT_MATRIX_CLOSE(zero_toffoli, matrix, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> zero_toffoli:\n" << qpp::disp(zero_toffoli) << "\n\n";
-        std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
-    }
+    debug() << ">> zero_toffoli:\n" << qpp::disp(zero_toffoli) << "\n\n";
+    debug() << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
 }
 
 //! @brief Figure 4.13
@@ -1785,11 +1661,8 @@ TEST(chapter4_3, DISABLED_multiple_target_ctrl)
 
     EXPECT_MATRIX_CLOSE(matrix, expected_matrix, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
-        std::cerr << ">> expected_matrix:\n" << qpp::disp(expected_matrix) << "\n\n";
-    }
+    debug() << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
+    debug() << ">> expected_matrix:\n" << qpp::disp(expected_matrix) << "\n\n";
 }
 
 //! @brief Exercise 4.31 and Equations 4.32 through 4.39
@@ -1825,11 +1698,8 @@ TEST(chapter4_3, more_circuit_identities)
             EXPECT_MATRIX_CLOSE(ctrl_matrix, matrix, 1e-12);
         }
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> ctrl_matrix:\n" << qpp::disp(ctrl_matrix) << "\n\n";
-            std::cerr << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
-        }
+        debug() << ">> ctrl_matrix:\n" << qpp::disp(ctrl_matrix) << "\n\n";
+        debug() << ">> matrix:\n" << qpp::disp(matrix) << "\n\n";
     };
 
     auto const& X = qpp::gt.X;

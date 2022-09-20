@@ -5,16 +5,14 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
+#include <qpp-examples/qube/debug.hpp>
 #include <qpp-examples/qube/decompositions.hpp>
 
 #include <unsupported/Eigen/MatrixFunctions>
 
 #include <numbers>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 //! @brief Equations 4.1 through 4.3
 TEST(chapter4_2, important_single_qubit_gates)
@@ -51,16 +49,13 @@ TEST(chapter4_2, important_single_qubit_gates)
     EXPECT_MATRIX_CLOSE((inv_sqrt2 * (X + Z)).eval(), H, 1e-12);
     EXPECT_MATRIX_CLOSE((T*T).eval(), S, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> I:\n" << qpp::disp(I) << "\n\n";
-        std::cerr << ">> X:\n" << qpp::disp(X) << "\n\n";
-        std::cerr << ">> Y:\n" << qpp::disp(Y) << "\n\n";
-        std::cerr << ">> Z:\n" << qpp::disp(Z) << "\n\n";
-        std::cerr << ">> H:\n" << qpp::disp(H) << "\n\n";
-        std::cerr << ">> S:\n" << qpp::disp(S) << "\n\n";
-        std::cerr << ">> T:\n" << qpp::disp(T) << "\n\n";
-    }
+    debug() << ">> I:\n" << qpp::disp(I) << "\n\n";
+    debug() << ">> X:\n" << qpp::disp(X) << "\n\n";
+    debug() << ">> Y:\n" << qpp::disp(Y) << "\n\n";
+    debug() << ">> Z:\n" << qpp::disp(Z) << "\n\n";
+    debug() << ">> H:\n" << qpp::disp(H) << "\n\n";
+    debug() << ">> S:\n" << qpp::disp(S) << "\n\n";
+    debug() << ">> T:\n" << qpp::disp(T) << "\n\n";
 }
 
 //! @brief Exercise 4.1
@@ -83,12 +78,9 @@ TEST(chapter4_2, pauli_matrices_eigen_vectors)
     EXPECT_COLLINEAR(v_Z.col(0), Eigen::Vector2cd(0., 1.), 1e-12);
     EXPECT_COLLINEAR(v_Z.col(1), Eigen::Vector2cd(1., 0.), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> X: " << qpp::disp(lambda_X.transpose()) << "\n" << qpp::disp(v_X) << "\n\n";
-        std::cerr << ">> Y: " << qpp::disp(lambda_Y.transpose()) << "\n" << qpp::disp(v_Y) << "\n\n";
-        std::cerr << ">> Z: " << qpp::disp(lambda_Z.transpose()) << "\n" << qpp::disp(v_Z) << "\n\n";
-    }
+    debug() << ">> X: " << qpp::disp(lambda_X.transpose()) << "\n" << qpp::disp(v_X) << "\n\n";
+    debug() << ">> Y: " << qpp::disp(lambda_Y.transpose()) << "\n" << qpp::disp(v_Y) << "\n\n";
+    debug() << ">> Z: " << qpp::disp(lambda_Z.transpose()) << "\n" << qpp::disp(v_Z) << "\n\n";
 }
 
 //! @brief Equations 4.4 through 4.7 and Exercise 4.2
@@ -116,12 +108,9 @@ TEST(chapter4_2, rotation_operators)
     EXPECT_MATRIX_CLOSE(Rz, (-0.5i * theta * qpp::gt.Z).exp().eval(), 1e-12);
     EXPECT_MATRIX_CLOSE(Rz, (cos * qpp::gt.Id2 - 1.i * sin * qpp::gt.Z).eval(), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Rx:\n" << qpp::disp(Rx) << "\n\n";
-        std::cerr << ">> Ry:\n" << qpp::disp(Ry) << "\n\n";
-        std::cerr << ">> Rz:\n" << qpp::disp(Rz) << "\n\n";
-    }
+    debug() << ">> Rx:\n" << qpp::disp(Rx) << "\n\n";
+    debug() << ">> Ry:\n" << qpp::disp(Ry) << "\n\n";
+    debug() << ">> Rz:\n" << qpp::disp(Rz) << "\n\n";
 }
 
 //! @brief Exercise 4.3
@@ -142,11 +131,8 @@ TEST(chapter4_2, h_as_rotations)
     auto const H = (std::exp(phi * 1.i) * qpp::gt.RX(phi) * qpp::gt.RZ(phi) * qpp::gt.RX(phi)).eval();
     EXPECT_MATRIX_CLOSE(H, qpp::gt.H, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> H:\n" << qpp::disp(H) << "\n\n";
-        std::cerr << ">> H (QPP):\n" << qpp::disp(qpp::gt.H) << "\n\n";
-    }
+    debug() << ">> H:\n" << qpp::disp(H) << "\n\n";
+    debug() << ">> H (QPP):\n" << qpp::disp(qpp::gt.H) << "\n\n";
 }
 
 //! @brief Equation 4.8 and Exercise 4.5
@@ -167,10 +153,7 @@ TEST(chapter4_2, generalized_rotations)
     EXPECT_MATRIX_CLOSE(Rtheta, qpp::gt.Rn(theta, {n[0], n[1], n[2]}), 1e-12);
     EXPECT_MATRIX_CLOSE(Rtheta, (-0.5i * theta * n_dot_sigma).exp().eval(), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Rtheta:\n" << qpp::disp(Rtheta) << "\n\n";
-    }
+    debug() << ">> Rtheta:\n" << qpp::disp(Rtheta) << "\n\n";
 }
 
 //! @brief Exercise 4.6
@@ -199,13 +182,10 @@ TEST(chapter4_2, bloch_sphere_interpretation_of_rotations)
 
     EXPECT_MATRIX_CLOSE(lambda_rotated_state, rotated_lambda, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> state: " << qpp::disp(state.transpose()) << "\n";
-        std::cerr << ">> lambda: " << qpp::disp(lambda.transpose()) << "\n";
-        std::cerr << ">> lambda_rotated_state: " << qpp::disp(lambda_rotated_state.transpose()) << "\n";
-        std::cerr << ">> rotated_lambda: " << qpp::disp(rotated_lambda.transpose()) << "\n";
-    }
+    debug() << ">> state: " << qpp::disp(state.transpose()) << "\n";
+    debug() << ">> lambda: " << qpp::disp(lambda.transpose()) << "\n";
+    debug() << ">> lambda_rotated_state: " << qpp::disp(lambda_rotated_state.transpose()) << "\n";
+    debug() << ">> rotated_lambda: " << qpp::disp(rotated_lambda.transpose()) << "\n";
 }
 
 //! @brief Exercise 4.7
@@ -250,16 +230,16 @@ TEST(chapter4_2, unitary_matrix_as_rotation)
 
     /* Part 1 */
     auto const U = qpp::randU();
-    qpp_e::qube::unitary_to_rotation<print_text>(U);
+    qpp_e::qube::unitary_to_rotation(U);
 
     /* Part 2 */
-    auto const [alpha_H, theta_H, n_H] = qpp_e::qube::unitary_to_rotation<print_text>(qpp::gt.H);
+    auto const [alpha_H, theta_H, n_H] = qpp_e::qube::unitary_to_rotation(qpp::gt.H);
     EXPECT_COMPLEX_CLOSE(alpha_H, 0.5 * pi, 1e-12);
     EXPECT_COMPLEX_CLOSE(theta_H, pi, 1e-12);
     EXPECT_MATRIX_CLOSE(n_H, Eigen::Vector3d(inv_sqrt2, 0., inv_sqrt2), 1e-12);
 
     /* Part 3 */
-    auto const [alpha_S, theta_S, n_S] = qpp_e::qube::unitary_to_rotation<print_text>(qpp::gt.S);
+    auto const [alpha_S, theta_S, n_S] = qpp_e::qube::unitary_to_rotation(qpp::gt.S);
     EXPECT_COMPLEX_CLOSE(alpha_S, 0.25 * pi, 1e-12);
     EXPECT_COMPLEX_CLOSE(theta_S, 0.5 * pi, 1e-12);
     EXPECT_MATRIX_CLOSE(n_S, Eigen::Vector3d::UnitZ(), 1e-12);
@@ -274,9 +254,9 @@ TEST(chapter4_2, z_y_decomposition)
     qpp_e::maths::seed();
 
     auto const U = qpp::randU();
-    auto const [alpha, theta, n] = qpp_e::qube::unitary_to_rotation<print_text>(U);
+    auto const [alpha, theta, n] = qpp_e::qube::unitary_to_rotation(U);
 
-    auto const e = qpp_e::qube::euler_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z, print_text>(alpha, theta, n);
+    auto const e = qpp_e::qube::euler_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(alpha, theta, n);
 
     auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RZ(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RZ(e[3])).eval();
     EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
@@ -293,16 +273,13 @@ TEST(chapter4_2, z_y_decomposition)
     };
     EXPECT_MATRIX_CLOSE(UU, U, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
-        std::cerr << ">> alpha: " << alpha << "\n\n";
-        std::cerr << ">> theta: " << theta << "\n\n";
-        std::cerr << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
-        std::cerr << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
-        std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
-        std::cerr << ">> UU:\n" << qpp::disp(UU) << "\n\n";
-    }
+    debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+    debug() << ">> alpha: " << alpha << "\n\n";
+    debug() << ">> theta: " << theta << "\n\n";
+    debug() << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
+    debug() << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
+    debug() << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
+    debug() << ">> UU:\n" << qpp::disp(UU) << "\n\n";
 }
 
 //! @brief Exercise 4.10
@@ -314,22 +291,19 @@ TEST(chapter4_2, x_y_decomposition)
     qpp_e::maths::seed();
 
     auto const U = qpp::randU();
-    auto const [alpha, theta, n] = qpp_e::qube::unitary_to_rotation<print_text>(U);
+    auto const [alpha, theta, n] = qpp_e::qube::unitary_to_rotation(U);
 
-    auto const e = qpp_e::qube::euler_decomposition<Eigen::EULER_X, Eigen::EULER_Y, Eigen::EULER_X, print_text>(alpha, theta, n);
+    auto const e = qpp_e::qube::euler_decomposition<Eigen::EULER_X, Eigen::EULER_Y, Eigen::EULER_X>(alpha, theta, n);
 
     auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RX(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RX(e[3])).eval();
     EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
-        std::cerr << ">> alpha: " << alpha << "\n\n";
-        std::cerr << ">> theta: " << theta << "\n\n";
-        std::cerr << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
-        std::cerr << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
-        std::cerr << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
-    }
+    debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+    debug() << ">> alpha: " << alpha << "\n\n";
+    debug() << ">> theta: " << theta << "\n\n";
+    debug() << ">> n: " << qpp::disp(n.transpose()) << "\n\n";
+    debug() << ">> euler: " << qpp::disp(e.transpose()) << "\n\n";
+    debug() << ">> rotation:\n" << qpp::disp(rotation) << "\n\n";
 }
 
 //! @brief Check for Angle-Axis in a different basis
@@ -351,11 +325,8 @@ TEST(chapter4_2, basis_change_angle_axis_rotation)
 
     EXPECT_MATRIX_CLOSE(b_R_b, b_R_b_alt, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> b_R_b:\n" << qpp::disp(b_R_b) << "\n\n";
-        std::cerr << ">> b_R_b_alt:\n" << qpp::disp(b_R_b_alt) << "\n\n";
-    }
+    debug() << ">> b_R_b:\n" << qpp::disp(b_R_b) << "\n\n";
+    debug() << ">> b_R_b_alt:\n" << qpp::disp(b_R_b_alt) << "\n\n";
 }
 
 //! @brief Exercise 4.11 and Equation 4.13
@@ -370,7 +341,7 @@ TEST(chapter4_2, n_m_decomposition)
     qpp_e::maths::seed(7981584u);
 
     auto const U = qpp::randU();
-    auto const [alpha_U, theta_U, n_U] = qpp_e::qube::unitary_to_rotation<print_text>(U);
+    auto const [alpha_U, theta_U, n_U] = qpp_e::qube::unitary_to_rotation(U);
 
     auto const Q = Eigen::Quaterniond{ Eigen::AngleAxisd(theta_U, n_U) };
     auto const R = Q.toRotationMatrix();
@@ -378,7 +349,7 @@ TEST(chapter4_2, n_m_decomposition)
     auto const n1 = Eigen::Vector3d::Random().normalized().eval();
     auto const n2 = Eigen::Vector3d::Random().normalized().eval();
 
-    auto const theta = qpp_e::qube::generalized_euler_decomposition<print_text>(alpha_U, theta_U, n_U, n1, n2, n1);
+    auto const theta = qpp_e::qube::generalized_euler_decomposition(alpha_U, theta_U, n_U, n1, n2, n1);
     auto const computed_Q = Eigen::AngleAxisd(theta[1], n1) * Eigen::AngleAxisd(theta[2], n2) * Eigen::AngleAxisd(theta[3], n1);
     auto const computed_R = computed_Q.toRotationMatrix();
     EXPECT_MATRIX_CLOSE(computed_R, R, 1e-12);
@@ -391,16 +362,13 @@ TEST(chapter4_2, n_m_decomposition)
         * qpp::gt.Rn(theta[3], { n1[0], n1[1], n1[2]})).eval();
     EXPECT_MATRIX_CLOSE(computed_U, U, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> theta: " << qpp::disp(theta.transpose()) << "\n\n";
-        std::cerr << ">> Q: " << Q << "\n";
-        std::cerr << ">> computed_Q: " << computed_Q << "\n\n";
-        std::cerr << ">> R:\n" << qpp::disp(R) << "\n\n";
-        std::cerr << ">> computed_R:\n" << qpp::disp(computed_R) << "\n\n";
-        std::cerr << ">> U:\n" << qpp::disp(U) << "\n\n";
-        std::cerr << ">> computed_U:\n" << qpp::disp(computed_U) << "\n\n";
-    }
+    debug() << ">> theta: " << qpp::disp(theta.transpose()) << "\n\n";
+    debug() << ">> Q: " << Q << "\n";
+    debug() << ">> computed_Q: " << computed_Q << "\n\n";
+    debug() << ">> R:\n" << qpp::disp(R) << "\n\n";
+    debug() << ">> computed_R:\n" << qpp::disp(computed_R) << "\n\n";
+    debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+    debug() << ">> computed_U:\n" << qpp::disp(computed_U) << "\n\n";
 }
 
 //! @brief Corollary 4.2 and Equations 4.14 through 4.17
@@ -409,7 +377,7 @@ TEST(chapter4_2, abc_decomposition)
     qpp_e::maths::seed(31385u);
 
     auto const U = qpp::randU();
-    qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z, print_text>(U);
+    qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
 }
 
 //! @brief Exercise 4.12
@@ -420,7 +388,7 @@ TEST(chapter4_2, H_abc_decomposition)
 
     auto constexpr inv_sqrt2 = 0.5 * sqrt2;
 
-    auto const [ alpha, A, B, C ] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z, print_text>(qpp::gt.H);
+    auto const [ alpha, A, B, C ] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(qpp::gt.H);
 
     EXPECT_COMPLEX_CLOSE(alpha, 0.5 * pi, 1e-12);
 
@@ -455,14 +423,11 @@ TEST(chapter4_2, circuit_identites)
     auto const HTH = (qpp::gt.H * qpp::gt.T * qpp::gt.H).eval();
     EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(HTH, qpp::gt.RX(0.25 * pi), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> HXH:\n" << qpp::disp(HXH) << "\n\n";
-        std::cerr << ">> -HYH:\n" << qpp::disp(_HYH) << "\n\n";
-        std::cerr << ">> HZH:\n" << qpp::disp(HZH) << "\n\n";
-        std::cerr << ">> HTH:\n" << qpp::disp(HTH) << "\n\n";
-        std::cerr << ">> Rx(pi/4):\n" << qpp::disp(qpp::gt.RX(0.25 * pi)) << "\n\n";
-    }
+    debug() << ">> HXH:\n" << qpp::disp(HXH) << "\n\n";
+    debug() << ">> -HYH:\n" << qpp::disp(_HYH) << "\n\n";
+    debug() << ">> HZH:\n" << qpp::disp(HZH) << "\n\n";
+    debug() << ">> HTH:\n" << qpp::disp(HTH) << "\n\n";
+    debug() << ">> Rx(pi/4):\n" << qpp::disp(qpp::gt.RX(0.25 * pi)) << "\n\n";
 }
 
 namespace
@@ -479,15 +444,12 @@ namespace
 
         EXPECT_MATRIX_CLOSE(Ua, Ub, 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> beta12: " << beta12 << ", n12: " << qpp::disp(n12.transpose()) << "\n\n";
-            std::cerr << ">> beta1: " << beta1 << ", n1:" << qpp::disp(n1.transpose()) << "\n\n";
-            std::cerr << ">> beta2: " << beta2 << ", n2:" << qpp::disp(n2.transpose()) << "\n\n";
+        debug() << ">> beta12: " << beta12 << ", n12: " << qpp::disp(n12.transpose()) << "\n\n";
+        debug() << ">> beta1: " << beta1 << ", n1:" << qpp::disp(n1.transpose()) << "\n\n";
+        debug() << ">> beta2: " << beta2 << ", n2:" << qpp::disp(n2.transpose()) << "\n\n";
 
-            std::cerr << ">> Ua:\n" << qpp::disp(Ua) << "\n\n";
-            std::cerr << ">> Ub:\n" << qpp::disp(Ub) << "\n\n";
-        }
+        debug() << ">> Ua:\n" << qpp::disp(Ua) << "\n\n";
+        debug() << ">> Ub:\n" << qpp::disp(Ub) << "\n\n";
 
         return std::tuple{ beta12, n12 };
     }

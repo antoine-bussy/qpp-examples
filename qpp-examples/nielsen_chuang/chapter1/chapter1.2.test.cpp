@@ -3,13 +3,11 @@
 
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <ranges>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 //! @brief Equations 1.1 and 1.2
 TEST(chapter1_2, superposition)
@@ -30,16 +28,13 @@ TEST(chapter1_2, measure)
     EXPECT_THAT(probabilities, testing::ElementsAreArray({ testing::DoubleEq(0.5), testing::DoubleEq(0.5) }));
     EXPECT_THAT(resulting_state, testing::ElementsAreArray({ 0_ket, 1_ket }));
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state)
+        debug() << qpp::disp(it) << "\n\n";
 }
 
 //! @brief Equation 1.5
@@ -74,16 +69,13 @@ TEST(chapter1_2, two_qubits_measure)
     for (auto&& i : std::views::iota(0, 4))
         EXPECT_MATRIX_EQ(resulting_state[i], (state[i] * Eigen::Vector4cd::Unit(i)).normalized());
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state)
+        debug() << qpp::disp(it) << "\n\n";
 }
 
 //! @brief Equation 1.6
@@ -99,16 +91,13 @@ TEST(chapter1_2, simple_two_qubits_measure_on_first_qubit)
     EXPECT_MATRIX_EQ(resulting_state[0], Eigen::Vector4cd(1, 1, 0, 0).normalized());
     EXPECT_MATRIX_EQ(resulting_state[1], Eigen::Vector4cd::Zero());
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state)
+        debug() << qpp::disp(it) << "\n\n";
 }
 
 //! @brief Equation 1.6
@@ -124,16 +113,13 @@ TEST(chapter1_2, simple_two_qubits_measure_on_first_qubit_2)
     EXPECT_MATRIX_EQ(resulting_state[0], Eigen::Vector4cd::UnitX());
     EXPECT_MATRIX_EQ(resulting_state[1], Eigen::Vector4cd::UnitY());
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state)
+        debug() << qpp::disp(it) << "\n\n";
 }
 
 //! @brief Equation 1.6
@@ -149,16 +135,13 @@ TEST(chapter1_2, two_qubits_measure_on_first_qubit)
     EXPECT_MATRIX_CLOSE(resulting_state[0], Eigen::Vector4cd(state[0], state[1], 0, 0).normalized(), 1e-12);
     EXPECT_MATRIX_CLOSE(resulting_state[1], Eigen::Vector4cd(0, 0, state[2], state[3]).normalized(), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state)
+        debug() << qpp::disp(it) << "\n\n";
 }
 
 //! @brief Equation 1.7
@@ -168,8 +151,7 @@ TEST(chapter1_2, bell_state)
     auto const bell_state = (00_ket + 11_ket).normalized().eval();
     EXPECT_MATRIX_EQ(bell_state, Eigen::Vector4cd(1, 0, 0, 1).normalized());
 
-    if constexpr (print_text)
-        std::cerr << ">> State:\n" << qpp::disp(bell_state) << '\n';
+    debug() << ">> State:\n" << qpp::disp(bell_state) << '\n';
 }
 
 //! @brief Correlated measure of Equation 1.7
@@ -180,17 +162,14 @@ TEST(chapter1_2, bell_state_repeated_measure)
 
     auto const [result_0, probabilities_0, resulting_state_0] = qpp::measure(bell_state, qpp::gt.Id2, { 0 });
 
-    if constexpr (print_text)
-    {
-        std::cerr << "Measure on first qubit\n";
-        std::cerr << ">> State:\n" << qpp::disp(bell_state) << '\n';
-        std::cerr << ">> Measurement result: " << result_0 << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities_0, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state_0)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << "Measure on first qubit\n";
+    debug() << ">> State:\n" << qpp::disp(bell_state) << '\n';
+    debug() << ">> Measurement result: " << result_0 << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities_0, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state_0)
+        debug() << qpp::disp(it) << "\n\n";
 
     auto const [result_1, probabilities_1, resulting_state_1] = qpp::measure(resulting_state_0[result_0], qpp::gt.Id2);
 
@@ -200,15 +179,12 @@ TEST(chapter1_2, bell_state_repeated_measure)
     EXPECT_MATRIX_EQ(resulting_state_1[result_1], Eigen::Vector2cd::Unit(result_1));
     EXPECT_MATRIX_EQ(resulting_state_1[1-result_1], Eigen::Vector2cd::Zero());
 
-    if constexpr (print_text)
-    {
-        std::cerr << "Measure on second qubit\n";
-        std::cerr << ">> State:\n" << qpp::disp(resulting_state_0[result_0]) << '\n';
-        std::cerr << ">> Measurement result: " << result_1 << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities_1, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state_1)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << "Measure on second qubit\n";
+    debug() << ">> State:\n" << qpp::disp(resulting_state_0[result_0]) << '\n';
+    debug() << ">> Measurement result: " << result_1 << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities_1, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state_1)
+        debug() << qpp::disp(it) << "\n\n";
 }

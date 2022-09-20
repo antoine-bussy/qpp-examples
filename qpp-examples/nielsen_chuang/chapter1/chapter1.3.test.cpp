@@ -4,13 +4,11 @@
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <numbers>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 //! @brief Equations 1.8 through 1.12
 TEST(chapter1_3, not_gate)
@@ -21,12 +19,9 @@ TEST(chapter1_3, not_gate)
     EXPECT_MATRIX_EQ(not_state, state.reverse());
     EXPECT_MATRIX_EQ(qpp::gt.X, Eigen::Matrix2cd::Identity().rowwise().reverse());
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> NOT Gate:\n" << qpp::disp(qpp::gt.X) << '\n';
-        std::cerr << ">> NOT State:\n" << qpp::disp(not_state) << '\n';
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> NOT Gate:\n" << qpp::disp(qpp::gt.X) << '\n';
+    debug() << ">> NOT State:\n" << qpp::disp(not_state) << '\n';
 }
 
 //! @brief Equation 1.13
@@ -39,12 +34,9 @@ TEST(chapter1_3, z_gate)
     EXPECT_EQ(z_state[1],-state[1]);
     EXPECT_MATRIX_EQ(qpp::gt.Z, Eigen::Vector2cd(1, -1).asDiagonal().toDenseMatrix());
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> Z Gate:\n" << qpp::disp(qpp::gt.Z) << '\n';
-        std::cerr << ">> Z State:\n" << qpp::disp(z_state) << '\n';
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> Z Gate:\n" << qpp::disp(qpp::gt.Z) << '\n';
+    debug() << ">> Z State:\n" << qpp::disp(z_state) << '\n';
 }
 
 //! @brief Equation 1.14
@@ -58,12 +50,9 @@ TEST(chapter1_3, hadamard_gate)
     EXPECT_COMPLEX_CLOSE(h_state[0], (state[0] + state[1]) * inv_sqrt2, 1e-12);
     EXPECT_COMPLEX_CLOSE(h_state[1], (state[0] - state[1]) * inv_sqrt2, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> H Gate:\n" << qpp::disp(qpp::gt.H) << '\n';
-        std::cerr << ">> H State:\n" << qpp::disp(h_state) << '\n';
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> H Gate:\n" << qpp::disp(qpp::gt.H) << '\n';
+    debug() << ">> H State:\n" << qpp::disp(h_state) << '\n';
 }
 
 //! @brief Equations 1.15 and 1.16, and Block 1.1
@@ -83,14 +72,11 @@ TEST(chapter1_3, general_single_qubit_gate)
     auto const U = (phase_shift * qpp::gt.RZ(beta) * qpp::gt.RY(gamma) * qpp::gt.RZ(delta)).eval();
     EXPECT_MATRIX_CLOSE(U * U.adjoint(), Eigen::Matrix2cd::Identity(), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Phase shift:\n" << phase_shift << '\n';
-        std::cerr << ">> Rotation-Z Beta:\n" << qpp::disp(qpp::gt.RZ(beta)) << '\n';
-        std::cerr << ">> Rotation Gamma:\n" << qpp::disp(qpp::gt.RY(gamma)) << '\n';
-        std::cerr << ">> Rotation-Z Delta:\n" << qpp::disp(qpp::gt.RZ(delta)) << '\n';
-        std::cerr << ">> General single qubit gate:\n" << qpp::disp(U) << '\n';
-    }
+    debug() << ">> Phase shift:\n" << phase_shift << '\n';
+    debug() << ">> Rotation-Z Beta:\n" << qpp::disp(qpp::gt.RZ(beta)) << '\n';
+    debug() << ">> Rotation Gamma:\n" << qpp::disp(qpp::gt.RY(gamma)) << '\n';
+    debug() << ">> Rotation-Z Delta:\n" << qpp::disp(qpp::gt.RZ(delta)) << '\n';
+    debug() << ">> General single qubit gate:\n" << qpp::disp(U) << '\n';
 }
 
 //! @brief Equation 1.18 and Figure 1.6
@@ -113,8 +99,7 @@ TEST(chapter1_3, cnot_gate)
 
     EXPECT_MATRIX_EQ(qpp::gt.CNOT * qpp::gt.CNOT.adjoint(), Eigen::Matrix4cd::Identity());
 
-    if constexpr (print_text)
-        std::cerr << ">> CNOT Gate:\n" << qpp::disp(qpp::gt.CNOT) << '\n';
+    debug() << ">> CNOT Gate:\n" << qpp::disp(qpp::gt.CNOT) << '\n';
 }
 
 //! @brief Equation 1.19
@@ -132,11 +117,8 @@ TEST(chapter1_3, plus_minus_states)
     auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
     EXPECT_MATRIX_CLOSE(state, ((state[0] + state[1]) * plus_ket + (state[0] - state[1]) * minus_ket) * inv_sqrt2, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> |+> State:\n" << qpp::disp(plus_ket) << '\n';
-        std::cerr << ">> |-> State:\n" << qpp::disp(minus_ket) << '\n';
-    }
+    debug() << ">> |+> State:\n" << qpp::disp(plus_ket) << '\n';
+    debug() << ">> |-> State:\n" << qpp::disp(minus_ket) << '\n';
 }
 
 //! @brief Equation 1.19
@@ -155,16 +137,13 @@ TEST(chapter1_3, plus_minus_basis_measure)
     EXPECT_COLLINEAR(resulting_state[0], qpp::st.plus(), 1e-12);
     EXPECT_COLLINEAR(resulting_state[1], qpp::st.minus(), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state)
+        debug() << qpp::disp(it) << "\n\n";
 }
 
 //! @brief Equation 1.19
@@ -195,16 +174,13 @@ TEST(chapter1_3, general_basis_measure)
     EXPECT_COLLINEAR(resulting_state[0], a, 1e-12);
     EXPECT_COLLINEAR(resulting_state[1], b, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> State:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> State:\n" << qpp::disp(state) << '\n';
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state)
+        debug() << qpp::disp(it) << "\n\n";
 }
 
 //! @brief Equation 1.20 and Figure 1.7
@@ -220,8 +196,7 @@ TEST(chapter1_3, swap_gate)
     EXPECT_MATRIX_EQ(U * 10_ket, 01_ket);
     EXPECT_MATRIX_EQ(U * 11_ket, 11_ket);
 
-    if constexpr (print_text)
-        std::cerr << ">> SWAP:\n" << qpp::disp(qpp::gt.SWAP) << '\n';
+    debug() << ">> SWAP:\n" << qpp::disp(qpp::gt.SWAP) << '\n';
 }
 
 //! @brief Equation 1.20 and Figure 1.7
@@ -254,11 +229,8 @@ TEST(chapter1_3, controlled_u)
     auto const controlled_Z = qpp::gt.CTRL(qpp::gt.Z, { 0 }, { 1 }, 2);
     EXPECT_MATRIX_EQ(controlled_Z, Eigen::Vector4cd(1, 1, 1, -1).asDiagonal().toDenseMatrix());
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Controlled-X:\n" << qpp::disp(controlled_X) << '\n';
-        std::cerr << ">> Controlled-Z:\n" << qpp::disp(controlled_Z) << '\n';
-    }
+    debug() << ">> Controlled-X:\n" << qpp::disp(controlled_X) << '\n';
+    debug() << ">> Controlled-Z:\n" << qpp::disp(controlled_Z) << '\n';
 }
 
 //! @brief Equations 1.21 and 1.22, and Figure 1.11
@@ -283,16 +255,13 @@ TEST(chapter1_3, qubit_copy)
     ASSERT_NE(state[1], 0.);
     EXPECT_NE(copy(state), qpp::kron(state, state));
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> |0>|0>:\n" << qpp::disp(qpp::kron(0_ket, 0_ket)) << '\n';
-        std::cerr << ">> |1>|0>:\n" << qpp::disp(qpp::kron(1_ket, 0_ket)) << '\n';
-        std::cerr << ">> copy(|0>):\n" << qpp::disp(copy(0_ket)) << '\n';
-        std::cerr << ">> copy(|1>):\n" << qpp::disp(copy(1_ket)) << '\n';
-        std::cerr << ">> |psi>:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> copy(|psi>):\n" << qpp::disp(copy(state)) << '\n';
-        std::cerr << ">> |psi>|psi>:\n" << qpp::disp(qpp::kron(state, state)) << '\n';
-    }
+    debug() << ">> |0>|0>:\n" << qpp::disp(qpp::kron(0_ket, 0_ket)) << '\n';
+    debug() << ">> |1>|0>:\n" << qpp::disp(qpp::kron(1_ket, 0_ket)) << '\n';
+    debug() << ">> copy(|0>):\n" << qpp::disp(copy(0_ket)) << '\n';
+    debug() << ">> copy(|1>):\n" << qpp::disp(copy(1_ket)) << '\n';
+    debug() << ">> |psi>:\n" << qpp::disp(state) << '\n';
+    debug() << ">> copy(|psi>):\n" << qpp::disp(copy(state)) << '\n';
+    debug() << ">> |psi>|psi>:\n" << qpp::disp(qpp::kron(state, state)) << '\n';
 }
 
 //! @brief Equations 1.23 through 1.26, and Figure 1.12 left
@@ -307,13 +276,10 @@ TEST(chapter1_3, bell_states)
     EXPECT_MATRIX_CLOSE(qpp::st.b10, (00_ket - 11_ket) * inv_sqrt2, 1e-12);
     EXPECT_MATRIX_CLOSE(qpp::st.b11, (01_ket - 10_ket) * inv_sqrt2, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> b00:\n" << qpp::disp(qpp::st.b00) << '\n';
-        std::cerr << ">> b01:\n" << qpp::disp(qpp::st.b01) << '\n';
-        std::cerr << ">> b10:\n" << qpp::disp(qpp::st.b10) << '\n';
-        std::cerr << ">> b11:\n" << qpp::disp(qpp::st.b11) << '\n';
-    }
+    debug() << ">> b00:\n" << qpp::disp(qpp::st.b00) << '\n';
+    debug() << ">> b01:\n" << qpp::disp(qpp::st.b01) << '\n';
+    debug() << ">> b10:\n" << qpp::disp(qpp::st.b10) << '\n';
+    debug() << ">> b11:\n" << qpp::disp(qpp::st.b11) << '\n';
 }
 
 //! @brief Equation 1.27
@@ -334,13 +300,10 @@ TEST(chapter1_3, bell_state_mnemonic)
     EXPECT_MATRIX_CLOSE(bell(1, 0), qpp::st.b10, 1e-12);
     EXPECT_MATRIX_CLOSE(bell(1, 1), qpp::st.b11, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> b00:\n" << qpp::disp(bell(0, 0)) << '\n';
-        std::cerr << ">> b01:\n" << qpp::disp(bell(0, 1)) << '\n';
-        std::cerr << ">> b10:\n" << qpp::disp(bell(1, 0)) << '\n';
-        std::cerr << ">> b11:\n" << qpp::disp(bell(1, 1)) << '\n';
-    }
+    debug() << ">> b00:\n" << qpp::disp(bell(0, 0)) << '\n';
+    debug() << ">> b01:\n" << qpp::disp(bell(0, 1)) << '\n';
+    debug() << ">> b10:\n" << qpp::disp(bell(1, 0)) << '\n';
+    debug() << ">> b11:\n" << qpp::disp(bell(1, 1)) << '\n';
 }
 
 //! @brief Figure 1.12 right
@@ -357,13 +320,10 @@ TEST(chapter1_3, bell_state_circuit)
     EXPECT_MATRIX_CLOSE(circuit(1_ket, 0_ket), qpp::st.b10, 1e-12);
     EXPECT_MATRIX_CLOSE(circuit(1_ket, 1_ket), qpp::st.b11, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> b00:\n" << qpp::disp(circuit(0_ket, 0_ket)) << '\n';
-        std::cerr << ">> b01:\n" << qpp::disp(circuit(0_ket, 1_ket)) << '\n';
-        std::cerr << ">> b10:\n" << qpp::disp(circuit(1_ket, 0_ket)) << '\n';
-        std::cerr << ">> b11:\n" << qpp::disp(circuit(1_ket, 1_ket)) << '\n';
-    }
+    debug() << ">> b00:\n" << qpp::disp(circuit(0_ket, 0_ket)) << '\n';
+    debug() << ">> b01:\n" << qpp::disp(circuit(0_ket, 1_ket)) << '\n';
+    debug() << ">> b10:\n" << qpp::disp(circuit(1_ket, 0_ket)) << '\n';
+    debug() << ">> b11:\n" << qpp::disp(circuit(1_ket, 1_ket)) << '\n';
 }
 
 //! @brief Equations 1.28 through 1.36, and Figure 1.13
@@ -409,16 +369,13 @@ TEST(chapter1_3, quantum_teleportation)
     auto const psi4 = (qpp::powm(qpp::gt.Z, m1) * qpp::powm(qpp::gt.X, m2) * psi3).eval();
     EXPECT_MATRIX_CLOSE(psi4, psi, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> psi:\n" << qpp::disp(psi) << '\n';
-        std::cerr << ">> psi0:\n" << qpp::disp(psi0) << '\n';
-        std::cerr << ">> psi1:\n" << qpp::disp(psi1) << '\n';
-        std::cerr << ">> psi2:\n" << qpp::disp(psi2) << '\n';
-        std::cerr << ">> Alice\'s measure: |" << m1 << m2 << ">\n" << qpp::disp(alice_measure) << '\n';
-        std::cerr << ">> psi3:\n" << qpp::disp(psi3) << '\n';
-        std::cerr << ">> psi4:\n" << qpp::disp(psi4) << '\n';
-    }
+    debug() << ">> psi:\n" << qpp::disp(psi) << '\n';
+    debug() << ">> psi0:\n" << qpp::disp(psi0) << '\n';
+    debug() << ">> psi1:\n" << qpp::disp(psi1) << '\n';
+    debug() << ">> psi2:\n" << qpp::disp(psi2) << '\n';
+    debug() << ">> Alice\'s measure: |" << m1 << m2 << ">\n" << qpp::disp(alice_measure) << '\n';
+    debug() << ">> psi3:\n" << qpp::disp(psi3) << '\n';
+    debug() << ">> psi4:\n" << qpp::disp(psi4) << '\n';
 }
 
 //! @brief Equations 1.28 through 1.36, and Figure 1.13
@@ -478,18 +435,15 @@ TEST(chapter1_3, quantum_teleportation_circuit)
     auto const psi4 = engine.get_psi();
     EXPECT_MATRIX_CLOSE(psi4, psi, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << circuit << "\n\n" << circuit.get_resources() << "\n\n";
-        std::cerr << engine << "\n\n";
-        std::cerr << ">> psi:\n" << qpp::disp(psi) << '\n';
-        std::cerr << ">> psi0:\n" << qpp::disp(psi0) << '\n';
-        std::cerr << ">> psi1:\n" << qpp::disp(psi1) << '\n';
-        std::cerr << ">> psi2:\n" << qpp::disp(psi2) << '\n';
-        std::cerr << ">> Alice\'s measure: |" << m1 << m2 << ">\n" << qpp::disp(alice_measure) << '\n';
-        std::cerr << ">> psi3:\n" << qpp::disp(psi3) << '\n';
-        std::cerr << ">> psi4:\n" << qpp::disp(psi4) << '\n';
-    }
+    debug() << circuit << "\n\n" << circuit.get_resources() << "\n\n";
+    debug() << engine << "\n\n";
+    debug() << ">> psi:\n" << qpp::disp(psi) << '\n';
+    debug() << ">> psi0:\n" << qpp::disp(psi0) << '\n';
+    debug() << ">> psi1:\n" << qpp::disp(psi1) << '\n';
+    debug() << ">> psi2:\n" << qpp::disp(psi2) << '\n';
+    debug() << ">> Alice\'s measure: |" << m1 << m2 << ">\n" << qpp::disp(alice_measure) << '\n';
+    debug() << ">> psi3:\n" << qpp::disp(psi3) << '\n';
+    debug() << ">> psi4:\n" << qpp::disp(psi4) << '\n';
 }
 
 //! @brief Equations 1.28 through 1.36, and Figure 1.13
@@ -513,12 +467,9 @@ TEST(chapter1_3, quantum_teleportation_circuit_short)
     auto const psi_out = engine.get_psi();
     EXPECT_MATRIX_CLOSE(psi_out, psi, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << circuit << "\n\n" << circuit.get_resources() << "\n\n";
-        std::cerr << engine << "\n\n";
-        std::cerr << ">> psi:\n" << qpp::disp(psi) << '\n';
-        std::cerr << ">> psi_in:\n" << qpp::disp(psi_in) << '\n';
-        std::cerr << ">> psi_out:\n" << qpp::disp(psi_out) << '\n';
-    }
+    debug() << circuit << "\n\n" << circuit.get_resources() << "\n\n";
+    debug() << engine << "\n\n";
+    debug() << ">> psi:\n" << qpp::disp(psi) << '\n';
+    debug() << ">> psi_in:\n" << qpp::disp(psi_in) << '\n';
+    debug() << ">> psi_out:\n" << qpp::disp(psi_out) << '\n';
 }

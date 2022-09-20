@@ -5,6 +5,7 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <unsupported/Eigen/KroneckerProduct>
 
@@ -12,10 +13,7 @@
 #include <numbers>
 #include <ranges>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 namespace
 {
@@ -56,19 +54,15 @@ TEST(chapter2_6, anti_correlations)
     auto const [result, probabilities, resulting_state] = qpp::measure(state, v_dot_sigma_hvects, { 0 });
     EXPECT_MATRIX_CLOSE(Eigen::Vector2d::Map(probabilities.data()), Eigen::Vector2d::Constant(0.5), 1e-12);
 
+    debug() << ">> state:\n" << qpp::disp(state) << '\n';
+    debug() << ">> v . sigma:\n" << qpp::disp(v_dot_sigma) << "\n\n";
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> state:\n" << qpp::disp(state) << '\n';
-        std::cerr << ">> v . sigma:\n" << qpp::disp(v_dot_sigma) << "\n\n";
-
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& st : resulting_state)
-            std::cerr << qpp::disp(st) << "\n\n";
-    }
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& st : resulting_state)
+        debug() << qpp::disp(st) << "\n\n";
 
     for (auto&& i : { 0u, 1u })
     {
@@ -79,15 +73,12 @@ TEST(chapter2_6, anti_correlations)
         EXPECT_MATRIX_CLOSE(Eigen::Vector2d::Map(probabilities2.data()), Eigen::Vector2d::Unit(j), 1e-12);
         EXPECT_MATRIX_CLOSE(resulting_state2[j], resulting_state[i], 1e-12);
 
-        if constexpr (print_text)
-        {
-            std::cerr << ">> Measurement result: " << result2 << '\n';
-            std::cerr << ">> Probabilities: ";
-            std::cerr << qpp::disp(probabilities2, ", ") << '\n';
-            std::cerr << ">> Resulting states:\n";
-            for (auto&& stt : resulting_state2)
-                std::cerr << qpp::disp(stt) << "\n\n";
-        }
+        debug() << ">> Measurement result: " << result2 << '\n';
+        debug() << ">> Probabilities: ";
+        debug() << qpp::disp(probabilities2, ", ") << '\n';
+        debug() << ">> Resulting states:\n";
+        for (auto&& stt : resulting_state2)
+            debug() << qpp::disp(stt) << "\n\n";
     }
 
     EXPECT_MATRIX_CLOSE(v_dot_sigma_hvects * v_dot_sigma_hvects.adjoint(), Eigen::Matrix2cd::Identity(), 1e-12);
@@ -102,13 +93,10 @@ TEST(chapter2_6, anti_correlations)
 
     EXPECT_NEAR(std::norm(det), 1., 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> state    : " << qpp::disp(state.transpose()) << '\n';
-        std::cerr << ">> ab_state : " << qpp::disp(ab_state.transpose()) << '\n';
-        std::cerr << ">> alt_state: " << qpp::disp(det * ab_state.transpose()) << '\n';
-        std::cerr << ">> det: " << det << ", norm: " << std::norm(det) << "\n";
-    }
+    debug() << ">> state    : " << qpp::disp(state.transpose()) << '\n';
+    debug() << ">> ab_state : " << qpp::disp(ab_state.transpose()) << '\n';
+    debug() << ">> alt_state: " << qpp::disp(det * ab_state.transpose()) << '\n';
+    debug() << ">> det: " << det << ", norm: " << std::norm(det) << "\n";
 }
 
 //! @brief Equations 2.226 through 2.230
@@ -159,12 +147,9 @@ TEST(chapter2_6, functions_pauli_matrices)
     EXPECT_MATRIX_CLOSE(n_dot_sigma, e1_e1 - e2_e2, 1e-12);
     EXPECT_MATRIX_CLOSE(Eigen::Matrix2cd::Identity(), e1_e1 + e2_e2, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> n_dot_sigma:\n" << qpp::disp(n_dot_sigma) << "\n\n";
-        std::cerr << ">> e1_e1:\n" << qpp::disp(e1_e1) << "\n\n";
-        std::cerr << ">> e2_e2:\n" << qpp::disp(e2_e2) << "\n\n";
-    }
+    debug() << ">> n_dot_sigma:\n" << qpp::disp(n_dot_sigma) << "\n\n";
+    debug() << ">> e1_e1:\n" << qpp::disp(e1_e1) << "\n\n";
+    debug() << ">> e2_e2:\n" << qpp::disp(e2_e2) << "\n\n";
 }
 
 //! @brief Problem 2.2, part (1)
@@ -205,16 +190,13 @@ TEST(chapter2_6, properties_of_the_schmidt_number_1)
     auto const rank = rhoA.bdcSvd().setThreshold(1e-12).rank();
     EXPECT_EQ(rank, schmidt_number);
 
-    if constexpr (print_text)
-    {
-        std::cerr << "lambda:\n" << qpp::disp(lambda) << "\n";
-        std::cerr << "psi:\n" << qpp::disp(psi) << "\n";
-        std::cerr << "Schmidt Basis A:\n" << qpp::disp(schmidt_basisA) << "\n";
-        std::cerr << "Schmidt Basis B:\n" << qpp::disp(schmidt_basisB) << "\n";
-        std::cerr << "Schmidt Coeffs:\n" << qpp::disp(schmidt_coeffs) << "\n";
-        std::cerr << "Schmidt Probs:\n" << qpp::disp(schmidt_probs) << "\n";
-        std::cerr << "Schmidt Number:\n" << schmidt_number << "\n";
-    }
+    debug() << "lambda:\n" << qpp::disp(lambda) << "\n";
+    debug() << "psi:\n" << qpp::disp(psi) << "\n";
+    debug() << "Schmidt Basis A:\n" << qpp::disp(schmidt_basisA) << "\n";
+    debug() << "Schmidt Basis B:\n" << qpp::disp(schmidt_basisB) << "\n";
+    debug() << "Schmidt Coeffs:\n" << qpp::disp(schmidt_coeffs) << "\n";
+    debug() << "Schmidt Probs:\n" << qpp::disp(schmidt_probs) << "\n";
+    debug() << "Schmidt Number:\n" << schmidt_number << "\n";
 }
 
 //! @brief Problem 2.2, part (2)
@@ -262,12 +244,9 @@ TEST(chapter2_6, properties_of_the_schmidt_number_2)
 
         EXPECT_GE(non_zero_alpha_beta, schmidt_number);
 
-        if constexpr (print_text)
-        {
-            std::cerr << "Schmidt Number:\n" << schmidt_number << "\n";
-            std::cerr << "Non-zero alpha*beta:\n" << non_zero_alpha_beta << "\n";
-            std::cerr << "N: " << N << ", M: " << M << "\n";
-        }
+        debug() << "Schmidt Number:\n" << schmidt_number << "\n";
+        debug() << "Non-zero alpha*beta:\n" << non_zero_alpha_beta << "\n";
+        debug() << "N: " << N << ", M: " << M << "\n";
     }
 }
 
@@ -336,12 +315,9 @@ TEST(chapter2_6, properties_of_the_schmidt_number_3)
 
     EXPECT_GE(psi_schmidt_number, std::abs(phi_schmidt_number - gamma_schmidt_number));
 
-    if constexpr (print_text)
-    {
-        std::cerr << "Schmidt Number phi  : " << phi_schmidt_number << "\n";
-        std::cerr << "Schmidt Number gamma: " << gamma_schmidt_number << "\n";
-        std::cerr << "Schmidt Number psi  : " << psi_schmidt_number << "\n";
-    }
+    debug() << "Schmidt Number phi  : " << phi_schmidt_number << "\n";
+    debug() << "Schmidt Number gamma: " << gamma_schmidt_number << "\n";
+    debug() << "Schmidt Number psi  : " << psi_schmidt_number << "\n";
 }
 
 //! @brief Check that (A x B)(C x D) = (AC) x (BD)
@@ -368,13 +344,10 @@ TEST(chapter2_6, kron_product_mixed_product)
     EXPECT_MATRIX_CLOSE(AxB_CxD, AxB_CxD_eigen, 1e-12);
     EXPECT_MATRIX_CLOSE(ACxBD, ACxBD_eigen, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << "(A x B)(C x D):\n" << qpp::disp(AxB_CxD) << "\n\n";
-        std::cerr << "(AC) x (BD):\n" << qpp::disp(ACxBD) << "\n\n";
-        std::cerr << "(A x B)(C x D) Eigen:\n" << qpp::disp(AxB_CxD_eigen) << "\n\n";
-        std::cerr << "(AC) x (BD) Eigen:\n" << qpp::disp(ACxBD_eigen) << "\n\n";
-    }
+    debug() << "(A x B)(C x D):\n" << qpp::disp(AxB_CxD) << "\n\n";
+    debug() << "(AC) x (BD):\n" << qpp::disp(ACxBD) << "\n\n";
+    debug() << "(A x B)(C x D) Eigen:\n" << qpp::disp(AxB_CxD_eigen) << "\n\n";
+    debug() << "(AC) x (BD) Eigen:\n" << qpp::disp(ACxBD_eigen) << "\n\n";
 }
 
 //! @brief Problem 2.3
@@ -411,11 +384,8 @@ TEST(chapter2_6, tsierelson_inequality)
 
     EXPECT_LE(mean, 2. * std::numbers::sqrt2 + 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << "M * M:\n" << qpp::disp(M2) << "\n\n";
-        std::cerr << "N:\n" << qpp::disp(N) << "\n\n";
-        std::cerr << "mean: " << mean << "\n";
-        std::cerr << "2*sqrt(2): " << 2. * std::numbers::sqrt2 << "\n";
-    }
+    debug() << "M * M:\n" << qpp::disp(M2) << "\n\n";
+    debug() << "N:\n" << qpp::disp(N) << "\n\n";
+    debug() << "mean: " << mean << "\n";
+    debug() << "2*sqrt(2): " << 2. * std::numbers::sqrt2 << "\n";
 }

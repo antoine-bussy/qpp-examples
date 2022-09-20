@@ -3,14 +3,15 @@
 
 #include <qpp/qpp.h>
 #include <qpp-examples/maths/gtest_macros.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <numbers>
 #include <ranges>
 
+using namespace qpp_e::qube::stream;
+
 namespace
 {
-    auto constexpr print_text = false;
-
     auto complicated_circuit()
     {
         auto circuit = qpp::QCircuit{ 3 };
@@ -110,16 +111,13 @@ TEST(perdrix, circuit_simplification)
 
     EXPECT_COLLINEAR(engine.get_psi(), engine_simple.get_psi(), 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << "Complicated circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
-        std::cerr << "Engine for complicated circuit:\n" << engine << "\n\n";
-        std::cerr << "Simplified circuit:\n" << circuit_simple << "\n\n" << circuit_simple.get_resources() << "\n\n";
-        std::cerr << "Engine for simplified circuit:\n" << engine_simple << "\n\n";
-        std::cerr << ">> psi:\n" << qpp::disp(psi) << '\n';
-        std::cerr << ">> psi_out complicated:\n" << qpp::disp(engine.get_psi()) << '\n';
-        std::cerr << ">> psi_out simplified:\n" << qpp::disp(engine_simple.get_psi()) << '\n';
-    }
+    debug() << "Complicated circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
+    debug() << "Engine for complicated circuit:\n" << engine << "\n\n";
+    debug() << "Simplified circuit:\n" << circuit_simple << "\n\n" << circuit_simple.get_resources() << "\n\n";
+    debug() << "Engine for simplified circuit:\n" << engine_simple << "\n\n";
+    debug() << ">> psi:\n" << qpp::disp(psi) << '\n';
+    debug() << ">> psi_out complicated:\n" << qpp::disp(engine.get_psi()) << '\n';
+    debug() << ">> psi_out simplified:\n" << qpp::disp(engine_simple.get_psi()) << '\n';
 }
 
 //! @brief Adapted from Slide 21, with the help of https://zxcalculus.com/
@@ -135,13 +133,10 @@ TEST(perdrix, circuit_simplification_adjoint)
 
     EXPECT_COLLINEAR(engine.get_psi(), psi, 1e-12);
 
-    if constexpr (print_text)
-    {
-        std::cerr << "Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
-        std::cerr << "Engine for circuit:\n" << engine << "\n\n";
-        std::cerr << ">> psi:\n" << qpp::disp(psi) << '\n';
-        std::cerr << ">> psi_out:\n" << qpp::disp(engine.get_psi()) << '\n';
-    }
+    debug() << "Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
+    debug() << "Engine for circuit:\n" << engine << "\n\n";
+    debug() << ">> psi:\n" << qpp::disp(psi) << '\n';
+    debug() << ">> psi_out:\n" << qpp::disp(engine.get_psi()) << '\n';
 
     auto M = Eigen::MatrixXcd::Zero(8, 8).eval();
     for(auto&& i : std::views::iota(0, 8))
@@ -152,6 +147,5 @@ TEST(perdrix, circuit_simplification_adjoint)
     }
     auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;
     EXPECT_TRUE((inv_sqrt2 * (-1. + 1i) * M).isIdentity(1e-12));
-    if constexpr (print_text)
-        std::cerr << "Circuit Matrix:\n" << qpp::disp(M) << '\n';
+    debug() << "Circuit Matrix:\n" << qpp::disp(M) << '\n';
 }

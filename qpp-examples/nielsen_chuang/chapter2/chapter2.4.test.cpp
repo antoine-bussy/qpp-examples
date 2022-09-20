@@ -5,14 +5,12 @@
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
+#include <qpp-examples/qube/debug.hpp>
 
 #include <execution>
 #include <ranges>
 
-namespace
-{
-    auto constexpr print_text = false;
-}
+using namespace qpp_e::qube::stream;
 
 namespace
 {
@@ -421,11 +419,8 @@ TEST(chapter2_4, minimal_ensemble)
     psi.colwise().normalize();
     EXPECT_NEAR(p.sum(), 1., 1e-12);
     EXPECT_MATRIX_NOT_CLOSE(psi.adjoint() * psi, Eigen::MatrixXcd::Identity(m,m), 1e-1);
-    if (print_text)
-    {
-        std::cerr << "Probability vector: " << qpp::disp(p) << '\n';
-        std::cerr << "psi.adjoint() * psi:\n" << qpp::disp(psi.adjoint() * psi) << '\n';
-    }
+    debug() << "Probability vector: " << qpp::disp(p) << '\n';
+    debug() << "psi.adjoint() * psi:\n" << qpp::disp(psi.adjoint() * psi) << '\n';
 
     auto lambda_inverse = Eigen::VectorXd::Zero(_2_pow_n).eval();
     lambda_inverse(_0_m) = lambda(_0_m).cwiseInverse();
@@ -551,22 +546,19 @@ TEST(chapter2_4, partial_trace_observables)
         EXPECT_COMPLEX_CLOSE(probabilities[i], probabilities_composite[i], 1e-12);
     }
 
-    if constexpr (print_text)
-    {
-        std::cerr << ">> Measurement result: " << result << '\n';
-        std::cerr << ">> Probabilities: ";
-        std::cerr << qpp::disp(probabilities, ", ") << '\n';
-        std::cerr << ">> Resulting states:\n";
-        for (auto&& it : resulting_state)
-            std::cerr << qpp::disp(it) << "\n\n";
-        std::cerr << "-----------------------------\n";
-        std::cerr << ">> Composite Measurement result: " << result_composite << '\n';
-        std::cerr << ">> Composite Probabilities: ";
-        std::cerr << qpp::disp(probabilities_composite, ", ") << '\n';
-        std::cerr << ">> Composite Resulting states:\n";
-        for (auto&& it : resulting_state_composite)
-            std::cerr << qpp::disp(it) << "\n\n";
-    }
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& it : resulting_state)
+        debug() << qpp::disp(it) << "\n\n";
+    debug() << "-----------------------------\n";
+    debug() << ">> Composite Measurement result: " << result_composite << '\n';
+    debug() << ">> Composite Probabilities: ";
+    debug() << qpp::disp(probabilities_composite, ", ") << '\n';
+    debug() << ">> Composite Resulting states:\n";
+    for (auto&& it : resulting_state_composite)
+        debug() << qpp::disp(it) << "\n\n";
 
     auto const rho_ab = qpp::randrho(_2_pow_n * _2_pow_l);
     auto const rho_a = qpp::ptrace2(rho_ab, { _2_pow_n, _2_pow_l });
