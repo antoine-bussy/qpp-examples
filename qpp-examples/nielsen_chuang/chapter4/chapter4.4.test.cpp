@@ -173,3 +173,55 @@ TEST(chapter4_4, implicit_measurement_circuit)
         EXPECT_COMPLEX_CLOSE(probs2[0], 1. - probs1[0], 1e-12);
     }
 }
+
+//! @brief Exercise 4.33
+TEST(chapter4_4, measurement_in_the_bell_basis)
+{
+    using namespace qpp::literals;
+
+    qpp_e::maths::seed(459);
+
+    auto const psi_bell = Eigen::Vector4cd::Random().normalized().eval();
+    auto bell_basis = Eigen::Matrix4cd{};
+    bell_basis.col(0) = qpp::st.b00;
+    bell_basis.col(1) = qpp::st.b01;
+    bell_basis.col(2) = qpp::st.b10;
+    bell_basis.col(3) = qpp::st.b11;
+    auto const psi = (bell_basis * psi_bell).eval();
+
+    auto const circuit = qpp::QCircuit{ 2 }
+        .CTRL(qpp::gt.X, 0, 1)
+        .gate(qpp::gt.H, 0)
+    ;
+    auto engine = qpp::QEngine{ circuit };
+    engine.set_psi(psi).execute();
+
+    auto const psi_out = engine.get_psi();
+
+    EXPECT_MATRIX_CLOSE(psi_out, psi_bell, 1e-12);
+
+    auto const [result, p, pm_states] = qpp::measure(psi_out, { 00_prj, 01_prj, 10_prj, 11_prj }, { 0, 1 }, 2, false);
+    auto const probs = Eigen::Vector4d::Map(p.data());
+    auto const [result_bell, p_bell, pm_states_bell] = qpp::measure(psi, { qpp::st.pb00, qpp::st.pb01, qpp::st.pb10, qpp::st.pb11 }, { 0, 1 }, 2, false);
+    auto const probs_bell = Eigen::Vector4d::Map(p_bell.data());
+
+    /* Probabilities are equal, but post-measurement states aren't -> POVM
+    * This also means that measurement operators are different. */
+    EXPECT_MATRIX_CLOSE(probs_bell, probs, 1e-12);
+    for (auto&& i : { 0, 1, 2, 3 })
+    {
+        EXPECT_MATRIX_NOT_CLOSE(pm_states_bell[i], pm_states[i], 1e-1);
+    }
+
+    debug() << ">> psi_bell:\n" << qpp::disp(psi_bell) << "\n";
+    debug() << ">> psi:\n" << qpp::disp(psi) << "\n";
+    debug() << ">> psi_out:\n" << qpp::disp(psi_out) << "\n\n";
+    debug() << ">> probs: " << qpp::disp(probs.transpose()) << "\n";
+    debug() << ">> probs_bell: " << qpp::disp(probs_bell.transpose()) << "\n\n";
+    debug() << ">> Resulting states :\n";
+    for (auto&& s : pm_states)
+        debug() << qpp::disp(s.transpose()) << "\n";
+    debug() << ">> Resulting states bell :\n";
+    for (auto&& s : pm_states_bell)
+        debug() << qpp::disp(s.transpose()) << "\n";
+}
