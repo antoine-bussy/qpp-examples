@@ -225,3 +225,44 @@ TEST(chapter4_4, measurement_in_the_bell_basis)
     for (auto&& s : pm_states_bell)
         debug() << qpp::disp(s.transpose()) << "\n";
 }
+
+//! @brief Exercise 4.34
+TEST(chapter4_4, measuring_an_operator)
+{
+    using namespace qpp::literals;
+
+    qpp_e::maths::seed();
+
+    auto const P = qpp::randU();
+    auto const U = (P * Eigen::Vector2cd{1.,-1.}.asDiagonal() * P.adjoint()).eval();
+
+    auto const [ lambda, v ] = qpp::heig(U);
+    EXPECT_MATRIX_CLOSE(lambda, Eigen::Vector2cd(-1.,1.), 1.e-12);
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(v.col(0), P.col(1), 1.e-12);
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(v.col(1), P.col(0), 1.e-12);
+
+    debug() << ">> lambda: " << qpp::disp(lambda.transpose()) << "\n";
+    debug() << ">> v:\n" << qpp::disp(v) << "\n";
+    debug() << ">> P:\n" << qpp::disp(P) << "\n";
+
+    auto const circuit = qpp::QCircuit{ 2, 1 }
+        .gate(qpp::gt.H, 0)
+        .CTRL(U, 0, 1)
+        .gate(qpp::gt.H, 0)
+        .measureZ(0, 0)
+    ;
+    auto engine = qpp::QEngine{ circuit };
+
+    auto const psi = qpp::randket();
+
+    engine.reset().set_psi(qpp::kron(0_ket, psi)).execute();
+    auto const p = engine.get_probs();
+    auto const probs = Eigen::VectorXd::Map(p.data(), p.size());
+    auto const dits = engine.get_dits();
+    auto const psi_out = engine.get_psi();
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(psi_out, v.col(1 - dits[0]), 1.e-12);
+
+    debug() << ">> psi_out:\n" << qpp::disp(psi_out) << "\n";
+    debug() << ">> probs: " << qpp::disp(probs.transpose()) << "\n";
+    debug() << ">> dits: " << qpp::disp(dits, ", ") << "\n";
+}
