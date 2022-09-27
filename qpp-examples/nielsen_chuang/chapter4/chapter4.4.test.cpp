@@ -266,3 +266,58 @@ TEST(chapter4_4, measuring_an_operator)
     debug() << ">> probs: " << qpp::disp(probs.transpose()) << "\n";
     debug() << ">> dits: " << qpp::disp(dits, ", ") << "\n";
 }
+
+//! @brief Exercise 4.35
+TEST(chapter4_4, measurement_commutes_with_controls)
+{
+
+    qpp_e::maths::seed();
+    auto const U = qpp::randU();
+    auto const phi = qpp::randket();
+    auto const psi = qpp::randket();
+
+    auto const ctrl_circuit = qpp::QCircuit{ 2, 1 }
+        .CTRL(U, 0, 1)
+        .measureZ(0, 0)
+    ;
+    auto ctrl_engine = qpp::QEngine{ ctrl_circuit };
+
+
+    auto const cctrl_circuit = qpp::QCircuit{ 2, 1 }
+        .measureZ(0, 0)
+        .cCTRL(U, 0, 1)
+    ;
+    auto cctrl_engine = qpp::QEngine{ cctrl_circuit };
+
+    auto const phi_psi = qpp::kron(phi, psi);
+
+    ctrl_engine.reset().set_psi(phi_psi).execute();
+    cctrl_engine.reset().set_psi(phi_psi).execute();
+
+    auto const ctrl_dit = ctrl_engine.get_dit(0);
+    auto const ctrl_prob = ctrl_engine.get_probs()[0];
+    auto const cctrl_dit = cctrl_engine.get_dit(0);
+    auto const cctrl_prob = cctrl_engine.get_probs()[0];
+
+    if (ctrl_dit == cctrl_dit)
+    {
+        EXPECT_COMPLEX_CLOSE(ctrl_prob, cctrl_prob, 1.e-12);
+    }
+    else
+    {
+        EXPECT_COMPLEX_CLOSE(ctrl_prob, 1. - cctrl_prob, 1.e-12);
+    }
+
+    EXPECT_COMPLEX_CLOSE(ctrl_prob, std::norm(phi[ctrl_dit]), 1.e-12);
+    auto const psi_out = ctrl_engine.get_psi();
+    auto const expected_psi_out = (qpp::powm(U, ctrl_dit) * psi).eval();
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(psi_out, expected_psi_out, 1.e-12);
+
+    debug() << ">> CTRL dit: " << ctrl_dit << "\n";
+    debug() << ">> CTRL prob: " << ctrl_prob << "\n";
+    debug() << ">> cCTRL dit: " << cctrl_dit << "\n";
+    debug() << ">> cCTRL prob: " << cctrl_prob << "\n\n";
+
+    debug() << ">> psi_out:\n" << qpp::disp(psi_out) << "\n";
+    debug() << ">> expected_psi_out:\n" << qpp::disp(expected_psi_out) << "\n";
+}
