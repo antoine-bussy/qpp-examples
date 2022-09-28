@@ -14,6 +14,7 @@ Decomposistion functions.
 #include <unsupported/Eigen/MatrixFunctions>
 
 #include <numbers>
+#include <ranges>
 
 namespace qpp_e::qube
 {
@@ -241,6 +242,83 @@ namespace qpp_e::qube
         debug() << ">> eiaAXBXC:\n" << qpp::disp(eiaAXBXC) << "\n\n";
 
         return std::tuple{ e[0], A, B, C };
+    }
+
+    template < typename Scalar = Eigen::dcomplex >
+    struct two_level_matrix_t
+    {
+        Eigen::Index index = 0;
+        Eigen::Matrix2<Scalar> U = Eigen::Matrix2<Scalar>::Identity();
+    };
+
+    template < typename Scalar >
+    Eigen::MatrixX<Scalar> operator*(qpp_e::maths::Matrix auto const& M, two_level_matrix_t<Scalar> const& s)
+    {
+        auto const n = M.cols();
+        auto P = Eigen::MatrixX<Scalar>::Identity(n, n).eval();
+        auto const& i = s.index;
+        P({i, i+1}, {i, i+1}) = s.U;
+
+        debug() << ">> P:\n" << qpp::disp(P) << "\n\n";
+
+        return M * P;
+    }
+
+    template < typename Scalar >
+    auto two_level_unitary_decomposition(maths::Matrix auto const& U, std::vector<two_level_matrix_t<Scalar>>& out, Eigen::Index const offset = 0) -> void
+    {
+        using namespace Eigen::indexing;
+
+        debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+
+        auto const n = U.cols();
+        assert(n >= 2);
+        assert(n == U.rows());
+
+        if(n == 2)
+        {
+            auto const I = seqN(fix<0>, fix<2>);
+            out.emplace_back(offset, U(I,I));
+            return;
+        }
+
+        auto const range = std::views::iota(0, n-1) | std::views::common;
+
+        auto const I2 = Eigen::Matrix2<Scalar>::Identity();
+        auto const I = Eigen::MatrixX<Scalar>::Identity(n, n);
+        EXPECT_MATRIX_CLOSE((U.adjoint()*U).eval(), I, 1.e-12);
+        EXPECT_MATRIX_CLOSE((U*U.adjoint()).eval(), I, 1.e-12);
+
+        auto new_U = U.eval();
+        for(auto&& i : range | std::views::reverse)
+        {
+            auto const& b = new_U(i+1, 0);
+            if (b == 0.)
+                continue;
+            auto const& a = new_U(i, 0);
+
+            auto s = two_level_matrix_t<Scalar>{};
+            s.index = i + offset;
+            s.U.col(0) = Eigen::Vector2<Scalar>{ a, b };
+            s.U.col(1) = Eigen::Vector2<Scalar>{ -std::conj(b), std::conj(a) };
+            s.U /= std::sqrt(std::norm(a) + std::norm(b));
+            EXPECT_MATRIX_CLOSE((s.U.adjoint()*s.U).eval(), I2, 1.e-12);
+            EXPECT_MATRIX_CLOSE((s.U*s.U.adjoint()).eval(), I2, 1.e-12);
+
+            out.emplace_back(s);
+            new_U({i, i+1}, all) = s.U.adjoint() * new_U({i, i+1}, all);
+        }
+        debug() << ">> new_U:\n" << qpp::disp(new_U) << "\n\n";
+
+        return two_level_unitary_decomposition(new_U(lastN(n-1), lastN(n-1)), out, offset + 1);
+    }
+
+    template < typename Scalar = Eigen::dcomplex >
+    auto two_level_unitary_decomposition(maths::Matrix auto const& U)
+    {
+        auto result = std::vector<two_level_matrix_t<Scalar>>{};
+        two_level_unitary_decomposition(U, result);
+        return result;
     }
 
 } /* namespace qpp_e::qube */
