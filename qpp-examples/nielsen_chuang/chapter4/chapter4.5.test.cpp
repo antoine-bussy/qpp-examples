@@ -75,3 +75,26 @@ TEST(chapter4_5, two_level_unitary_decomposition)
     debug() << ">> computed_U:\n" << qpp::disp(computed_U) << "\n\n";
     debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
 }
+
+//! @brief Exercise 4.37 and Equation 4.52
+TEST(chapter4_5, two_level_unitary_decomposition_example)
+{
+    using namespace std::complex_literals;
+
+    auto const U = (0.5 * Eigen::Matrix4cd
+    {
+        { 1., 1. , 1., 1. },
+        { 1., 1.i,-1.,-1.i},
+        { 1.,-1. , 1.,-1. },
+        { 1.,-1.i,-1., 1.i},
+
+    }).eval();
+
+    auto const u = qpp_e::qube::two_level_unitary_decomposition(U);
+    auto const computed_U = std::accumulate(u.cbegin(), u.cend(), Eigen::Matrix4cd::Identity().eval(), std::multiplies<>());
+
+    EXPECT_MATRIX_CLOSE(computed_U, U, 1.e-12);
+
+    debug() << ">> computed_U:\n" << qpp::disp(computed_U) << "\n\n";
+    debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+}
