@@ -11,6 +11,7 @@
 #include <chrono>
 #include <execution>
 #include <numbers>
+#include <unordered_set>
 #include <ranges>
 
 using namespace qpp_e::qube::stream;
@@ -97,4 +98,77 @@ TEST(chapter4_5, two_level_unitary_decomposition_example)
 
     debug() << ">> computed_U:\n" << qpp::disp(computed_U) << "\n\n";
     debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+}
+
+//! @brief Exercise 4.38
+TEST(chapter4_5, minimal_two_level_unitary_decomposition)
+{
+    qpp_e::maths::seed();
+
+    auto constexpr d = 7u;
+
+    /* Build (d-2) pairs of indices (i,j), where 0 <= i,j < d and i != j */
+    auto index_pairs = Eigen::ArrayX2<unsigned int>::Zero(d-2, 2).eval();
+    index_pairs.col(0) = (0.5 * d * (1. + Eigen::ArrayXd::Random(d-2))).cast<unsigned int>();
+    index_pairs.col(1) = (0.5 * (d-1) * (1. + Eigen::ArrayXd::Random(d-2))).cast<unsigned int>();
+    index_pairs.col(1) = (index_pairs.col(0) + index_pairs.col(1) + 1).unaryExpr([](auto&& x) { return x % d; });
+
+    /* For each i, register j when (i,j) is a pair */
+    auto index_pair_map = std::vector<std::unordered_set<unsigned int>>(d);
+    for (auto&& p : index_pairs.rowwise())
+    {
+        index_pair_map[p[0]].emplace(p[1]);
+        index_pair_map[p[1]].emplace(p[0]);
+    }
+
+    /* Build a partition r, t of [0, d[. t is the set of indices "connected" to index_pairs(0,0) by a pair.
+    Then r = [0, d[ \ t */
+    auto t = std::unordered_set<unsigned int>{};
+    auto constexpr range = std::views::iota(0u, d) | std::views::common;
+    auto r = std::unordered_set(range.begin(), range.end());
+
+    auto queue = std::unordered_set{ index_pairs(0,0) };
+    while (!queue.empty())
+    {
+        auto const n = *queue.begin();
+        queue.erase(queue.begin());
+        queue.merge(index_pair_map[n]);
+        index_pair_map[n].clear();
+        t.emplace(n);
+        r.erase(n);
+    }
+
+    auto const T = std::vector(t.cbegin(), t.cend());
+    auto const R = std::vector(r.cbegin(), r.cend());
+
+    debug() << ">> index pairs:\n" << qpp::disp(index_pairs.matrix().transpose()) << "\n\n";
+    debug() << ">> r:\n" << qpp::disp(R, ", ") << "\n\n";
+    debug() << ">> t:\n" << qpp::disp(T, ", ") << "\n\n";
+
+    /* Build U as the product of (d-2) two-level matrices, the two-level being determined by an index pair */
+    auto U = Eigen::MatrixXcd::Identity(d,d).eval();
+    auto u = Eigen::MatrixXcd::Identity(d,d).eval();
+    for (auto&& p : index_pairs.rowwise())
+    {
+        u(p,p) = qpp::randU();
+        U = U * u;
+        u(p,p).setIdentity();
+    }
+
+    /* r is never empty, i.e. (d-2) pairs always fail to "connect" all of [0,d[ */
+    EXPECT_FALSE(r.empty());
+    /* t and r defines a partition of the vectors of the computational basis,
+    and the two vectorial spaces E_t and E_r spanned by them: E = E_t + E_r.
+    The result, which is examplified here, is that E_t and E_r are stable under the
+    action of U. In other words, the "blocks" U(t,r) and U(r,t) are zero. */
+    EXPECT_TRUE(U(R,T).isZero(1e-12));
+    EXPECT_TRUE(U(T,R).isZero(1e-12));
+
+    /* t and r not being empty, any matrix built as a product of (d-2) two-level matrices
+    has two non-empty zero blocks. Conversely, any matrix without any zero coefficient
+    cannot be decomposed as a product of less than (d-1) two-level matrices */
+
+    debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+    debug() << ">> U(r,t):\n" << qpp::disp(U(R,T)) << "\n\n";
+    debug() << ">> U(t,r):\n" << qpp::disp(U(T,R)) << "\n\n";
 }
