@@ -1479,7 +1479,7 @@ TEST(chapter4_3, zero_toffoli)
 //! @brief Figure 4.13
 //! @details QPP is bugged, so we disable the test
 //! @see https://github.com/softwareQinc/qpp/issues/130
-TEST(chapter4_3, multiple_target_ctrl)
+TEST(chapter4_3, DISABLED_multiple_target_ctrl)
 {
     auto const& X = qpp::gt.X;
 
