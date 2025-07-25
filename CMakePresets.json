@@ -1,0 +1,30 @@
+{
+  "version": 10,
+  "configurePresets": [
+    {
+      "name": "ninja",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/_build/ninja/${presetName}",
+      "installDir": "${sourceDir}/_install/ninja/${presetName}",
+      "cacheVariables": {
+        "CMAKE_PROJECT_TOP_LEVEL_INCLUDES": {
+          "type": "PATH",
+          "value": "${sourceDir}/cmake/provider.cmake"
+        },
+        "CMAKE_BUILD_TYPE": "${presetName}"
+      },
+      "environment": {
+        "PATH": "${sourceDir}/.pixi/envs/default/bin:$penv{PATH}"
+      },
+      "cmakeExecutable": "${sourceDir}/.pixi/envs/default/bin/cmake",
+      "hidden": true
+    },
+    {
+      "name": "Default",
+      "inherits": "ninja",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ]
+}

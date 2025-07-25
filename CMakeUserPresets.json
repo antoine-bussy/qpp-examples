@@ -1,0 +1,25 @@
+{
+  "version": 10,
+  "configurePresets": [
+    {
+      "name": "limit-jobs",
+      "inherits": "ninja",
+      "environment": {
+        "CMAKE_BUILD_PARALLEL_LEVEL": "6"
+      },
+      "hidden": true
+    },
+    {
+      "name": "Release",
+      "inherits": ["ninja", "limit-jobs"]
+    },
+    {
+      "name": "Debug",
+      "inherits": ["ninja", "limit-jobs"]
+    },
+    {
+      "name": "RelWithDebInfo",
+      "inherits": ["ninja", "limit-jobs"]
+    }
+  ]
+}
