@@ -1,5 +1,5 @@
 [project]
-name = "pinocchio"
+name = "qpp-examples"
 version = "0.0.0"
 description = "Examples of Quantum Computing in C++ using the Quantum++ library"
 platforms = ["linux-64"]
@@ -14,4 +14,5 @@ openmp = ">=8.0"
 cmake = ">=4.0"
 ninja = ">=1.13"
 gxx = ">=15.1"
+gdb = ">=16.3"
 conda-gcc-specs = ">=15.1"
