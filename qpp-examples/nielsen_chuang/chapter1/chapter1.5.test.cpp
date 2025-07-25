@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/qube/debug.hpp>
 
@@ -25,7 +25,7 @@ TEST(chapter1_5, stern_gerlach)
     debug() << ">> Oven:\n" << qpp::disp(oven) << '\n';
     debug() << ">> Measurement result: " << result1 << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities1, ", ") << '\n';
+    debug() << qpp::disp(probabilities1, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state1)
         debug() << qpp::disp(it) << "\n\n";
@@ -50,7 +50,7 @@ TEST(chapter1_5, cascaded_stern_gerlach)
     debug() << ">> |+Z>:\n" << qpp::disp(resulting_state1[0]) << '\n';
     debug() << ">> Measurement result: " << result2 << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities2, ", ") << '\n';
+    debug() << qpp::disp(probabilities2, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state2)
         debug() << qpp::disp(it) << "\n\n";
@@ -76,7 +76,7 @@ TEST(chapter1_5, three_stage_cascaded_stern_gerlach)
     debug() << ">> |+X>:\n" << qpp::disp(resulting_state2[0]) << '\n';
     debug() << ">> Measurement result: " << result3 << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities3, ", ") << '\n';
+    debug() << qpp::disp(probabilities3, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state3)
         debug() << qpp::disp(it) << "\n\n";

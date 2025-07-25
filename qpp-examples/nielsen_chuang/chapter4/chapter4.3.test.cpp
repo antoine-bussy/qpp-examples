@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
@@ -32,7 +32,7 @@ TEST(chapter4_3, cnot_circuit)
     EXPECT_MATRIX_EQ(cnot, qpp::gt.CNOT);
 
     auto circuit = qpp::QCircuit{ 2, 0 };
-    circuit.gate_joint(qpp::gt.CNOT, { 0, 1 });
+    circuit.gate(qpp::gt.CNOT, { 0, 1 });
     auto engine = qpp::QEngine{ circuit };
 
     /* Random |c>|t> input */
@@ -40,19 +40,19 @@ TEST(chapter4_3, cnot_circuit)
     auto const t = qpp::randket();
 
     auto const in = qpp::kron(c,t);
-    engine.reset().set_psi(in).execute();
-    auto const out = engine.get_psi();
+    engine.reset().set_state(in).execute();
+    auto const out = engine.get_state();
 
     auto const expected_out = (cnot * in).eval();
     EXPECT_MATRIX_CLOSE(out, expected_out, 1e-12);
 
     /* |0>|t> input */
-    engine.reset().set_psi(qpp::kron(0_ket,t)).execute();
-    EXPECT_MATRIX_CLOSE(engine.get_psi(), qpp::kron(0_ket,t), 1e-12);
+    engine.reset().set_state(qpp::kron(0_ket,t)).execute();
+    EXPECT_MATRIX_CLOSE(engine.get_state(), qpp::kron(0_ket,t), 1e-12);
 
     /* |1>|t> input */
-    engine.reset().set_psi(qpp::kron(1_ket,t)).execute();
-    EXPECT_MATRIX_CLOSE(engine.get_psi(), qpp::kron(1_ket,t.reverse()), 1e-12);
+    engine.reset().set_state(qpp::kron(1_ket,t)).execute();
+    EXPECT_MATRIX_CLOSE(engine.get_state(), qpp::kron(1_ket,t.reverse()), 1e-12);
 
     debug() << ">> Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
     debug() << ">> Engine:\n" << engine << "\n\n";
@@ -83,7 +83,7 @@ TEST(chapter4_3, controlled_u)
     EXPECT_MATRIX_EQ(cU, controlled_U);
 
     auto circuit = qpp::QCircuit{ 2, 0 };
-    circuit.gate_joint(controlled_U, { 0, 1 });
+    circuit.gate(controlled_U, { 0, 1 });
     auto engine = qpp::QEngine{ circuit };
 
     /* Random |c>|t> input */
@@ -91,19 +91,19 @@ TEST(chapter4_3, controlled_u)
     auto const t = qpp::randket();
 
     auto const in = qpp::kron(c,t);
-    engine.reset().set_psi(in).execute();
-    auto const out = engine.get_psi();
+    engine.reset().set_state(in).execute();
+    auto const out = engine.get_state();
 
     auto const expected_out = (cU * in).eval();
     EXPECT_MATRIX_CLOSE(out, expected_out, 1e-12);
 
     /* |0>|t> input */
-    engine.reset().set_psi(qpp::kron(0_ket,t)).execute();
-    EXPECT_MATRIX_CLOSE(engine.get_psi(), qpp::kron(0_ket,t), 1e-12);
+    engine.reset().set_state(qpp::kron(0_ket,t)).execute();
+    EXPECT_MATRIX_CLOSE(engine.get_state(), qpp::kron(0_ket,t), 1e-12);
 
     /* |1>|t> input */
-    engine.reset().set_psi(qpp::kron(1_ket,t)).execute();
-    EXPECT_MATRIX_CLOSE(engine.get_psi(), qpp::kron(1_ket, (U*t).eval()), 1e-12);
+    engine.reset().set_state(qpp::kron(1_ket,t)).execute();
+    EXPECT_MATRIX_CLOSE(engine.get_state(), qpp::kron(1_ket, (U*t).eval()), 1e-12);
 
     debug() << ">> Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
     debug() << ">> Engine:\n" << engine << "\n\n";
@@ -130,7 +130,7 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
     };
 
     auto circuit_IxH = qpp::QCircuit{ 2, 0 };
-    circuit_IxH.gate_joint(qpp::gt.H, { 1 });
+    circuit_IxH.gate(qpp::gt.H, { 1 });
     auto engine_IxH = qpp::QEngine{ circuit_IxH };
 
     auto const circuit_IxH_matrix = qpp_e::qube::extract_matrix<4>(engine_IxH);
@@ -149,7 +149,7 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
     };
 
     auto circuit_HxI = qpp::QCircuit{ 2, 0 };
-    circuit_HxI.gate_joint(qpp::gt.H, { 0 });
+    circuit_HxI.gate(qpp::gt.H, { 0 });
     auto engine_HxI = qpp::QEngine{ circuit_HxI };
 
     auto const circuit_HxI_matrix = qpp_e::qube::extract_matrix<4>(engine_HxI);
@@ -442,25 +442,25 @@ TEST(chapter4_3, n_controlled_k_operation_circuit)
     auto const psi = qpp::randket(_2_pow_k);
 
     auto const circuit = qpp::QCircuit{ n + k }
-        .CTRL_joint(U, { range_n.begin(), range_n.end() }, { range_nk.begin(), range_nk.end() });
+        .CTRL(U, { range_n.begin(), range_n.end() }, { range_nk.begin(), range_nk.end() });
 
-    auto engine = qpp::QEngine{ circuit };
+    auto engine = qpp::QEngine(circuit);
 
     {
         auto const x = Eigen::Vector<bool, n>::Random().cast<qpp::idx>().eval();
         auto const x_ket = qpp::mket({ x.cbegin(), x.cend() });
-        engine.reset().set_psi(qpp::kron(x_ket, psi)).execute();
+        engine.reset().set_state(qpp::kron(x_ket, psi)).execute();
 
         auto const expected_out = qpp::kron(x_ket, psi);
-        EXPECT_MATRIX_CLOSE(engine.get_psi(), expected_out, 1e-12);
+        EXPECT_MATRIX_CLOSE(engine.get_state(), expected_out, 1e-12);
     }
     {
         auto const x = Eigen::Vector<bool, n>::Ones().cast<qpp::idx>().eval();
         auto const x_ket = qpp::mket({ x.cbegin(), x.cend() });
-        engine.reset().set_psi(qpp::kron(x_ket, psi)).execute();
+        engine.reset().set_state(qpp::kron(x_ket, psi)).execute();
 
         auto const expected_out = qpp::kron(x_ket, (U * psi).eval());
-        EXPECT_MATRIX_CLOSE(engine.get_psi(), expected_out, 1e-12);
+        EXPECT_MATRIX_CLOSE(engine.get_state(), expected_out, 1e-12);
     }
 }
 
@@ -937,8 +937,8 @@ TEST(chapter4_3, toffoli_up_to_phase)
             for (auto&& t : { 0u, 1u })
             {
                 auto const ket_in = qpp::mket({ c1, c2, t });
-                engine.reset().set_psi(ket_in).execute();
-                auto const expected_ket_out = engine.get_psi();
+                engine.reset().set_state(ket_in).execute();
+                auto const expected_ket_out = engine.get_state();
 
                 auto const phase = relative_phase(c1, c2, t);
                 auto const ket_out = (phase * qpp::gt.TOF * ket_in).eval();
@@ -1133,10 +1133,10 @@ namespace
 
         auto const circuit = qpp::QCircuit{ n + 1 }
             .CTRL(V, { n-1 }, { n })
-            .add_circuit(circuit_X, 0)
+            .compose_circuit(circuit_X, 0)
             .CTRL(V.adjoint(), { n-1 }, { n })
-            .add_circuit(circuit_X, 0)
-            .match_circuit_right(circuit_V, targets)
+            .compose_circuit(circuit_X, 0)
+            .couple_circuit_right(circuit_V, targets)
             ;
 
         --targets[n-1];

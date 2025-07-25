@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/qube/debug.hpp>
@@ -332,9 +332,9 @@ namespace
 //! @brief Test of bitwise inner product with std::popcount
 TEST(chapter1_4, bitwise_inner_product)
 {
-    auto constexpr n = 7u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
-    auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
+    auto constexpr n = 7ul;
+    auto constexpr _2_pow_n = qpp_e::maths::pow(2ul, n);
+    auto constexpr range = std::views::iota(0ul, _2_pow_n) | std::views::common;
     auto const dims = std::vector<qpp::idx>(n, 2u);
 
     for (auto&& x : range)
@@ -448,7 +448,7 @@ TEST(chapter1_4, deutsch_jozsa_algorithm)
         debug() << ">> psi3:\n" << qpp::disp(psi3) << '\n';
         debug() << ">> Measurement result: " << result << '\n';
         debug() << ">> Probabilities: ";
-        debug() << qpp::disp(probabilities, ", ") << '\n';
+        debug() << qpp::disp(probabilities, {", "}) << '\n';
         debug() << ">> Resulting states:\n";
         for (auto&& it : resulting_state)
             debug() << qpp::disp(it) << "\n\n";

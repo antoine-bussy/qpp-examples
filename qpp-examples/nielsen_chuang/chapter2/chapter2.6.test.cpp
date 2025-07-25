@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
@@ -59,7 +59,7 @@ TEST(chapter2_6, anti_correlations)
 
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& st : resulting_state)
         debug() << qpp::disp(st) << "\n\n";
@@ -75,7 +75,7 @@ TEST(chapter2_6, anti_correlations)
 
         debug() << ">> Measurement result: " << result2 << '\n';
         debug() << ">> Probabilities: ";
-        debug() << qpp::disp(probabilities2, ", ") << '\n';
+        debug() << qpp::disp(probabilities2, {", "}) << '\n';
         debug() << ">> Resulting states:\n";
         for (auto&& stt : resulting_state2)
             debug() << qpp::disp(stt) << "\n\n";

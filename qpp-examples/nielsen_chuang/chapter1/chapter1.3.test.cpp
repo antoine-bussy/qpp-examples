@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/qube/debug.hpp>
@@ -140,7 +140,7 @@ TEST(chapter1_3, plus_minus_basis_measure)
     debug() << ">> State:\n" << qpp::disp(state) << '\n';
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state)
         debug() << qpp::disp(it) << "\n\n";
@@ -177,7 +177,7 @@ TEST(chapter1_3, general_basis_measure)
     debug() << ">> State:\n" << qpp::disp(state) << '\n';
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state)
         debug() << qpp::disp(it) << "\n\n";
@@ -392,18 +392,18 @@ TEST(chapter1_3, quantum_teleportation_circuit)
 
     auto circuit = qpp::QCircuit{ 3, 2 };
     auto engine = qpp::QEngine{ circuit };
-    engine.reset().set_psi(psi_init).execute();
-    auto const psi0 = engine.get_psi();
+    engine.reset().set_state(psi_init).execute();
+    auto const psi0 = engine.get_state();
     EXPECT_MATRIX_CLOSE(psi0, inv_sqrt2 * (alpha * (000_ket + 011_ket) + beta * (100_ket + 111_ket)), 1e-12);
 
-    circuit.gate_joint(qpp::gt.CNOT, { 0, 1 });
-    engine.reset().set_psi(psi_init).execute();
-    auto const psi1 = engine.get_psi();
+    circuit.gate(qpp::gt.CNOT, { 0, 1 });
+    engine.reset().set_state(psi_init).execute();
+    auto const psi1 = engine.get_state();
     EXPECT_MATRIX_CLOSE(psi1, inv_sqrt2 * (alpha * (000_ket + 011_ket) + beta * (110_ket + 101_ket)), 1e-12);
 
     circuit.gate(qpp::gt.H, 0);
-    engine.reset().set_psi(psi_init).execute();
-    auto const psi2 = engine.get_psi();
+    engine.reset().set_state(psi_init).execute();
+    auto const psi2 = engine.get_state();
     EXPECT_MATRIX_CLOSE(psi2, 0.5 * (alpha * qpp::kron(0_ket + 1_ket, 00_ket + 11_ket)  + beta * qpp::kron(0_ket - 1_ket, 10_ket + 01_ket)), 1e-12);
     EXPECT_MATRIX_CLOSE(psi2, 0.5 * (qpp::kron(00_ket, alpha * 0_ket + beta * 1_ket)
                                    + qpp::kron(01_ket, alpha * 1_ket + beta * 0_ket)
@@ -412,8 +412,8 @@ TEST(chapter1_3, quantum_teleportation_circuit)
 
     circuit.measureV(qpp::gt.Id2, 0, 0);
     circuit.measureV(qpp::gt.Id2, 1, 1);
-    engine.reset().set_psi(psi_init).execute();
-    auto const psi3 = engine.get_psi();
+    engine.reset().set_state(psi_init).execute();
+    auto const psi3 = engine.get_state();
     auto const m1 = engine.get_dit(0);
     auto const m2 = engine.get_dit(1);
     auto const alice_measure = qpp::kron(Eigen::Vector2cd::Unit(m1), Eigen::Vector2cd::Unit(m2));
@@ -431,8 +431,8 @@ TEST(chapter1_3, quantum_teleportation_circuit)
 
     circuit.cCTRL(qpp::gt.X, 1, 2);
     circuit.cCTRL(qpp::gt.Z, 0, 2);
-    engine.reset().set_psi(psi_init).execute();
-    auto const psi4 = engine.get_psi();
+    engine.reset().set_state(psi_init).execute();
+    auto const psi4 = engine.get_state();
     EXPECT_MATRIX_CLOSE(psi4, psi, 1e-12);
 
     debug() << circuit << "\n\n" << circuit.get_resources() << "\n\n";
@@ -452,7 +452,7 @@ TEST(chapter1_3, quantum_teleportation_circuit_short)
     auto const psi = qpp::randket().eval();
 
     auto circuit = qpp::QCircuit{ 3, 2 };
-    circuit.gate_joint(qpp::gt.CNOT, { 0, 1 });
+    circuit.gate(qpp::gt.CNOT, { 0, 1 });
     circuit.gate(qpp::gt.H, 0);
     circuit.measureV(qpp::gt.Id2, 0, 0);
     circuit.measureV(qpp::gt.Id2, 1, 1);
@@ -460,11 +460,11 @@ TEST(chapter1_3, quantum_teleportation_circuit_short)
     circuit.cCTRL(qpp::gt.Z, 0, 2);
 
     auto engine = qpp::QEngine{ circuit };
-    engine.set_psi(qpp::kron(psi, qpp::st.b00));
-    auto const psi_in = engine.get_psi();
+    engine.set_state(qpp::kron(psi, qpp::st.b00));
+    auto const psi_in = engine.get_state();
     engine.execute();
 
-    auto const psi_out = engine.get_psi();
+    auto const psi_out = engine.get_state();
     EXPECT_MATRIX_CLOSE(psi_out, psi, 1e-12);
 
     debug() << circuit << "\n\n" << circuit.get_resources() << "\n\n";

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/qube/debug.hpp>
 
@@ -57,6 +57,6 @@ TEST(chapter2_3, superdense_coding_interception)
 
         auto const [result, probabilities, resulting_state] = qpp::measure(sent_state, Mext);
         EXPECT_MATRIX_CLOSE(Eigen::Vector4d::Map(probabilities.data()), probabilities_ref, 1e-12);
-        debug() << "Sent message: " << sent_message << ", Eve's probabilites: " << qpp::disp(probabilities, ", ") << '\n';
+        debug() << "Sent message: " << sent_message << ", Eve's probabilites: " << qpp::disp(probabilities, {", "}) << '\n';
     }
 }

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
@@ -582,7 +582,7 @@ TEST(chapter2_5, purification_and_measurement_3)
     EXPECT_MATRIX_CLOSE(Eigen::VectorXd::Map(probabilities.data(), probabilities.size()), p, 1e-12);
 
     debug() << ">> p: " << qpp::disp(p.transpose()) << "\n";
-    debug() << ">> Probabilities: " << qpp::disp(probabilities, ", ") << "\n\n";
+    debug() << ">> Probabilities: " << qpp::disp(probabilities, {", "}) << "\n\n";
 
     for (auto&& i : range)
     {

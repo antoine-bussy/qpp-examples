@@ -72,8 +72,8 @@ function(qpp_examples_provide_qpp)
     message(STATUS "Custom Provider: Providing qpp dependency")
     FetchContent_Declare(
         qpp
-    #   GIT_REPOSITORY https://github.com/softwareQinc/qpp.git
-        GIT_REPOSITORY https://github.com/antoine-bussy/qpp.git
+        GIT_REPOSITORY https://github.com/softwareQinc/qpp.git
+        # GIT_REPOSITORY https://github.com/antoine-bussy/qpp.git
         GIT_TAG main
     )
     FetchContent_Populate(qpp)

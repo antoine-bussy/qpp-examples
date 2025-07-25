@@ -6,7 +6,7 @@ Decomposistion functions.
 
 #include "debug.hpp"
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 

@@ -6,7 +6,7 @@ Introspection functions.
 
 #include "debug.hpp"
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 
@@ -144,8 +144,8 @@ namespace qpp_e::qube
         for(auto&& i : indices)
         {
             auto const psi = Eigen::VectorXcd::Unit(total_dim, i);
-            engine.reset().set_psi(psi).execute();
-            matrix.col(j) = engine.get_psi()(indices, Eigen::all);
+            engine.reset().set_state(psi).execute();
+            matrix.col(j) = engine.get_state()(indices, Eigen::all);
             ++j;
         }
         return matrix;

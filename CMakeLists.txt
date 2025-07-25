@@ -31,8 +31,11 @@ find_package(Eigen3 3.4 REQUIRED)
 find_package(qpp REQUIRED)
 add_library(libqpp_fix INTERFACE)
 # Fix qpp link to eigen3
-target_link_libraries(libqpp_fix INTERFACE qpp::qpp Eigen3::Eigen)
+target_link_libraries(libqpp_fix INTERFACE libqpp Eigen3::Eigen)
+target_compile_options(libqpp_fix INTERFACE $<$<CONFIG:Debug>:-O0>)
+target_link_options(libqpp_fix INTERFACE $<$<CONFIG:Debug>:-O0>)
 add_library(qpp::qpp ALIAS libqpp_fix)
+
 
 find_package(GTest REQUIRED)
 find_package(OpenMP REQUIRED)

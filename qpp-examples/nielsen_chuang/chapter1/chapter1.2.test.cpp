@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/qube/debug.hpp>
 
@@ -31,7 +31,7 @@ TEST(chapter1_2, measure)
     debug() << ">> State:\n" << qpp::disp(state) << '\n';
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state)
         debug() << qpp::disp(it) << "\n\n";
@@ -72,7 +72,7 @@ TEST(chapter1_2, two_qubits_measure)
     debug() << ">> State:\n" << qpp::disp(state) << '\n';
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state)
         debug() << qpp::disp(it) << "\n\n";
@@ -88,13 +88,13 @@ TEST(chapter1_2, simple_two_qubits_measure_on_first_qubit)
 
     EXPECT_EQ(result, 0);
     EXPECT_MATRIX_CLOSE(Eigen::Vector2d::Map(probabilities.data()), Eigen::Vector2d::UnitX(), 1e-12);
-    EXPECT_MATRIX_EQ(resulting_state[0], Eigen::Vector4cd(1, 1, 0, 0).normalized());
+    EXPECT_MATRIX_CLOSE(resulting_state[0], Eigen::Vector4cd(1, 1, 0, 0).normalized(), 1e-12);
     EXPECT_MATRIX_EQ(resulting_state[1], Eigen::Vector4cd::Zero());
 
     debug() << ">> State:\n" << qpp::disp(state) << '\n';
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state)
         debug() << qpp::disp(it) << "\n\n";
@@ -116,7 +116,7 @@ TEST(chapter1_2, simple_two_qubits_measure_on_first_qubit_2)
     debug() << ">> State:\n" << qpp::disp(state) << '\n';
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state)
         debug() << qpp::disp(it) << "\n\n";
@@ -138,7 +138,7 @@ TEST(chapter1_2, two_qubits_measure_on_first_qubit)
     debug() << ">> State:\n" << qpp::disp(state) << '\n';
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state)
         debug() << qpp::disp(it) << "\n\n";
@@ -166,7 +166,7 @@ TEST(chapter1_2, bell_state_repeated_measure)
     debug() << ">> State:\n" << qpp::disp(bell_state) << '\n';
     debug() << ">> Measurement result: " << result_0 << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities_0, ", ") << '\n';
+    debug() << qpp::disp(probabilities_0, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state_0)
         debug() << qpp::disp(it) << "\n\n";
@@ -183,7 +183,7 @@ TEST(chapter1_2, bell_state_repeated_measure)
     debug() << ">> State:\n" << qpp::disp(resulting_state_0[result_0]) << '\n';
     debug() << ">> Measurement result: " << result_1 << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities_1, ", ") << '\n';
+    debug() << qpp::disp(probabilities_1, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state_1)
         debug() << qpp::disp(it) << "\n\n";

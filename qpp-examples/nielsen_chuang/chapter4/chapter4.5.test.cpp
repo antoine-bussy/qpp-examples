@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
@@ -30,7 +30,7 @@ TEST(chapter4_5, addition_mod_4)
         ;
     auto engine = qpp::QEngine{ circuit };
 
-    auto constexpr range = std::views::iota(0, 4) | std::views::common;
+    auto constexpr range = std::views::iota(0ul, 4ul) | std::views::common;
 
     for(auto&& x : range)
     {
@@ -40,10 +40,10 @@ TEST(chapter4_5, addition_mod_4)
             auto const xy_bin = qpp::n2multiidx(xy, { 2, 2, 2, 2 });
             auto const psi = qpp::mket(xy_bin);
 
-            engine.reset().set_psi(psi).execute();
+            engine.reset().set_state(psi).execute();
 
-            auto const psi_out = engine.get_psi();
-            auto const xy_bin_out = qpp::zket2dits(psi_out);
+            auto const psi_out = engine.get_state();
+            auto const xy_bin_out = *qpp::zket2dits(psi_out);
             auto const x_out = 2*xy_bin_out[0] + xy_bin_out[1];
             auto const y_out = 2*xy_bin_out[2] + xy_bin_out[3];
 
@@ -52,10 +52,10 @@ TEST(chapter4_5, addition_mod_4)
 
             debug() << ">> x: " << x << "\n";
             debug() << ">> y: " << y << "\n";
-            debug() << ">> xy_bin: " << qpp::disp(xy_bin, "") << "\n";
+            debug() << ">> xy_bin: " << qpp::disp(xy_bin, { "" }) << "\n";
             debug() << ">> x_out: " << x_out << "\n";
             debug() << ">> y_out: " << y_out << "\n";
-            debug() << ">> xy_bin_out: " << qpp::disp(xy_bin_out, "") << "\n\n";
+            debug() << ">> xy_bin_out: " << qpp::disp(xy_bin_out, { "" }) << "\n\n";
         }
     }
 }
@@ -142,8 +142,8 @@ TEST(chapter4_5, minimal_two_level_unitary_decomposition)
     auto const R = std::vector(r.cbegin(), r.cend());
 
     debug() << ">> index pairs:\n" << qpp::disp(index_pairs.matrix().transpose()) << "\n\n";
-    debug() << ">> r:\n" << qpp::disp(R, ", ") << "\n\n";
-    debug() << ">> t:\n" << qpp::disp(T, ", ") << "\n\n";
+    debug() << ">> r:\n" << qpp::disp(R, {", "}) << "\n\n";
+    debug() << ">> t:\n" << qpp::disp(T, {", "}) << "\n\n";
 
     /* Build U as the product of (d-2) two-level matrices, the two-level being determined by an index pair */
     auto U = Eigen::MatrixXcd::Identity(d,d).eval();

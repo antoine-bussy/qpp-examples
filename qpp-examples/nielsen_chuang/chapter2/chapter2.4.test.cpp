@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
@@ -548,14 +548,14 @@ TEST(chapter2_4, partial_trace_observables)
 
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& it : resulting_state)
         debug() << qpp::disp(it) << "\n\n";
     debug() << "-----------------------------\n";
     debug() << ">> Composite Measurement result: " << result_composite << '\n';
     debug() << ">> Composite Probabilities: ";
-    debug() << qpp::disp(probabilities_composite, ", ") << '\n';
+    debug() << qpp::disp(probabilities_composite, {", "}) << '\n';
     debug() << ">> Composite Resulting states:\n";
     for (auto&& it : resulting_state_composite)
         debug() << qpp::disp(it) << "\n\n";

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 #include <qpp-examples/maths/arithmetic.hpp>
 #include <qpp-examples/maths/gtest_macros.hpp>
 #include <qpp-examples/maths/random.hpp>
@@ -50,7 +50,7 @@ TEST(chapter2_2, measurement_operators)
         debug() << qpp::disp(op) << "\n\n";
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& st : resulting_state)
         debug() << qpp::disp(st) << "\n\n";
@@ -97,7 +97,7 @@ TEST(chapter2_2, measurement_operators_one_qubit)
     debug() << ">> M1:\n" << qpp::disp(M1) << "\n\n";
     debug() << ">> Measurement result: " << result << '\n';
     debug() << ">> Probabilities: ";
-    debug() << qpp::disp(probabilities, ", ") << '\n';
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
     debug() << ">> Resulting states:\n";
     for (auto&& st : resulting_state)
         debug() << qpp::disp(st) << "\n\n";
@@ -670,7 +670,7 @@ TEST(chapter2_2, ancillary_system)
         for (auto&& j : std::views::iota(0u, MM))
         {
             auto const psi_m = qpp::kron(Eigen::VectorXcd::Unit(_2_pow_n, i), Eigen::VectorXcd::Unit(MM, j));
-            auto const col = qpp::zket2dits(psi_m, { D }).front();
+            auto const col = qpp::zket2dits(psi_m, { D })->front();
             if(j == 0)
                 U.col(col) = U_partial.col(i);
             else

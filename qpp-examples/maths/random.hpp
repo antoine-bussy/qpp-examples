@@ -4,7 +4,7 @@
 Randomness functions.
  */
 
-#include <qpp/qpp.h>
+#include <qpp/qpp.hpp>
 
 namespace qpp_e::maths
 {
