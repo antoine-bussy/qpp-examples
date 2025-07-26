@@ -11,28 +11,39 @@ Nielsen, M., & Chuang, I. (2010). *Quantum Computation and Quantum Information: 
 
 ## Installation instructions
 
-Build has only been tested under Ubuntu 22.04 with g++-12
+Build has only been tested with the current pixi lock file, and the custom cmake provider.
+This makes the build process easier.
 
-Install g++-12, as root
+### With pixi
+
+Install `pixi` from [https://prefix.dev/](https://prefix.dev/).
+
+Run a pixi shell in the project directory
 ```bash
-apt install g++-12
-update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-12 120
-```
-Install pip and Conan, as root
-```bash
-apt install python3-pip
-python3 -m pip install conan
-```
-Install QPP with Conan
-```bash
-conan create third_party/conanfile.qpp.py qpp/main@local/snapshot
+pixi shell
 ```
 
 You can now build and run the examples
 ```bash
-./scripts/conan.py ninja
+cmake --preset default
 cd _build/ninja/Release
-source conan/activate.sh; source conan/activate_build.sh
 ninja
 ninja test
 ```
+
+Alternatively, you can use the preset `default` directly in `VSCode`.
+
+### Without pixi (untested)
+
+You need to have a compiler, `cmake`, `OpenMP` installed. The versions required by the project are pretty high, although probably higher than really necessary. This is why using `pixi` is recommended.
+
+Build and run the examples (or use `VSCode`)
+```bash
+cmake --preset no-pixi
+cd _build/ninja/Release
+ninja
+ninja test
+```
+This will handle the dependencies (e.g `Eigen`, `googletest`) automatically by fetching them in the build directory.
+
+Alternatively, you might ignore the custom provider and install the dependencies yourself (not recommended).
