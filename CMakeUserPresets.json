@@ -11,15 +11,15 @@
     },
     {
       "name": "Release",
-      "inherits": ["ninja", "limit-jobs"]
+      "inherits": ["ninja", "limit-jobs", "pixi"]
     },
     {
       "name": "Debug",
-      "inherits": ["ninja", "limit-jobs"]
+      "inherits": ["ninja", "limit-jobs", "pixi"]
     },
     {
       "name": "RelWithDebInfo",
-      "inherits": ["ninja", "limit-jobs"]
+      "inherits": ["ninja", "limit-jobs", "pixi"]
     }
   ]
 }

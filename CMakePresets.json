@@ -13,10 +13,6 @@
         },
         "CMAKE_BUILD_TYPE": "${presetName}"
       },
-      "environment": {
-        "PATH": "${sourceDir}/.pixi/envs/default/bin:$penv{PATH}"
-      },
-      "cmakeExecutable": "${sourceDir}/.pixi/envs/default/bin/cmake",
       "hidden": true
     },
     {
@@ -25,6 +21,14 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
+    },
+    {
+      "name": "pixi",
+      "environment": {
+        "PATH": "${sourceDir}/.pixi/envs/default/bin:$penv{PATH}"
+      },
+      "cmakeExecutable": "${sourceDir}/.pixi/envs/default/bin/cmake",
+      "hidden": true
     }
   ]
 }
