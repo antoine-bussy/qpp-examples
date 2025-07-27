@@ -379,7 +379,7 @@ TEST(chapter1_3, quantum_teleportation)
 }
 
 //! @brief Equations 1.28 through 1.36, and Figure 1.13
-TEST(chapter1_3, DISABLED_quantum_teleportation_circuit)
+TEST(chapter1_3, quantum_teleportation_circuit)
 {
     using namespace qpp::literals;
     auto constexpr inv_sqrt2 = 0.5 * std::numbers::sqrt2;

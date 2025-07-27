@@ -133,7 +133,7 @@ TEST(chapter4_4, implicit_measurement_formulas)
 }
 
 //! @brief Exercise 4.32 (with circuit)
-TEST(chapter4_4, DISABLED_implicit_measurement_circuit)
+TEST(chapter4_4, implicit_measurement_circuit)
 {
     qpp_e::maths::seed();
 

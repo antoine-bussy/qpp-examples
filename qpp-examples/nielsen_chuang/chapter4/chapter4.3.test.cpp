@@ -1477,14 +1477,12 @@ TEST(chapter4_3, zero_toffoli)
 }
 
 //! @brief Figure 4.13
-//! @details QPP is bugged, so we disable the test
-//! @see https://github.com/softwareQinc/qpp/issues/130
-TEST(chapter4_3, DISABLED_multiple_target_ctrl)
+TEST(chapter4_3, multiple_target_ctrl)
 {
     auto const& X = qpp::gt.X;
 
     auto const circuit = qpp::QCircuit{ 3u }
-        .CTRL(X, { 0u }, { 1u, 2u })
+        .CTRL_fan(X, { 0u }, { 1u, 2u })
         ;
     auto const matrix = qpp_e::qube::extract_matrix<8>(circuit);
 
