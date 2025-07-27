@@ -4,7 +4,7 @@ include(SourcesLists.cmake)
 
 # maths library
 add_library(maths INTERFACE)
-target_link_libraries(maths INTERFACE Eigen3::Eigen warnings qpp::qpp)
+target_link_libraries(maths INTERFACE Eigen3::Eigen warnings libqpp)
 set_target_properties(maths PROPERTIES PUBLIC_HEADER "${maths_headers}")
 
 # maths unit test
