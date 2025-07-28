@@ -1,5 +1,7 @@
 message(STATUS "Using custom provider CMake configuration")
 
+cmake_policy(SET CMP0169 OLD)
+
 include(FetchContent)
 
 set(DEPS_INSTALL_DIR ${CMAKE_BINARY_DIR}/_deps/_install)
@@ -64,7 +66,13 @@ function(qpp_examples_provide_eigen)
         GIT_TAG 3.4
     )
     FetchContent_Populate(Eigen3)
-    default_try_compile(Eigen3)
+    base_try_compile(Eigen3
+        -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
+        -DCMAKE_INSTALL_PREFIX=${DEPS_INSTALL_DIR}
+        -DEIGEN_BUILD_TESTING=OFF
+        -DEIGEN_BUILD_DOC=OFF
+        -DEIGEN_BUILD_DEMOS=OFF
+    )
     set(Eigen3_DIR ${DEPS_INSTALL_DIR}/share/eigen3/cmake CACHE PATH "Path to Eigen3 CMake configuration" FORCE)
 endfunction(qpp_examples_provide_eigen)
 
