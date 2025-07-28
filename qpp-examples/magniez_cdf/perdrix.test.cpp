@@ -8,7 +8,7 @@
 #include <numbers>
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 namespace
 {

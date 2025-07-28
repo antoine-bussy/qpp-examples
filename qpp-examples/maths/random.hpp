@@ -6,7 +6,7 @@ Randomness functions.
 
 #include <qpp/qpp.hpp>
 
-namespace qpp_e::maths
+namespace qube::maths
 {
     template < class Sseq >
     inline auto qpp_seed(Sseq& seq)
@@ -20,4 +20,4 @@ namespace qpp_e::maths
         return qpp_seed(s);
     }
 
-} /* namespace qpp_e::maths */
+} /* namespace qube::maths */

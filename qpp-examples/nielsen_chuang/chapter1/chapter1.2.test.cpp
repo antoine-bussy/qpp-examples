@@ -7,7 +7,7 @@
 
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 //! @brief Equations 1.1 and 1.2
 TEST(chapter1_2, superposition)

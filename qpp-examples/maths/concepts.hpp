@@ -7,7 +7,7 @@ Maths concepts.
 #include <concepts>
 #include <Eigen/Core>
 
-namespace qpp_e::maths
+namespace qube::maths
 {
     template < class Derived >
     concept Matrix = requires(Derived m)
@@ -28,4 +28,4 @@ namespace qpp_e::maths
     template < class T >
     concept arithmetic = std::is_arithmetic_v<T>;
 
-} /* namespace qpp_e::maths */
+} /* namespace qube::maths */

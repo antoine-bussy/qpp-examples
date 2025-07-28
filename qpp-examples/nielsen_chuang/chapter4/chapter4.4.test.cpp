@@ -12,13 +12,13 @@
 #include <numbers>
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 //! @brief Figure 4.14
 TEST(chapter4_4, projective_measurment_circuit)
 {
     using namespace qpp::literals;
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const psi = qpp::randket();
 
@@ -53,7 +53,7 @@ TEST(chapter4_4, projective_measurment_circuit)
 //! @brief Figure 4.15 (and Figure 1.13)
 TEST(chapter4_4, quantum_teleportation_with_deferred_measurement)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const& b00 = qpp::st.b00;
 
@@ -106,7 +106,7 @@ TEST(chapter4_4, implicit_measurement_formulas)
 {
     using namespace qpp::literals;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const& I = qpp::gt.Id2;
 
@@ -135,7 +135,7 @@ TEST(chapter4_4, implicit_measurement_formulas)
 //! @brief Exercise 4.32 (with circuit)
 TEST(chapter4_4, implicit_measurement_circuit)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const U = qpp::randU(4);
     auto circuit = qpp::QCircuit{ 2, 2 }
@@ -179,7 +179,7 @@ TEST(chapter4_4, measurement_in_the_bell_basis)
 {
     using namespace qpp::literals;
 
-    qpp_e::maths::seed(459);
+    qube::maths::seed(459);
 
     auto const psi_bell = Eigen::Vector4cd::Random().normalized().eval();
     auto bell_basis = Eigen::Matrix4cd{};
@@ -231,7 +231,7 @@ TEST(chapter4_4, measuring_an_operator)
 {
     using namespace qpp::literals;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const P = qpp::randU();
     auto const U = (P * Eigen::Vector2cd{1.,-1.}.asDiagonal() * P.adjoint()).eval();
@@ -271,7 +271,7 @@ TEST(chapter4_4, measuring_an_operator)
 TEST(chapter4_4, measurement_commutes_with_controls)
 {
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
     auto const U = qpp::randU();
     auto const phi = qpp::randket();
     auto const psi = qpp::randket();

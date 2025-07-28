@@ -10,12 +10,12 @@
 #include <execution>
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 namespace
 {
     //! @brief Characterization of density operator from theorem 2.5
-    auto expect_density_operator(qpp_e::maths::Matrix auto const& rho, qpp_e::maths::RealNumber auto const& precision)
+    auto expect_density_operator(qube::maths::Matrix auto const& rho, qube::maths::RealNumber auto const& precision)
     {
         EXPECT_COMPLEX_CLOSE(rho.trace(), 1., precision);
         EXPECT_MATRIX_CLOSE(rho.adjoint(), rho, precision);
@@ -27,7 +27,7 @@ namespace
 TEST(chapter2_4, density_operator_transformation)
 {
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr I = 7u;
     auto constexpr range = std::views::iota(0u, I) | std::views::common;
     auto constexpr policy = std::execution::par;
@@ -58,7 +58,7 @@ TEST(chapter2_4, density_operator_transformation)
 TEST(chapter2_4, density_operator_transformation_2)
 {
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
 
     auto const rho = qpp::randrho(_2_pow_n);
     expect_density_operator(rho, 1e-12);
@@ -75,7 +75,7 @@ TEST(chapter2_4, density_operator_transformation_2)
 TEST(chapter2_4, density_operator_measure)
 {
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr MM = 7u;
 
     auto const rho = qpp::randrho(_2_pow_n);
@@ -96,9 +96,9 @@ TEST(chapter2_4, density_operator_measure)
 //! @brief Equations 2.148 through 2.152
 TEST(chapter2_4, density_operator_measure_output)
 {
-    qpp_e::maths::seed(0u);
+    qube::maths::seed(0u);
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr MM = 7u;
     auto constexpr range = std::views::iota(0u, MM) | std::views::common;
     auto constexpr policy = std::execution::par;
@@ -124,7 +124,7 @@ TEST(chapter2_4, density_operator_measure_output)
 TEST(chapter2_4, density_operator_characterization)
 {
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr I = 7u;
     auto constexpr range = std::views::iota(0u, I) | std::views::common;
     auto constexpr policy = std::execution::par;
@@ -152,9 +152,9 @@ TEST(chapter2_4, density_operator_characterization)
 //! @brief Exercise 2.71
 TEST(chapter2_4, mixed_state_criterion)
 {
-    qpp_e::maths::seed(0u);
+    qube::maths::seed(0u);
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
 
     auto const rho_mixed = qpp::randrho(_2_pow_n);
     expect_density_operator(rho_mixed, 1e-12);
@@ -193,10 +193,10 @@ TEST(chapter2_4, quantum_states_from_density)
 //! @brief Theorem 2.6 and equations 2.166 through 2.174
 TEST(chapter2_4, unitary_freedom_density_matrices_1)
 {
-    qpp_e::maths::seed(10u);
+    qube::maths::seed(10u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
 
     auto constexpr m = 7u;
     auto constexpr range_m = std::views::iota(0u, m) | std::views::common;
@@ -243,10 +243,10 @@ TEST(chapter2_4, unitary_freedom_density_matrices_1)
 TEST(chapter2_4, unitary_freedom_density_matrices_2)
 {
     using namespace Eigen::indexing;
-    qpp_e::maths::seed(15u);
+    qube::maths::seed(15u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
 
     auto constexpr m = 5u;
     auto constexpr range_m = std::views::iota(0u, m) | std::views::common;
@@ -314,13 +314,13 @@ TEST(chapter2_4, unitary_freedom_density_matrices_3)
 
 namespace
 {
-    auto density(qpp_e::maths::Matrix auto const& r) -> Eigen::Matrix2cd
+    auto density(qube::maths::Matrix auto const& r) -> Eigen::Matrix2cd
     {
         assert(r.cols() == 1 && r.rows() == 3);
         return 0.5 * (Eigen::Matrix2cd::Identity() + r[0] * qpp::gt.X + r[1] * qpp::gt.Y + r[2] * qpp::gt.Z);
     }
 
-    auto bloch_vector(qpp_e::maths::Matrix auto const& rho) -> Eigen::Vector3d
+    auto bloch_vector(qube::maths::Matrix auto const& rho) -> Eigen::Vector3d
     {
         assert(rho.cols() == 2 && rho.rows() == 2);
         return { 2 * rho(1,0).real(), 2 * rho(1,0).imag(), 2 * rho(0,0).real() - 1 };
@@ -350,7 +350,7 @@ TEST(chapter2_4, generalized_bloch_sphere_2)
 //! @brief Exercise 2.72 (3)
 TEST(chapter2_4, generalized_bloch_sphere_3)
 {
-    qpp_e::maths::seed(123u);
+    qube::maths::seed(123u);
 
     auto const rho_mixed = qpp::randrho();
     EXPECT_LE(bloch_vector(rho_mixed).squaredNorm(), 1. - 1e-1);
@@ -371,7 +371,7 @@ TEST(chapter2_4, generalized_bloch_sphere_4)
 {
     using namespace qpp::literals;
     using namespace std::complex_literals;
-    qpp_e::maths::seed(123u);
+    qube::maths::seed(123u);
 
     auto const angles = Eigen::Vector2d::Random().eval();
     auto const& theta = angles[0];
@@ -397,10 +397,10 @@ TEST(chapter2_4, generalized_bloch_sphere_4)
 TEST(chapter2_4, minimal_ensemble)
 {
     using namespace Eigen::indexing;
-    qpp_e::maths::seed(46u);
+    qube::maths::seed(46u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
 
     auto constexpr m = 5u;
     auto constexpr range_m = std::views::iota(0u, m) | std::views::common;
@@ -446,12 +446,12 @@ TEST(chapter2_4, minimal_ensemble)
 //! @brief Equations 2.177 and 2.178
 TEST(chapter2_4, partial_trace)
 {
-    qpp_e::maths::seed(12u);
+    qube::maths::seed(12u);
 
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr m = 2u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
 
     auto const a1 = qpp::randket(_2_pow_n);
     auto const a2 = qpp::randket(_2_pow_n);
@@ -467,12 +467,12 @@ TEST(chapter2_4, partial_trace)
 //! @brief Equation 2.184
 TEST(chapter2_4, reduced_density_operator)
 {
-    qpp_e::maths::seed(7u);
+    qube::maths::seed(7u);
 
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr m = 2u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
 
     auto const rho = qpp::randrho(_2_pow_n);
     auto const sigma = qpp::randrho(_2_pow_m);
@@ -494,7 +494,7 @@ TEST(chapter2_4, reduced_density_operator_entangled)
 namespace
 {
     //! @brief Compute mean and variance
-    auto statistics(qpp_e::maths::Matrix auto const& M, qpp_e::maths::Matrix auto const& state)
+    auto statistics(qube::maths::Matrix auto const& M, qube::maths::Matrix auto const& state)
     {
         auto const mean = state.dot(M * state);
         EXPECT_NEAR(mean.imag(), 0., 1e-12);
@@ -508,13 +508,13 @@ namespace
 //! @brief Box 2.6 and equations 2.179 through 2.183
 TEST(chapter2_4, partial_trace_observables)
 {
-    qpp_e::maths::seed(98u);
+    qube::maths::seed(98u);
 
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range_n = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr l = 2u;
-    auto constexpr _2_pow_l = qpp_e::maths::pow(2u, l);
+    auto constexpr _2_pow_l = qube::maths::pow(2u, l);
 
     auto const M = qpp::randH(_2_pow_n);
     auto const [m, m_vec] = qpp::heig(M);
@@ -568,12 +568,12 @@ TEST(chapter2_4, partial_trace_observables)
 //! @brief Exercise 2.74
 TEST(chapter2_4, composite_of_pure_states)
 {
-    qpp_e::maths::seed(25u);
+    qube::maths::seed(25u);
 
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr m = 2u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
 
     auto const a = qpp::randket(_2_pow_n);
     auto const rho_a = qpp::prj(a);
@@ -592,7 +592,7 @@ TEST(chapter2_4, composite_of_pure_states)
 
 namespace
 {
-    auto constexpr bell_state_reduce_density_operator(qpp_e::maths::Matrix auto const& state)
+    auto constexpr bell_state_reduce_density_operator(qube::maths::Matrix auto const& state)
     {
         using namespace qpp::literals;
 

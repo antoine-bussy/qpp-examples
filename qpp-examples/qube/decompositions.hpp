@@ -16,11 +16,11 @@ Decomposistion functions.
 #include <numbers>
 #include <ranges>
 
-namespace qpp_e::qube
+namespace qube
 {
 
     //! @brief Compute rotation parameters from unitary matrix
-    auto unitary_to_rotation(qpp_e::maths::Matrix auto const& U)
+    auto unitary_to_rotation(qube::maths::Matrix auto const& U)
     {
         using namespace std::literals::complex_literals;
         using namespace std::numbers;
@@ -87,7 +87,7 @@ namespace qpp_e::qube
     //! @brief Compute Euler decomposition and phase from phase, angle and unit axis
     //! @see unitary_to_rotation (output)
     template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis, bool reentering = false>
-    auto euler_decomposition(qpp_e::maths::RealNumber auto const& alpha, qpp_e::maths::RealNumber auto const& theta, qpp_e::maths::Matrix auto const& n)
+    auto euler_decomposition(qube::maths::RealNumber auto const& alpha, qube::maths::RealNumber auto const& theta, qube::maths::Matrix auto const& n)
     {
         using namespace std::numbers;
 
@@ -116,10 +116,10 @@ namespace qpp_e::qube
     //! Return NaN if the condition is not met
     //! Computed from "On Coordinate-Free Rotation Decomposition: Euler Angles about Arbitrary Axes" by Giulia Piovan and Francesco Bullo
     auto generalized_euler_decomposition(
-        qpp_e::maths::Matrix auto const& R
-        , qpp_e::maths::Matrix auto const& r1
-        , qpp_e::maths::Matrix auto const& r2
-        , qpp_e::maths::Matrix auto const& r3)
+        qube::maths::Matrix auto const& R
+        , qube::maths::Matrix auto const& r1
+        , qube::maths::Matrix auto const& r2
+        , qube::maths::Matrix auto const& r3)
     {
         auto theta = Eigen::Vector3d::Zero().eval();
 
@@ -132,7 +132,7 @@ namespace qpp_e::qube
 
         theta[1] = std::atan2(b, a) + std::atan2(std::sqrt(a * a + b * b - c * c), c);
 
-        auto const collinear = qpp_e::maths::collinear((R.transpose() * r1).eval(), r3, 1e-12, true);
+        auto const collinear = qube::maths::collinear((R.transpose() * r1).eval(), r3, 1e-12, true);
 
         if(collinear)
         {
@@ -172,10 +172,10 @@ namespace qpp_e::qube
     //! @see generalized_euler_decomposition
     template < bool reentering = false >
     auto generalized_euler_decomposition(
-        qpp_e::maths::RealNumber auto const& alpha, qpp_e::maths::RealNumber auto const& theta, qpp_e::maths::Matrix auto const& n
-        , qpp_e::maths::Matrix auto const& r1
-        , qpp_e::maths::Matrix auto const& r2
-        , qpp_e::maths::Matrix auto const& r3)
+        qube::maths::RealNumber auto const& alpha, qube::maths::RealNumber auto const& theta, qube::maths::Matrix auto const& n
+        , qube::maths::Matrix auto const& r1
+        , qube::maths::Matrix auto const& r2
+        , qube::maths::Matrix auto const& r3)
     {
         using namespace std::numbers;
 
@@ -200,7 +200,7 @@ namespace qpp_e::qube
     }
 
     template <Eigen::EulerAxis _AlphaAxis, Eigen::EulerAxis _BetaAxis, Eigen::EulerAxis _GammaAxis>
-    auto abc_decomposition(qpp_e::maths::Matrix auto const& U)
+    auto abc_decomposition(qube::maths::Matrix auto const& U)
     {
         using namespace std::literals::complex_literals;
 
@@ -252,7 +252,7 @@ namespace qpp_e::qube
     };
 
     template < typename Scalar >
-    Eigen::MatrixX<Scalar> operator*(qpp_e::maths::Matrix auto const& M, two_level_matrix_t<Scalar> const& s)
+    Eigen::MatrixX<Scalar> operator*(qube::maths::Matrix auto const& M, two_level_matrix_t<Scalar> const& s)
     {
         auto const n = M.cols();
         auto P = Eigen::MatrixX<Scalar>::Identity(n, n).eval();
@@ -321,4 +321,4 @@ namespace qpp_e::qube
         return result;
     }
 
-} /* namespace qpp_e::qube */
+} /* namespace qube */

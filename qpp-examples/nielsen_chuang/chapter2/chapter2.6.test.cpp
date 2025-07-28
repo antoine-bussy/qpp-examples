@@ -13,12 +13,12 @@
 #include <numbers>
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 namespace
 {
     //! @brief Compute mean and variance
-    auto statistics(qpp_e::maths::Matrix auto const& M, qpp_e::maths::Matrix auto const& state)
+    auto statistics(qube::maths::Matrix auto const& M, qube::maths::Matrix auto const& state)
     {
         auto const mean = state.dot(M * state);
         EXPECT_NEAR(mean.imag(), 0., 1e-12);
@@ -29,7 +29,7 @@ namespace
     }
 
     //! @brief Characterization of density operator from theorem 2.5
-    auto expect_density_operator(qpp_e::maths::Matrix auto const& rho, qpp_e::maths::RealNumber auto const& precision)
+    auto expect_density_operator(qube::maths::Matrix auto const& rho, qube::maths::RealNumber auto const& precision)
     {
         EXPECT_COMPLEX_CLOSE(rho.trace(), 1., precision);
         EXPECT_MATRIX_CLOSE(rho.adjoint(), rho, precision);
@@ -40,7 +40,7 @@ namespace
 //! @brief Box 2.7 and equations 2.213 through 2.217
 TEST(chapter2_6, anti_correlations)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto constexpr sqrt2 = std::numbers::sqrt2;
     auto constexpr inv_sqrt2 = 0.5 * sqrt2;
@@ -130,7 +130,7 @@ TEST(chapter2_6, bell_inequality)
 //! @see https://math.stackexchange.com/questions/1049553/function-of-pauli-matrices
 TEST(chapter2_6, functions_pauli_matrices)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const n = Eigen::Vector3d::Random().normalized().eval();
     auto const n_dot_sigma = (n[0] * qpp::gt.X + n[1] * qpp::gt.Y + n[2] * qpp::gt.Z).eval();
@@ -155,12 +155,12 @@ TEST(chapter2_6, functions_pauli_matrices)
 //! @brief Problem 2.2, part (1)
 TEST(chapter2_6, properties_of_the_schmidt_number_1)
 {
-    qpp_e::maths::seed(974u);
+    qube::maths::seed(974u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr m = 3u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
     ASSERT_GE(n, m);
     auto constexpr range_m = std::views::iota(0u, _2_pow_m) | std::views::common;
     auto constexpr policy = std::execution::par;
@@ -204,7 +204,7 @@ TEST(chapter2_6, properties_of_the_schmidt_number_2)
 {
     for (auto&& s : {1660140020u, 1660140083u})
     {
-        qpp_e::maths::seed(s);
+        qube::maths::seed(s);
 
         auto constexpr N = 40u;
         auto constexpr M = 27u;
@@ -212,9 +212,9 @@ TEST(chapter2_6, properties_of_the_schmidt_number_2)
         auto constexpr range_M = std::views::iota(0u, M) | std::views::common;
 
         auto constexpr n = 4u;
-        auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+        auto constexpr _2_pow_n = qube::maths::pow(2u, n);
         auto constexpr m = 3u;
-        auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+        auto constexpr _2_pow_m = qube::maths::pow(2u, m);
         auto constexpr policy = std::execution::par;
 
         auto const alpha = Eigen::MatrixXcd::Random(_2_pow_n, N).eval();
@@ -253,12 +253,12 @@ TEST(chapter2_6, properties_of_the_schmidt_number_2)
 //! @brief Problem 2.2, part (3)
 TEST(chapter2_6, properties_of_the_schmidt_number_3)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto constexpr n = 5u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr m = 4u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
     ASSERT_GE(n, m);
     auto constexpr policy = std::execution::par;
 
@@ -323,7 +323,7 @@ TEST(chapter2_6, properties_of_the_schmidt_number_3)
 //! @brief Check that (A x B)(C x D) = (AC) x (BD)
 TEST(chapter2_6, kron_product_mixed_product)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto constexpr n = 2u;
 
@@ -353,10 +353,10 @@ TEST(chapter2_6, kron_product_mixed_product)
 //! @brief Problem 2.3
 TEST(chapter2_6, tsierelson_inequality)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto constexpr n = 2u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
 
     auto const observable = []
     {

@@ -11,13 +11,13 @@
 #include <numbers>
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 //! @brief Equations 2.92 through 2.95
 TEST(chapter2_2, measurement_operators)
 {
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
 
@@ -107,7 +107,7 @@ TEST(chapter2_2, measurement_operators_one_qubit)
 TEST(chapter2_2, cascade_measurement_operators)
 {
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
 
@@ -191,9 +191,9 @@ TEST(chapter2_2, non_completeness)
 //! @brief Measurements operators are not necessarily projective measurements
 TEST(chapter2_2, not_projective_measurements)
 {
-    qpp_e::maths::seed(0);
+    qube::maths::seed(0);
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto const measurement_operators = qpp::randkraus(_2_pow_n, _2_pow_n);
 
     for (auto&& m : std::views::iota(0u, _2_pow_n))
@@ -213,7 +213,7 @@ TEST(chapter2_2, not_projective_measurements)
 namespace
 {
     //! @brief Compute mean and variance
-    auto statistics(qpp_e::maths::Matrix auto const& M, qpp_e::maths::Matrix auto const& state)
+    auto statistics(qube::maths::Matrix auto const& M, qube::maths::Matrix auto const& state)
     {
         auto const mean = state.dot(M * state);
         EXPECT_NEAR(mean.imag(), 0., 1e-12);
@@ -228,7 +228,7 @@ namespace
 TEST(chapter2_2, projective_measurements)
 {
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
 
@@ -285,7 +285,7 @@ TEST(chapter2_2, projective_measurements)
 TEST(chapter2_2, projective_measurements_with_eigenstate)
 {
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
 
     auto const M = qpp::randH(_2_pow_n);
@@ -304,7 +304,7 @@ TEST(chapter2_2, projective_measurements_with_eigenstate)
 TEST(chapter2_2, heisenberg_uncertainty_principle)
 {
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
 
     auto const state = qpp::randket(_2_pow_n);
     auto const C = qpp::randH(_2_pow_n);
@@ -524,7 +524,7 @@ TEST(chapter2_2, povm_and_measurement)
 //! @brief Exercise 2.64
 TEST(chapter2_2, povm_construction)
 {
-    qpp_e::maths::seed(0u);
+    qube::maths::seed(0u);
     auto constexpr n = 5u;
     auto constexpr m = 3u;
     auto constexpr range = std::views::iota(0u, m) | std::views::common;
@@ -638,7 +638,7 @@ TEST(chapter2_2, composite_system)
 TEST(chapter2_2, ancillary_system)
 {
     auto constexpr n = 1u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr MM = 3u;
     auto constexpr D = _2_pow_n * MM;

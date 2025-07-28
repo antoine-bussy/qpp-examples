@@ -7,7 +7,7 @@
 
 #include <numbers>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 //! @brief Figure 1.22 and equations 1.56 through 1.59
 TEST(chapter1_5, stern_gerlach)

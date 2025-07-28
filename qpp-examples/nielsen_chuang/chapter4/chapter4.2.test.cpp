@@ -12,7 +12,7 @@
 
 #include <numbers>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 //! @brief Equations 4.1 through 4.3
 TEST(chapter4_2, important_single_qubit_gates)
@@ -141,7 +141,7 @@ TEST(chapter4_2, generalized_rotations)
     using namespace std::literals::complex_literals;
     using namespace std::numbers;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const n = Eigen::Vector3d::Random().normalized().eval();
     auto const n_dot_sigma = (n[0] * qpp::gt.X + n[1] * qpp::gt.Y + n[2] * qpp::gt.Z).eval();
@@ -161,7 +161,7 @@ TEST(chapter4_2, bloch_sphere_interpretation_of_rotations)
 {
     using namespace std::numbers;
 
-    qpp_e::maths::seed(63u);
+    qube::maths::seed(63u);
 
     auto constexpr bloch_vector = [](auto&& psi)
     {
@@ -193,7 +193,7 @@ TEST(chapter4_2, x_y_relation)
 {
     using namespace std::numbers;
 
-    qpp_e::maths::seed(82u);
+    qube::maths::seed(82u);
 
     EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.Y * qpp::gt.X).eval(), -qpp::gt.Y, 1e-12);
     /* Or, equivalently */
@@ -209,7 +209,7 @@ TEST(chapter4_2, x_z_relation)
 {
     using namespace std::numbers;
 
-    qpp_e::maths::seed(28u);
+    qube::maths::seed(28u);
 
     EXPECT_MATRIX_CLOSE((qpp::gt.X * qpp::gt.Z * qpp::gt.X).eval(), -qpp::gt.Z, 1e-12);
     /* Or, equivalently */
@@ -224,22 +224,22 @@ TEST(chapter4_2, unitary_matrix_as_rotation)
 {
     using namespace std::numbers;
 
-    qpp_e::maths::seed(3112u);
+    qube::maths::seed(3112u);
 
     auto constexpr inv_sqrt2 = 0.5 * sqrt2;
 
     /* Part 1 */
     auto const U = qpp::randU();
-    qpp_e::qube::unitary_to_rotation(U);
+    qube::unitary_to_rotation(U);
 
     /* Part 2 */
-    auto const [alpha_H, theta_H, n_H] = qpp_e::qube::unitary_to_rotation(qpp::gt.H);
+    auto const [alpha_H, theta_H, n_H] = qube::unitary_to_rotation(qpp::gt.H);
     EXPECT_COMPLEX_CLOSE(alpha_H, 0.5 * pi, 1e-12);
     EXPECT_COMPLEX_CLOSE(theta_H, pi, 1e-12);
     EXPECT_MATRIX_CLOSE(n_H, Eigen::Vector3d(inv_sqrt2, 0., inv_sqrt2), 1e-12);
 
     /* Part 3 */
-    auto const [alpha_S, theta_S, n_S] = qpp_e::qube::unitary_to_rotation(qpp::gt.S);
+    auto const [alpha_S, theta_S, n_S] = qube::unitary_to_rotation(qpp::gt.S);
     EXPECT_COMPLEX_CLOSE(alpha_S, 0.25 * pi, 1e-12);
     EXPECT_COMPLEX_CLOSE(theta_S, 0.5 * pi, 1e-12);
     EXPECT_MATRIX_CLOSE(n_S, Eigen::Vector3d::UnitZ(), 1e-12);
@@ -251,12 +251,12 @@ TEST(chapter4_2, z_y_decomposition)
     using namespace std::literals::complex_literals;
     using namespace std::numbers;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const U = qpp::randU();
-    auto const [alpha, theta, n] = qpp_e::qube::unitary_to_rotation(U);
+    auto const [alpha, theta, n] = qube::unitary_to_rotation(U);
 
-    auto const e = qpp_e::qube::euler_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(alpha, theta, n);
+    auto const e = qube::euler_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(alpha, theta, n);
 
     auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RZ(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RZ(e[3])).eval();
     EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
@@ -288,12 +288,12 @@ TEST(chapter4_2, x_y_decomposition)
     using namespace std::literals::complex_literals;
     using namespace std::numbers;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const U = qpp::randU();
-    auto const [alpha, theta, n] = qpp_e::qube::unitary_to_rotation(U);
+    auto const [alpha, theta, n] = qube::unitary_to_rotation(U);
 
-    auto const e = qpp_e::qube::euler_decomposition<Eigen::EULER_X, Eigen::EULER_Y, Eigen::EULER_X>(alpha, theta, n);
+    auto const e = qube::euler_decomposition<Eigen::EULER_X, Eigen::EULER_Y, Eigen::EULER_X>(alpha, theta, n);
 
     auto const rotation = (std::exp(1.i * e[0]) * qpp::gt.RX(e[1]) * qpp::gt.RY(e[2]) * qpp::gt.RX(e[3])).eval();
     EXPECT_MATRIX_CLOSE(rotation, U, 1e-12);
@@ -311,7 +311,7 @@ TEST(chapter4_2, basis_change_angle_axis_rotation)
 {
     using namespace std::numbers;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const b_H_o = Eigen::Quaterniond::UnitRandom().toRotationMatrix().eval();
     auto const o_X = Eigen::Vector3d::Random().normalized().eval();
@@ -338,10 +338,10 @@ TEST(chapter4_2, n_m_decomposition)
     using namespace std::literals::complex_literals;
     using namespace std::numbers;
 
-    qpp_e::maths::seed(7981584u);
+    qube::maths::seed(7981584u);
 
     auto const U = qpp::randU();
-    auto const [alpha_U, theta_U, n_U] = qpp_e::qube::unitary_to_rotation(U);
+    auto const [alpha_U, theta_U, n_U] = qube::unitary_to_rotation(U);
 
     auto const Q = Eigen::Quaterniond{ Eigen::AngleAxisd(theta_U, n_U) };
     auto const R = Q.toRotationMatrix();
@@ -349,7 +349,7 @@ TEST(chapter4_2, n_m_decomposition)
     auto const n1 = Eigen::Vector3d::Random().normalized().eval();
     auto const n2 = Eigen::Vector3d::Random().normalized().eval();
 
-    auto const theta = qpp_e::qube::generalized_euler_decomposition(alpha_U, theta_U, n_U, n1, n2, n1);
+    auto const theta = qube::generalized_euler_decomposition(alpha_U, theta_U, n_U, n1, n2, n1);
     auto const computed_Q = Eigen::AngleAxisd(theta[1], n1) * Eigen::AngleAxisd(theta[2], n2) * Eigen::AngleAxisd(theta[3], n1);
     auto const computed_R = computed_Q.toRotationMatrix();
     EXPECT_MATRIX_CLOSE(computed_R, R, 1e-12);
@@ -374,10 +374,10 @@ TEST(chapter4_2, n_m_decomposition)
 //! @brief Corollary 4.2 and Equations 4.14 through 4.17
 TEST(chapter4_2, abc_decomposition)
 {
-    qpp_e::maths::seed(31385u);
+    qube::maths::seed(31385u);
 
     auto const U = qpp::randU();
-    qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
+    qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
 }
 
 //! @brief Exercise 4.12
@@ -388,7 +388,7 @@ TEST(chapter4_2, H_abc_decomposition)
 
     auto constexpr inv_sqrt2 = 0.5 * sqrt2;
 
-    auto const [ alpha, A, B, C ] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(qpp::gt.H);
+    auto const [ alpha, A, B, C ] = qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(qpp::gt.H);
 
     EXPECT_COMPLEX_CLOSE(alpha, 0.5 * pi, 1e-12);
 
@@ -432,8 +432,8 @@ TEST(chapter4_2, circuit_identites)
 
 namespace
 {
-    auto single_qubit_operation_composition(qpp_e::maths::RealNumber auto const& beta1, qpp_e::maths::Matrix auto const& n1
-                                        , qpp_e::maths::RealNumber auto const& beta2, qpp_e::maths::Matrix auto const& n2)
+    auto single_qubit_operation_composition(qube::maths::RealNumber auto const& beta1, qube::maths::Matrix auto const& n1
+                                        , qube::maths::RealNumber auto const& beta2, qube::maths::Matrix auto const& n2)
     {
         auto const composed_rot = Eigen::AngleAxisd(beta1, n1) * Eigen::AngleAxisd(beta2, n2);
         auto const n12 = composed_rot.vec().normalized().eval();
@@ -461,7 +461,7 @@ TEST(chapter4_2, composition_of_single_qubit_operations)
     using namespace std::literals::complex_literals;
     using namespace std::numbers;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     /* Part 1 */
     auto const n1 = Eigen::Vector3d::Random().normalized().eval();

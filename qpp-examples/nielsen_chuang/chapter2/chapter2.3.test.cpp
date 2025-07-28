@@ -7,7 +7,7 @@
 
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 //! @brief Equations 2.133 through 2.137, figure 2.3 and exercise 2.69
 TEST(chapter2_3, superdense_coding)

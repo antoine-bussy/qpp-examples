@@ -6,7 +6,7 @@ Debug functions.
 
 #include <iostream>
 
-namespace qpp_e::qube
+namespace qube
 {
     struct null_stream_t
     {
@@ -34,8 +34,8 @@ namespace qpp_e::qube
     namespace stream
     {
 
-        using qpp_e::qube::debug;
+        using qube::debug;
 
     } /* namespace stream */
 
-} /* namespace qpp_e::qube */
+} /* namespace qube */

@@ -7,7 +7,7 @@ Arithmetic functions.
 #include "concepts.hpp"
 #include <cmath>
 
-namespace qpp_e::maths
+namespace qube::maths
 {
 
     inline auto constexpr pow(arithmetic auto const& base, std::integral auto const& exp) -> std::decay_t<decltype(base)>
@@ -24,4 +24,4 @@ namespace qpp_e::maths
         return std::pow(base, exp);
     }
 
-} /* namespace qpp_e::maths */
+} /* namespace qube::maths */

@@ -11,7 +11,7 @@ Introspection functions.
 #include <qpp-examples/maths/gtest_macros.hpp>
 
 
-namespace qpp_e::qube
+namespace qube
 {
 
     //! @brief Extract indices of non-work qubits in a mket
@@ -37,8 +37,8 @@ namespace qpp_e::qube
 
         auto constexpr OuputDim = (NbOfOutputQubits == Eigen::Dynamic)
                                     ? Eigen::Dynamic
-                                    : qpp_e::maths::pow(2l, static_cast<unsigned long int>(NbOfOutputQubits));
-        auto const output_dim = qpp_e::maths::pow(2l, nb_of_non_work_qubits);
+                                    : qube::maths::pow(2l, static_cast<unsigned long int>(NbOfOutputQubits));
+        auto const output_dim = qube::maths::pow(2l, nb_of_non_work_qubits);
 
         auto indices = Eigen::Vector<unsigned long int, OuputDim>::Zero(output_dim).eval();
         auto array = indices.array();
@@ -95,8 +95,8 @@ namespace qpp_e::qube
 
         auto constexpr OuputDim = (NbOfOutputQubits == Eigen::Dynamic)
                                     ? Eigen::Dynamic
-                                    : qpp_e::maths::pow(2l, static_cast<unsigned long int>(NbOfOutputQubits));
-        auto const output_dim = qpp_e::maths::pow(2l, nb_of_non_work_qubits);
+                                    : qube::maths::pow(2l, static_cast<unsigned long int>(NbOfOutputQubits));
+        auto const output_dim = qube::maths::pow(2l, nb_of_non_work_qubits);
 
         auto indices = Eigen::Vector<unsigned long int, OuputDim>::Zero(output_dim).eval();
 
@@ -133,9 +133,9 @@ namespace qpp_e::qube
 
     //! @brief Extract circuit matrix from engine
     template < int Dim = Eigen::Dynamic >
-    auto extract_matrix(qpp::QEngine& engine, qpp_e::maths::Matrix auto const& indices)
+    auto extract_matrix(qpp::QEngine& engine, qube::maths::Matrix auto const& indices)
     {
-        auto const total_dim = qpp_e::maths::pow(2u, engine.get_circuit().get_nq());
+        auto const total_dim = qube::maths::pow(2u, engine.get_circuit().get_nq());
         auto const dim = indices.size();
         EXPECT_EQ(total_dim % dim, 0);
 
@@ -161,7 +161,7 @@ namespace qpp_e::qube
 
     //! @brief Extract circuit matrix from circuit
     template < int Dim = Eigen::Dynamic >
-    auto extract_matrix(qpp::QCircuit const& circuit, qpp_e::maths::Matrix auto const& indices)
+    auto extract_matrix(qpp::QCircuit const& circuit, qube::maths::Matrix auto const& indices)
     {
         auto engine = qpp::QEngine{ circuit };
         return extract_matrix<Dim>(engine, indices);
@@ -175,4 +175,4 @@ namespace qpp_e::qube
         return extract_matrix<Dim>(circuit, Eigen::Vector<unsigned int, Dim>::LinSpaced(dim, 0u, dim));
     }
 
-} /* namespace qpp_e::qube */
+} /* namespace qube */

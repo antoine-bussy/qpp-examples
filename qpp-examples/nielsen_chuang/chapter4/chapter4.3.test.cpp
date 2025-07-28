@@ -14,13 +14,13 @@
 #include <numbers>
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 //! @brief Equation 4.23
 TEST(chapter4_3, cnot_circuit)
 {
     using namespace qpp::literals;
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const cnot = Eigen::Matrix4cd
     {
@@ -67,7 +67,7 @@ TEST(chapter4_3, controlled_u)
 {
     using namespace qpp::literals;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const U = qpp::randU();
 
@@ -133,7 +133,7 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
     circuit_IxH.gate(qpp::gt.H, { 1 });
     auto engine_IxH = qpp::QEngine{ circuit_IxH };
 
-    auto const circuit_IxH_matrix = qpp_e::qube::extract_matrix<4>(engine_IxH);
+    auto const circuit_IxH_matrix = qube::extract_matrix<4>(engine_IxH);
     EXPECT_MATRIX_CLOSE(IxH, circuit_IxH_matrix, 1e-12);
 
     debug() << ">> IxH:\n" << qpp::disp(IxH) << "\n\n";
@@ -152,7 +152,7 @@ TEST(chapter4_3, matrix_representation_of_multiqubit_gates)
     circuit_HxI.gate(qpp::gt.H, { 0 });
     auto engine_HxI = qpp::QEngine{ circuit_HxI };
 
-    auto const circuit_HxI_matrix = qpp_e::qube::extract_matrix<4>(engine_HxI);
+    auto const circuit_HxI_matrix = qube::extract_matrix<4>(engine_HxI);
     EXPECT_MATRIX_CLOSE(HxI, circuit_HxI_matrix, 1e-12);
 
     debug() << ">> HxI:\n" << qpp::disp(HxI) << "\n\n";
@@ -168,7 +168,7 @@ TEST(chapter4_3, cnot_as_controlled_z_and_h)
     circuit.gate(qpp::gt.H, 1);
     auto engine = qpp::QEngine{ circuit };
 
-    auto const cnot = qpp_e::qube::extract_matrix<4>(engine);
+    auto const cnot = qube::extract_matrix<4>(engine);
     EXPECT_MATRIX_CLOSE(cnot, qpp::gt.CNOT, 1e-12);
 
     debug() << ">> cnot:\n" << qpp::disp(cnot) << "\n\n";
@@ -181,12 +181,12 @@ TEST(chapter4_3, controlled_z_flip_invariance)
     auto circuit_down = qpp::QCircuit{ 2, 0 };
     circuit_down.CTRL(qpp::gt.Z, { 0 }, { 1 });
     auto engine_down = qpp::QEngine{ circuit_down };
-    auto const cZ_down = qpp_e::qube::extract_matrix<4>(engine_down);
+    auto const cZ_down = qube::extract_matrix<4>(engine_down);
 
     auto circuit_up = qpp::QCircuit{ 2, 0 };
     circuit_up.CTRL(qpp::gt.Z, { 1 }, { 0 });
     auto engine_up = qpp::QEngine{ circuit_up };
-    auto const cZ_up = qpp_e::qube::extract_matrix<4>(engine_up);
+    auto const cZ_up = qube::extract_matrix<4>(engine_up);
 
     EXPECT_MATRIX_CLOSE(cZ_down, cZ_up, 1e-12);
 
@@ -197,7 +197,7 @@ TEST(chapter4_3, controlled_z_flip_invariance)
 //! @brief Exercise 4.19
 TEST(chapter4_3, cnot_action_on_density_matrices)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const rho = qpp::randrho(4);
     auto const rho_out = qpp::apply(rho, qpp::gt.CNOT, { 0, 1 });
@@ -223,12 +223,12 @@ TEST(chapter4_3, cnot_basis_transformations)
     circuit_HxH_cnot_HxH.gate(qpp::gt.CNOT, { 0 }, { 1 });
     circuit_HxH_cnot_HxH.gate_fan(qpp::gt.H, { 0, 1 });
     auto engine_HxH_cnot_HxH = qpp::QEngine{ circuit_HxH_cnot_HxH };
-    auto const HxH_cnot_HxH = qpp_e::qube::extract_matrix<4>(engine_HxH_cnot_HxH);
+    auto const HxH_cnot_HxH = qube::extract_matrix<4>(engine_HxH_cnot_HxH);
 
     auto circuit_cnot_flipped = qpp::QCircuit{ 2, 0 };
     circuit_cnot_flipped.gate(qpp::gt.CNOT, { 1 }, { 0 });
     auto engine_cnot_flipped = qpp::QEngine{ circuit_cnot_flipped };
-    auto const cnot_flipped = qpp_e::qube::extract_matrix<4>(engine_cnot_flipped);
+    auto const cnot_flipped = qube::extract_matrix<4>(engine_cnot_flipped);
 
     EXPECT_MATRIX_CLOSE(HxH_cnot_HxH, cnot_flipped, 1e-12);
     EXPECT_MATRIX_CLOSE(qpp::gt.CNOTba, cnot_flipped, 1e-12);
@@ -291,7 +291,7 @@ TEST(chapter4_3, controlled_phase_shift)
     using namespace std::literals::complex_literals;
     using namespace std::numbers;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const alpha = qpp::rand(0., 2.*pi);
     auto const exp_ia = std::exp(1.i * alpha);
@@ -309,11 +309,11 @@ TEST(chapter4_3, controlled_phase_shift)
 
     auto const circuit_controlled_exp_ia_id = qpp::QCircuit{ 2, 0 }
         .CTRL(exp_ia_id, { 0 }, { 1 });
-    auto const controlled_exp_ia_id = qpp_e::qube::extract_matrix<4>(circuit_controlled_exp_ia_id);
+    auto const controlled_exp_ia_id = qube::extract_matrix<4>(circuit_controlled_exp_ia_id);
 
     auto const circuit_one_exp_ia_x_I = qpp::QCircuit{ 2, 0 }
         .gate(one_exp_ia, 0);
-    auto const one_exp_ia_x_I = qpp_e::qube::extract_matrix<4>(circuit_one_exp_ia_x_I);
+    auto const one_exp_ia_x_I = qube::extract_matrix<4>(circuit_one_exp_ia_x_I);
 
     EXPECT_MATRIX_CLOSE(controlled_exp_ia_id, one_exp_ia_x_I, 1e-12);
 
@@ -326,14 +326,14 @@ TEST(chapter4_3, controlled_u_built_circuit)
 {
     using namespace std::literals::complex_literals;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
     auto const U = qpp::randU();
 
     auto const circuit_controlled_u = qpp::QCircuit{ 2, 0 }
         .CTRL(U, { 0 }, { 1 });
-    auto const controlled_U = qpp_e::qube::extract_matrix<4>(circuit_controlled_u);
+    auto const controlled_U = qube::extract_matrix<4>(circuit_controlled_u);
 
-    auto const [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
+    auto const [alpha, A, B, C] = qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
 
     auto const aAXBXC = (std::exp(1.i * alpha) * A * qpp::gt.X * B * qpp::gt.X * C).eval();
     EXPECT_MATRIX_CLOSE(aAXBXC, U, 1e-12);
@@ -351,7 +351,7 @@ TEST(chapter4_3, controlled_u_built_circuit)
         .CTRL(qpp::gt.X, { 0 }, { 1 })
         .gate(A, 1)
         .gate(one_exp_ia, 0);
-    auto const built_controlled_U = qpp_e::qube::extract_matrix<4>(built_circuit);
+    auto const built_controlled_U = qube::extract_matrix<4>(built_circuit);
 
     EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
@@ -364,12 +364,12 @@ TEST(chapter4_3, controlled_u_built_circuit)
 //! @brief Equation 4.29
 TEST(chapter4_3, n_controlled_k_operation)
 {
-    qpp_e::maths::seed(958u);
+    qube::maths::seed(958u);
 
     auto constexpr n_controlled_k = []<unsigned int n, unsigned int k, bool ctrl>(auto&& x, auto&& U)
     {
         auto constexpr range_n = std::views::iota(0u, n) | std::views::common;
-        auto constexpr _2_pow_k = qpp_e::maths::pow(2u, k);
+        auto constexpr _2_pow_k = qube::maths::pow(2u, k);
         auto constexpr range_nk = std::views::iota(n, n+k) | std::views::common;
 
         EXPECT_EQ(U.rows(), _2_pow_k);
@@ -420,7 +420,7 @@ TEST(chapter4_3, n_controlled_k_operation)
 
     auto constexpr n = 4u;
     auto constexpr k = 3u;
-    auto constexpr _2_pow_k = qpp_e::maths::pow(2u, k);
+    auto constexpr _2_pow_k = qube::maths::pow(2u, k);
     auto const U = qpp::randU(_2_pow_k);
     n_controlled_k.template operator()<n, k, false>(Eigen::Vector<bool, n>::Random().eval(), U);
     n_controlled_k.template operator()<n, k, true>(Eigen::Vector<bool, n>::Ones(), U);
@@ -429,13 +429,13 @@ TEST(chapter4_3, n_controlled_k_operation)
 //! @brief Figure 4.7
 TEST(chapter4_3, n_controlled_k_operation_circuit)
 {
-    qpp_e::maths::seed(95658u);
+    qube::maths::seed(95658u);
 
     auto constexpr n = 4u;
     auto constexpr range_n = std::views::iota(0u, n) | std::views::common;
 
     auto constexpr k = 3u;
-    auto constexpr _2_pow_k = qpp_e::maths::pow(2u, k);
+    auto constexpr _2_pow_k = qube::maths::pow(2u, k);
     auto constexpr range_nk = std::views::iota(n, n+k) | std::views::common;
 
     auto const U = qpp::randU(_2_pow_k);
@@ -469,7 +469,7 @@ TEST(chapter4_3, _2_controlled_1_U)
 {
     using namespace std::complex_literals;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto constexpr _2_controlled_1_U_circuit = [](auto&& U, auto&& V)
     {
@@ -479,7 +479,7 @@ TEST(chapter4_3, _2_controlled_1_U)
 
         auto const circuit_U = qpp::QCircuit{ 3u }
             .CTRL(U, { 0, 1 }, { 2 });
-        auto const controlled_U = qpp_e::qube::extract_matrix<8>(circuit_U);
+        auto const controlled_U = qube::extract_matrix<8>(circuit_U);
 
         auto const& X = qpp::gt.X;
 
@@ -489,7 +489,7 @@ TEST(chapter4_3, _2_controlled_1_U)
             .CTRL(V.adjoint(), { 1 }, { 2 })
             .CTRL(X, { 0 }, { 1 })
             .CTRL(V, { 0 }, { 2 });
-        auto const built_controlled_U = qpp_e::qube::extract_matrix<8>(built_circuit_U);
+        auto const built_controlled_U = qube::extract_matrix<8>(built_circuit_U);
 
         EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
@@ -515,7 +515,7 @@ TEST(chapter4_3, _2_controlled_1_U)
 //! @details It applies in particular to phase gates
 TEST(chapter4_3, diagonal_gate_and_cnot)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const D = Eigen::Vector2cd::Random().asDiagonal().toDenseMatrix().eval();
     auto const& I = qpp::gt.Id2;
@@ -549,13 +549,13 @@ TEST(chapter4_3, diagonal_gate_and_cnot)
     auto const circuit_DxI_CNOT = qpp::QCircuit{ 2u }
         .CTRL(X, { 0 }, { 1 })
         .gate(D, 0);
-    auto const built_DxI_CNOT = qpp_e::qube::extract_matrix<4>(circuit_DxI_CNOT);
+    auto const built_DxI_CNOT = qube::extract_matrix<4>(circuit_DxI_CNOT);
     EXPECT_MATRIX_CLOSE(built_DxI_CNOT, DxI_CNOT, 1e-12);
 
     auto const circuit_CNOT_DxI = qpp::QCircuit{ 2u }
         .gate(D, 0)
         .CTRL(X, { 0 }, { 1 });
-    auto const built_CNOT_DxI = qpp_e::qube::extract_matrix<4>(circuit_CNOT_DxI);
+    auto const built_CNOT_DxI = qube::extract_matrix<4>(circuit_CNOT_DxI);
     EXPECT_MATRIX_CLOSE(built_CNOT_DxI, CNOT_DxI, 1e-12);
 
     debug() << ">> D:\n" << qpp::disp(D) << "\n\n";
@@ -573,20 +573,20 @@ TEST(chapter4_3, simplified_2_controlled_1_U)
 {
     using namespace std::complex_literals;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const U = qpp::randU();
 
     auto const circuit_U = qpp::QCircuit{ 3u }
         .CTRL(U, { 0, 1 }, { 2 });
-    auto const controlled_U = qpp_e::qube::extract_matrix<8>(circuit_U);
+    auto const controlled_U = qube::extract_matrix<8>(circuit_U);
 
     auto const V = qpp::sqrtm(U);
     EXPECT_MATRIX_CLOSE((V * V).eval(), U, 1e-12);
     EXPECT_MATRIX_CLOSE((V * V.adjoint()).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
     EXPECT_MATRIX_CLOSE((V.adjoint() * V).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
 
-    auto const [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(V);
+    auto const [alpha, A, B, C] = qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(V);
     auto const exp_ia = Eigen::Matrix2cd
     {
         { 1., 0. },
@@ -611,7 +611,7 @@ TEST(chapter4_3, simplified_2_controlled_1_U)
         .gate(exp_ia.adjoint(), 1)
         .CTRL(X, { 0 }, { 1 })
     ;
-    auto const built_controlled_U = qpp_e::qube::extract_matrix<8>(built_circuit_U);
+    auto const built_controlled_U = qube::extract_matrix<8>(built_circuit_U);
 
     EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
@@ -625,13 +625,13 @@ TEST(chapter4_3, controlled_rx_circuit)
     using namespace std::complex_literals;
     using namespace std::numbers;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
     auto const theta = qpp::rand(0., 2.*pi);
 
     auto const U = qpp::gt.RX(theta);
     auto const circuit_U = qpp::QCircuit{ 2u }
         .CTRL(U, { 0 }, { 1 });
-    auto const controlled_U = qpp_e::qube::extract_matrix<4>(circuit_U);
+    auto const controlled_U = qube::extract_matrix<4>(circuit_U);
 
     /* Force special values for A, B, C */
     auto const A = (qpp::gt.RZ(-0.5 * pi) * qpp::gt.RY(0.5 * theta)).eval();
@@ -652,7 +652,7 @@ TEST(chapter4_3, controlled_rx_circuit)
         .CTRL(X, { 0 }, { 1 })
         .gate(A, 1)
     ;
-    auto const built_controlled_U = qpp_e::qube::extract_matrix<4>(built_circuit_U);
+    auto const built_controlled_U = qube::extract_matrix<4>(built_circuit_U);
     EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
     debug() << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
@@ -665,15 +665,15 @@ TEST(chapter4_3, controlled_ry_circuit)
     using namespace std::complex_literals;
     using namespace std::numbers;
 
-    qpp_e::maths::seed(3141592u);
+    qube::maths::seed(3141592u);
     auto const theta = qpp::rand(0., 2.*pi);
 
     auto const U = qpp::gt.RY(theta);
     auto const circuit_U = qpp::QCircuit{ 2u }
         .CTRL(U, { 0 }, { 1 });
-    auto const controlled_U = qpp_e::qube::extract_matrix<4>(circuit_U);
+    auto const controlled_U = qube::extract_matrix<4>(circuit_U);
 
-    auto [alpha, A, B, C] = qpp_e::qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
+    auto [alpha, A, B, C] = qube::abc_decomposition<Eigen::EULER_Z, Eigen::EULER_Y, Eigen::EULER_Z>(U);
 
     /* RY is exactly at the singularity of the euler system */
     ASSERT_LT(std::abs(alpha), 1e-12);
@@ -688,7 +688,7 @@ TEST(chapter4_3, controlled_ry_circuit)
         .CTRL(X, { 0 }, { 1 })
         .gate(A, 1)
     ;
-    auto const built_controlled_U = qpp_e::qube::extract_matrix<4>(built_circuit_U);
+    auto const built_controlled_U = qube::extract_matrix<4>(built_circuit_U);
     EXPECT_MATRIX_CLOSE(built_controlled_U, controlled_U, 1e-12);
 
     debug() << ">> controlled_U:\n" << qpp::disp(controlled_U) << "\n\n";
@@ -738,7 +738,7 @@ TEST(chapter4_3, toffoli_circuit)
 
     auto const circuit_toffoli = qpp::QCircuit{ 3, 0 }
         .gate(qpp::gt.TOF, 0, 1, 2);
-    auto const toffoli = qpp_e::qube::extract_matrix<8>(circuit_toffoli);
+    auto const toffoli = qube::extract_matrix<8>(circuit_toffoli);
     EXPECT_MATRIX_CLOSE(toffoli, qpp::gt.TOF, 1e-12);
 
     auto const built_circuit_toffoli = qpp::QCircuit{ 3, 0 }
@@ -761,7 +761,7 @@ TEST(chapter4_3, toffoli_circuit)
 
         .gate(T, 0)
     ;
-    auto const built_toffoli = qpp_e::qube::extract_matrix<8>(built_circuit_toffoli);
+    auto const built_toffoli = qube::extract_matrix<8>(built_circuit_toffoli);
     EXPECT_MATRIX_CLOSE(built_toffoli, toffoli, 1e-12);
 
     auto const built_circuit_toffoli_b = qpp::QCircuit{ 3, 0 }
@@ -783,7 +783,7 @@ TEST(chapter4_3, toffoli_circuit)
 
         .gate(T, 0)
     ;
-    auto const built_toffoli_b = qpp_e::qube::extract_matrix<8>(built_circuit_toffoli_b);
+    auto const built_toffoli_b = qube::extract_matrix<8>(built_circuit_toffoli_b);
     EXPECT_MATRIX_CLOSE(built_toffoli_b, toffoli, 1e-12);
 
     debug() << ">> toffoli (qpp):\n" << qpp::disp(qpp::gt.TOF) << "\n\n";
@@ -808,7 +808,7 @@ TEST(chapter4_3, fredkin_circuit)
 
     auto const circuit_fredkin = qpp::QCircuit{ 3, 0 }
         .gate(qpp::gt.FRED, 0, 1, 2);
-    auto const fredkin = qpp_e::qube::extract_matrix<8>(circuit_fredkin);
+    auto const fredkin = qube::extract_matrix<8>(circuit_fredkin);
     EXPECT_MATRIX_CLOSE(fredkin, qpp::gt.FRED, 1e-12);
 
     /* Part 1 */
@@ -817,7 +817,7 @@ TEST(chapter4_3, fredkin_circuit)
         .gate(TOF, 0, 1, 2)
         .gate(TOF, 0, 2, 1)
         ;
-    auto const fredkin_as_tof = qpp_e::qube::extract_matrix<8>(circuit_fredkin_as_tof);
+    auto const fredkin_as_tof = qube::extract_matrix<8>(circuit_fredkin_as_tof);
     EXPECT_MATRIX_CLOSE(fredkin_as_tof, fredkin, 1e-12);
 
     /* Part 2 */
@@ -826,7 +826,7 @@ TEST(chapter4_3, fredkin_circuit)
         .gate(TOF, 0, 1, 2)
         .CTRL(X, 2, 1)
         ;
-    auto const fredkin_as_tof_and_cnot = qpp_e::qube::extract_matrix<8>(circuit_fredkin_as_tof_and_cnot);
+    auto const fredkin_as_tof_and_cnot = qube::extract_matrix<8>(circuit_fredkin_as_tof_and_cnot);
     EXPECT_MATRIX_CLOSE(fredkin_as_tof_and_cnot, fredkin, 1e-12);
 
     /* Part 3 */
@@ -841,7 +841,7 @@ TEST(chapter4_3, fredkin_circuit)
         .CTRL(V, 0, 2)
         .CTRL(X, 2, 1)
         ;
-    auto const fredkin_6_gates = qpp_e::qube::extract_matrix<8>(circuit_fredkin_6_gates);
+    auto const fredkin_6_gates = qube::extract_matrix<8>(circuit_fredkin_6_gates);
     EXPECT_MATRIX_CLOSE(fredkin_6_gates, fredkin, 1e-12);
 
     /* Part 4 */
@@ -855,7 +855,7 @@ TEST(chapter4_3, fredkin_circuit)
         .gate(B, 1, 2)
         .CTRL(X, 0, 1)
         ;
-    auto const fredkin_5_gates = qpp_e::qube::extract_matrix<8>(circuit_fredkin_5_gates);
+    auto const fredkin_5_gates = qube::extract_matrix<8>(circuit_fredkin_5_gates);
     EXPECT_MATRIX_CLOSE(fredkin_5_gates, fredkin, 1e-12);
 
     debug() << ">> fredkin:\n" << qpp::disp(fredkin) << "\n\n";
@@ -868,7 +868,7 @@ TEST(chapter4_3, fredkin_circuit)
 //! @brief Check that U, V commute => ctrl-U, ctrl-V commute
 TEST(chapter4_3, ctrl_commute)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const P = qpp::randU();
     EXPECT_MATRIX_CLOSE((P * P.adjoint()).eval(), Eigen::Matrix2cd::Identity(), 1e-12);
@@ -883,13 +883,13 @@ TEST(chapter4_3, ctrl_commute)
         .CTRL(V, 0, 2)
         .CTRL(U, 1, 2)
         ;
-    auto const ctrl_UV = qpp_e::qube::extract_matrix<8>(circuit_UV);
+    auto const ctrl_UV = qube::extract_matrix<8>(circuit_UV);
 
     auto const circuit_VU = qpp::QCircuit{ 3, 0 }
         .CTRL(U, 1, 2)
         .CTRL(V, 0, 2)
         ;
-    auto const ctrl_VU = qpp_e::qube::extract_matrix<8>(circuit_VU);
+    auto const ctrl_VU = qube::extract_matrix<8>(circuit_VU);
 
     EXPECT_MATRIX_CLOSE(ctrl_UV, ctrl_VU, 1e-12);
 
@@ -955,7 +955,7 @@ TEST(chapter4_3, toffoli_up_to_phase)
             }
 
 
-    auto const toffoli_up_to_phase = qpp_e::qube::extract_matrix<8>(engine);
+    auto const toffoli_up_to_phase = qube::extract_matrix<8>(engine);
     auto const expected_toffoli_up_to_phase = (relative_phase_vector.asDiagonal().toDenseMatrix() * qpp::gt.TOF).eval();
     EXPECT_MATRIX_CLOSE(toffoli_up_to_phase, expected_toffoli_up_to_phase, 1e-12);
 
@@ -977,7 +977,7 @@ TEST(chapter4_3, permutation_circuit)
         .CTRL(X, 1, 2)
         .gate(TOF, 0, 1, 2)
         ;
-    auto const perm = qpp_e::qube::extract_matrix<8>(circuit);
+    auto const perm = qube::extract_matrix<8>(circuit);
 
     auto const expected_perm = Eigen::Matrix<Eigen::dcomplex, 8, 8>
     {
@@ -999,18 +999,18 @@ TEST(chapter4_3, permutation_circuit)
 //! @brief Figure 4.10
 TEST(chapter4_3, n_controlled_U)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto constexpr n = 4u;
     ASSERT_GE(n, 2u);
-    auto constexpr _2_pow_n_1 = qpp_e::maths::pow(2u, n + 1u);
+    auto constexpr _2_pow_n_1 = qube::maths::pow(2u, n + 1u);
     auto const U = qpp::randU();
     auto constexpr ctrl = std::views::iota(0u, n) | std::views::common;
 
     auto const expected_circuit = qpp::QCircuit{ n + 1 }
         .CTRL(U, { ctrl.begin(), ctrl.end() }, n)
         ;
-    auto const expected_ctrl_U = qpp_e::qube::extract_matrix<_2_pow_n_1>(expected_circuit);
+    auto const expected_ctrl_U = qube::extract_matrix<_2_pow_n_1>(expected_circuit);
 
     auto const& TOF = qpp::gt.TOF;
     auto circuit = qpp::QCircuit{ 2u * n };
@@ -1028,12 +1028,12 @@ TEST(chapter4_3, n_controlled_U)
     auto const work_qubits_zero = Eigen::VectorX<unsigned int>::LinSpaced(n - 1u, n, 2u * n - 2u).eval();
 
     auto t0 = std::chrono::high_resolution_clock::now();
-    auto const indices = qpp_e::qube::extract_indices<n + 1u>(2u * n, work_qubits_zero);
+    auto const indices = qube::extract_indices<n + 1u>(2u * n, work_qubits_zero);
     auto tf = std::chrono::high_resolution_clock::now();
     debug() << "extract_indices: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
 
     t0 = std::chrono::high_resolution_clock::now();
-    auto const ctrl_U = qpp_e::qube::extract_matrix<_2_pow_n_1>(circuit, indices);
+    auto const ctrl_U = qube::extract_matrix<_2_pow_n_1>(circuit, indices);
     tf = std::chrono::high_resolution_clock::now();
     debug() << "extract_matrix: " << std::chrono::duration_cast<std::chrono::microseconds>(tf - t0).count() << " us" << std::endl;
 
@@ -1052,13 +1052,13 @@ TEST(chapter4_3, DISABLED_benchmark_extract_indices)
     auto const work_qubits_zero = Eigen::VectorX<unsigned int>::LinSpaced(n - 1u, n, 2u * n - 2u).eval();
 
     auto t0 = std::chrono::high_resolution_clock::now();
-    auto const indices = qpp_e::qube::extract_indices<>(2l * n, work_qubits_zero);
+    auto const indices = qube::extract_indices<>(2l * n, work_qubits_zero);
     auto tf = std::chrono::high_resolution_clock::now();
 
     std::cerr << ">> extract_indices: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
 
     t0 = std::chrono::high_resolution_clock::now();
-    auto const indices_2 = qpp_e::qube::extract_indices_2<>(2l * n, work_qubits_zero);
+    auto const indices_2 = qube::extract_indices_2<>(2l * n, work_qubits_zero);
     tf = std::chrono::high_resolution_clock::now();
 
     std::cerr << ">> extract_indices_2: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
@@ -1158,13 +1158,13 @@ TEST(chapter4_3, n_controlled_U_no_work_qubit_exp)
     {
         auto const& [ gates, gates_tof, CnX ] = n_controlled_X_no_work_qubit_circuit_exp(i+1);
 
-        auto const expected_gates = 2 * qpp_e::maths::pow(3u, i) - 1;
+        auto const expected_gates = 2 * qube::maths::pow(3u, i) - 1;
         EXPECT_EQ(gates, expected_gates);
 
         auto const expected_gates_tof = 4 * (i+1) - 3;
         EXPECT_EQ(gates_tof, expected_gates_tof);
 
-        auto const matrix = qpp_e::qube::extract_matrix<>(CnX, qpp_e::maths::pow(2u, i + 2));
+        auto const matrix = qube::extract_matrix<>(CnX, qube::maths::pow(2u, i + 2));
         auto const ctrl = qpp::gt.CTRL(qpp::gt.X, { range_n.begin(), range_n.begin() + i + 1 }, { i+1 }, i+2);
         EXPECT_MATRIX_CLOSE(matrix, ctrl, 1e-12);
 
@@ -1190,12 +1190,12 @@ TEST(chapter4_3, cnot_basis_transformations_flipped)
         .gate_fan(qpp::gt.H, { 0, 1 })
         .gate(qpp::gt.CNOT, { 1 }, { 0 })
         .gate_fan(qpp::gt.H, { 0, 1 });
-    auto const HxH_cnot_flipped_HxH = qpp_e::qube::extract_matrix<4>(circuit_HxH_cnot_flipped_HxH);
+    auto const HxH_cnot_flipped_HxH = qube::extract_matrix<4>(circuit_HxH_cnot_flipped_HxH);
 
     auto const circuit_cnot = qpp::QCircuit{ 2, 0 }
         .gate(qpp::gt.CNOT, { 0 }, { 1 });
     auto engine_cnot_flipped = qpp::QEngine{ circuit_cnot };
-    auto const cnot = qpp_e::qube::extract_matrix<4>(circuit_cnot);
+    auto const cnot = qube::extract_matrix<4>(circuit_cnot);
 
     EXPECT_MATRIX_CLOSE(HxH_cnot_flipped_HxH, cnot, 1e-12);
     EXPECT_MATRIX_CLOSE(qpp::gt.CNOT, cnot, 1e-12);
@@ -1329,7 +1329,7 @@ TEST(chapter4_3, lemma_7_2)
     auto const expected_gates_tof = 4u * (m - 2u);
     EXPECT_EQ(gates_tof, expected_gates_tof);
 
-    auto const matrix = qpp_e::qube::extract_matrix<>(circuit, qpp_e::maths::pow(2u, n));
+    auto const matrix = qube::extract_matrix<>(circuit, qube::maths::pow(2u, n));
     auto const ctrl_matrix = qpp::gt.CTRL(qpp::gt.X, ctrl, { n - 1u }, n);
     EXPECT_MATRIX_CLOSE(matrix, ctrl_matrix, 1e-12);
 
@@ -1363,7 +1363,7 @@ TEST(chapter4_3, n_control_linear_one_work_qubit)
     EXPECT_EQ(gates_tof, expected_gates_tof);
 
     t0 = std::chrono::high_resolution_clock::now();
-    auto const matrix = qpp_e::qube::extract_matrix<>(circuit, qpp_e::maths::pow(2u, n));
+    auto const matrix = qube::extract_matrix<>(circuit, qube::maths::pow(2u, n));
     tf = std::chrono::high_resolution_clock::now();
     debug() << "extract_matrix: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
 
@@ -1412,7 +1412,7 @@ TEST(chapter4_3, n_controlled_U_no_work_qubit_quadratic)
     EXPECT_EQ(gates, expected_gates);
 
     t0 = std::chrono::high_resolution_clock::now();
-    auto const matrix = qpp_e::qube::extract_matrix<>(circuit, qpp_e::maths::pow(2u, n));
+    auto const matrix = qube::extract_matrix<>(circuit, qube::maths::pow(2u, n));
     tf = std::chrono::high_resolution_clock::now();
     debug() << "extract_matrix: " << std::chrono::duration_cast<std::chrono::milliseconds>(tf - t0).count() << " ms" << std::endl;
     EXPECT_MATRIX_CLOSE(matrix, ctrl_matrix, 1e-12);
@@ -1448,7 +1448,7 @@ TEST(chapter4_3, zero_cnot)
         .gate(qpp::gt.CNOT, 0u, 1u)
         .gate(qpp::gt.X, 0u)
         ;
-    auto const matrix = qpp_e::qube::extract_matrix<4>(circuit);
+    auto const matrix = qube::extract_matrix<4>(circuit);
     EXPECT_MATRIX_CLOSE(zero_cnot, matrix, 1e-12);
 
     debug() << ">> zero_cnot:\n" << qpp::disp(zero_cnot) << "\n\n";
@@ -1458,7 +1458,7 @@ TEST(chapter4_3, zero_cnot)
 //! @brief Figure 4.12
 TEST(chapter4_3, zero_toffoli)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto const U = qpp::randU();
     auto zero_toffoli = Eigen::MatrixXcd::Identity(16, 16).eval();
@@ -1469,7 +1469,7 @@ TEST(chapter4_3, zero_toffoli)
         .CTRL(U, { 0u, 1u, 2u }, 3u)
         .gate_fan(qpp::gt.X, { 0u, 2u })
         ;
-    auto const matrix = qpp_e::qube::extract_matrix<>(circuit, 16);
+    auto const matrix = qube::extract_matrix<>(circuit, 16);
     EXPECT_MATRIX_CLOSE(zero_toffoli, matrix, 1e-12);
 
     debug() << ">> zero_toffoli:\n" << qpp::disp(zero_toffoli) << "\n\n";
@@ -1484,13 +1484,13 @@ TEST(chapter4_3, multiple_target_ctrl)
     auto const circuit = qpp::QCircuit{ 3u }
         .CTRL_fan(X, { 0u }, { 1u, 2u })
         ;
-    auto const matrix = qpp_e::qube::extract_matrix<8>(circuit);
+    auto const matrix = qube::extract_matrix<8>(circuit);
 
     auto const expected_circuit = qpp::QCircuit{ 3u }
         .CTRL(X, 0u, 1u)
         .CTRL(X, 0u, 2u)
         ;
-    auto const expected_matrix = qpp_e::qube::extract_matrix<8>(expected_circuit);
+    auto const expected_matrix = qube::extract_matrix<8>(expected_circuit);
 
     EXPECT_MATRIX_CLOSE(matrix, expected_matrix, 1e-12);
 
@@ -1503,23 +1503,23 @@ TEST(chapter4_3, more_circuit_identities)
 {
     using namespace std::numbers;
 
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
-    auto constexpr test = [](qpp_e::maths::Matrix auto const& gate, auto const qubit
-                            , qpp_e::maths::Matrix auto const& gate1
-                            , qpp_e::maths::Matrix auto const& gate2
+    auto constexpr test = [](qube::maths::Matrix auto const& gate, auto const qubit
+                            , qube::maths::Matrix auto const& gate1
+                            , qube::maths::Matrix auto const& gate2
                             , bool up_to_phase = false)
     {
         auto const ctrl_circuit = qpp::QCircuit{ 2u }
             .CTRL(qpp::gt.X, 0u, 1u)
             .gate(gate, qubit)
             .CTRL(qpp::gt.X, 0u, 1u);
-        auto const ctrl_matrix = qpp_e::qube::extract_matrix<4>(ctrl_circuit);
+        auto const ctrl_matrix = qube::extract_matrix<4>(ctrl_circuit);
 
         auto const circuit = qpp::QCircuit{ 2u }
             .gate(gate1, 0u)
             .gate(gate2, 1u);
-        auto const matrix = qpp_e::qube::extract_matrix<4>(circuit);
+        auto const matrix = qube::extract_matrix<4>(circuit);
 
         if(up_to_phase)
         {

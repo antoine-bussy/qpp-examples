@@ -12,12 +12,12 @@
 #include <numbers>
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 namespace
 {
     //! @brief Characterization of density operator from theorem 2.5
-    auto expect_density_operator(qpp_e::maths::Matrix auto const& rho, qpp_e::maths::RealNumber auto const& precision)
+    auto expect_density_operator(qube::maths::Matrix auto const& rho, qube::maths::RealNumber auto const& precision)
     {
         EXPECT_COMPLEX_CLOSE(rho.trace(), 1., precision);
         EXPECT_MATRIX_CLOSE(rho.adjoint(), rho, precision);
@@ -29,12 +29,12 @@ namespace
 TEST(chapter2_5, schmidt_reduced_density_operator)
 {
     using namespace Eigen::indexing;
-    qpp_e::maths::seed(899u);
+    qube::maths::seed(899u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr m = 3u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
 
     auto const psi = qpp::randket(_2_pow_n * _2_pow_m);
     auto const rho = qpp::prj(psi);
@@ -83,10 +83,10 @@ TEST(chapter2_5, schmidt_reduced_density_operator_example)
 //! @brief Theorem 2.7 and equations 2.203 through 2.205
 TEST(chapter2_5, schmidt_decomposition_proof)
 {
-    qpp_e::maths::seed(3112u);
+    qube::maths::seed(3112u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr _4_pow_n = _2_pow_n * _2_pow_n;
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
@@ -149,13 +149,13 @@ TEST(chapter2_5, schmidt_decomposition_proof)
 //! @brief Exercise 2.76
 TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions)
 {
-    qpp_e::maths::seed(1982u);
+    qube::maths::seed(1982u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range_n = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr m = 3u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
     auto constexpr range_m = std::views::iota(0u, _2_pow_m) | std::views::common;
     auto constexpr _2_pow_npm = _2_pow_n * _2_pow_m;
     auto constexpr policy = std::execution::par;
@@ -222,12 +222,12 @@ TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions)
 //! @brief Exercise 2.76
 TEST(chapter2_5, schmidt_decomposition_proof_different_dimensions_qpp)
 {
-    qpp_e::maths::seed(1982u);
+    qube::maths::seed(1982u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr m = 3u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
     auto constexpr range_m = std::views::iota(0u, _2_pow_m) | std::views::common;
     auto constexpr _2_pow_npm = _2_pow_n * _2_pow_m;
     auto constexpr policy = std::execution::par;
@@ -269,7 +269,7 @@ TEST(chapter2_5, three_vector_schmidt_decomposition)
 {
     using namespace qpp::literals;
 
-    qpp_e::maths::seed(12u);
+    qube::maths::seed(12u);
 
     auto const psi = (000_ket + 011_ket).normalized().eval();
 
@@ -293,12 +293,12 @@ TEST(chapter2_5, three_vector_schmidt_decomposition)
 //! @brief Exercise 2.78 part 1
 TEST(chapter2_5, schmidt_number)
 {
-    qpp_e::maths::seed(974u);
+    qube::maths::seed(974u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr m = 3u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
 
     auto const a = qpp::randket(_2_pow_n);
     auto const b = qpp::randket(_2_pow_m);
@@ -313,12 +313,12 @@ TEST(chapter2_5, schmidt_number)
 //! @brief Exercise 2.78 part 2
 TEST(chapter2_5, reduced_density_operator_of_product_state)
 {
-    qpp_e::maths::seed(33u);
+    qube::maths::seed(33u);
 
     auto constexpr n = 4u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr m = 3u;
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
 
     {
         auto const a = qpp::randket(_2_pow_n);
@@ -366,10 +366,10 @@ TEST(chapter2_5, reduced_density_operator_of_product_state)
 //! @brief Equations 2.207 through 2.211
 TEST(chapter2_5, purification)
 {
-    qpp_e::maths::seed(3u);
+    qube::maths::seed(3u);
 
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
 
@@ -433,8 +433,8 @@ TEST(chapter2_5, same_schmidt_coefficients)
 {
     auto constexpr n = 5u;
     auto constexpr m = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
-    auto constexpr _2_pow_m = qpp_e::maths::pow(2u, m);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
+    auto constexpr _2_pow_m = qube::maths::pow(2u, m);
 
     auto const psi = qpp::randket(_2_pow_n * _2_pow_m);
     auto const [schmidt_basisA, schmidt_basisB, schmidt_coeffs, schmidt_probs] = qpp::schmidt(psi, { _2_pow_n, _2_pow_m });
@@ -466,7 +466,7 @@ TEST(chapter2_5, same_schmidt_coefficients)
 TEST(chapter2_5, freedom_in_purifications)
 {
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
 
@@ -509,7 +509,7 @@ TEST(chapter2_5, freedom_in_purifications)
 TEST(chapter2_5, purification_and_measurement)
 {
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
 
@@ -552,10 +552,10 @@ TEST(chapter2_5, purification_and_measurement_3)
 {
     using namespace Eigen::indexing;
 
-    qpp_e::maths::seed(798u);
+    qube::maths::seed(798u);
 
     auto constexpr n = 3u;
-    auto constexpr _2_pow_n = qpp_e::maths::pow(2u, n);
+    auto constexpr _2_pow_n = qube::maths::pow(2u, n);
     auto constexpr range = std::views::iota(0u, _2_pow_n) | std::views::common;
     auto constexpr policy = std::execution::par;
 

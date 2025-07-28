@@ -14,7 +14,7 @@
 #include <unordered_set>
 #include <ranges>
 
-using namespace qpp_e::qube::stream;
+using namespace qube::stream;
 
 //! @brief Exercise 4.36
 TEST(chapter4_5, addition_mod_4)
@@ -63,12 +63,12 @@ TEST(chapter4_5, addition_mod_4)
 //! @brief Equations 4.41 through 4.51
 TEST(chapter4_5, two_level_unitary_decomposition)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto constexpr n = 8;
     auto const U = qpp::randU(n);
 
-    auto const u = qpp_e::qube::two_level_unitary_decomposition(U);
+    auto const u = qube::two_level_unitary_decomposition(U);
     auto const computed_U = std::accumulate(u.cbegin(), u.cend(), Eigen::MatrixXcd::Identity(n, n).eval(), std::multiplies<>());
 
     EXPECT_MATRIX_CLOSE(computed_U, U, 1.e-12);
@@ -91,7 +91,7 @@ TEST(chapter4_5, two_level_unitary_decomposition_example)
 
     }).eval();
 
-    auto const u = qpp_e::qube::two_level_unitary_decomposition(U);
+    auto const u = qube::two_level_unitary_decomposition(U);
     auto const computed_U = std::accumulate(u.cbegin(), u.cend(), Eigen::Matrix4cd::Identity().eval(), std::multiplies<>());
 
     EXPECT_MATRIX_CLOSE(computed_U, U, 1.e-12);
@@ -103,7 +103,7 @@ TEST(chapter4_5, two_level_unitary_decomposition_example)
 //! @brief Exercise 4.38
 TEST(chapter4_5, minimal_two_level_unitary_decomposition)
 {
-    qpp_e::maths::seed();
+    qube::maths::seed();
 
     auto constexpr d = 7u;
 

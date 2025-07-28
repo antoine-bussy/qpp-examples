@@ -6,7 +6,7 @@ Matrix comparison functions.
 
 #include "concepts.hpp"
 
-namespace qpp_e::maths
+namespace qube::maths
 {
 
     auto matrix_equal(Matrix auto const& actual, Matrix auto const& expected)
@@ -73,4 +73,4 @@ namespace qpp_e::maths
     auto constexpr matrix_close_up_to_factor_l = [](auto const& actual, auto const& expected, auto const& precision) { return matrix_close_up_to_factor(actual, expected, precision); };
     auto constexpr matrix_close_up_to_phase_factor_l = [](auto const& actual, auto const& expected, auto const& precision) { return matrix_close_up_to_factor(actual, expected, precision, true); };
 
-} /* namespace qpp_e::maths */
+} /* namespace qube::maths */
