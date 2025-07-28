@@ -10,16 +10,24 @@
       "hidden": true
     },
     {
+      "name": "user-base",
+      "inherits": ["ninja", "limit-jobs", "pixi"],
+      "cacheVariables": {
+        "DEBUG_STREAM": "OFF"
+      },
+      "hidden": true
+    },
+    {
       "name": "Release",
-      "inherits": ["ninja", "limit-jobs", "pixi"]
+      "inherits": "user-base"
     },
     {
       "name": "Debug",
-      "inherits": ["ninja", "limit-jobs", "pixi"]
+      "inherits": "user-base"
     },
     {
       "name": "RelWithDebInfo",
-      "inherits": ["ninja", "limit-jobs", "pixi"]
+      "inherits": "user-base"
     }
   ]
 }
