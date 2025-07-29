@@ -1,5 +1,3 @@
-file(RELATIVE_PATH current_folder ${CMAKE_SOURCE_DIR}/qpp-examples ${CMAKE_CURRENT_SOURCE_DIR})
-
 include(SourcesLists.cmake)
 
 add_library(warnings INTERFACE)
