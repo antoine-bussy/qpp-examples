@@ -33,4 +33,5 @@ find_package(OpenMP REQUIRED)
 
 enable_testing()
 
+add_subdirectory(qube)
 add_subdirectory(qpp-examples)

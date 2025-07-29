@@ -2,9 +2,9 @@
 #include <gmock/gmock.h>
 
 #include <qpp/qpp.hpp>
-#include <qpp-examples/maths/arithmetic.hpp>
-#include <qpp-examples/maths/gtest_macros.hpp>
-#include <qpp-examples/qube/debug.hpp>
+#include <maths/arithmetic.hpp>
+#include <maths/gtest_macros.hpp>
+#include <qube/debug.hpp>
 
 #include <numbers>
 

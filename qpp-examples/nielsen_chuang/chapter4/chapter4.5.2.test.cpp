@@ -4,11 +4,11 @@
 #include <ranges>
 
 #include <qpp/qpp.hpp>
-#include <qpp-examples/qube/debug.hpp>
-#include <qpp-examples/qube/introspection.hpp>
-#include <qpp-examples/maths/arithmetic.hpp>
-#include <qpp-examples/maths/random.hpp>
-#include <qpp-examples/maths/gtest_macros.hpp>
+#include <qube/debug.hpp>
+#include <qube/introspection.hpp>
+#include <maths/arithmetic.hpp>
+#include <maths/random.hpp>
+#include <maths/gtest_macros.hpp>
 
 using namespace qube::stream;
 
