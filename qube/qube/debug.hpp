@@ -24,7 +24,7 @@ namespace qube
 
     inline auto consteval debug()
     {
-#if QPP_E_DEBUG_STREAM
+#ifdef QUBE_DEBUG_STREAM
         return err_stream_t{};
 #else
         return null_stream_t{};

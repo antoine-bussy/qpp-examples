@@ -23,7 +23,7 @@ set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_FIND_PACKAGE_PREFER_CONFIG TRUE)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-option(DEBUG_STREAM "Enable debug stream" OFF)
+option(QUBE_DEBUG_STREAM "Enable debug stream" OFF)
 
 find_package(TBB 2022.2 REQUIRED)
 find_package(Eigen3 3.4 REQUIRED)

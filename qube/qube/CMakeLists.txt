@@ -5,6 +5,6 @@ add_library(qube INTERFACE)
 target_link_libraries(qube INTERFACE Eigen3::Eigen maths warnings libqpp)
 set_target_properties(qube PROPERTIES PUBLIC_HEADER "${qube_headers}")
 
-if(${DEBUG_STREAM})
-    target_compile_definitions(qube INTERFACE QPP_E_DEBUG_STREAM=1)
+if(${QUBE_DEBUG_STREAM})
+    target_compile_definitions(qube INTERFACE QUBE_DEBUG_STREAM)
 endif()
