@@ -6,9 +6,9 @@
 #include <qpp/qpp.hpp>
 #include <qube/debug.hpp>
 #include <qube/introspection.hpp>
-#include <maths/arithmetic.hpp>
-#include <maths/random.hpp>
-#include <maths/gtest_macros.hpp>
+#include <qube/maths/arithmetic.hpp>
+#include <qube/maths/random.hpp>
+#include <qube/maths/gtest_macros.hpp>
 
 using namespace qube::stream;
 

@@ -2,7 +2,7 @@
 #include <gmock/gmock.h>
 
 #include <qpp/qpp.hpp>
-#include <maths/gtest_macros.hpp>
+#include <qube/maths/gtest_macros.hpp>
 #include <qube/debug.hpp>
 
 #include <numbers>

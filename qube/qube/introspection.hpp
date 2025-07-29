@@ -7,8 +7,8 @@ Introspection functions.
 #include "debug.hpp"
 
 #include <qpp/qpp.hpp>
-#include <maths/arithmetic.hpp>
-#include <maths/gtest_macros.hpp>
+#include "maths/arithmetic.hpp"
+#include "maths/gtest_macros.hpp"
 
 
 namespace qube

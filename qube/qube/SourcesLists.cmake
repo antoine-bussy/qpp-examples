@@ -7,4 +7,19 @@ target_sources(qube
             qube/debug.hpp
             qube/decompositions.hpp
             qube/introspection.hpp
+
+            qube/maths/arithmetic.hpp
+            qube/maths/compare.hpp
+            qube/maths/concepts.hpp
+            qube/maths/gtest_macros.hpp
+            qube/maths/random.hpp
+)
+
+# qube unit test
+target_sources(qube.test
+    PRIVATE
+        qube/maths/arithmetic.test.cpp
+        qube/maths/compare.test.cpp
+        qube/maths/concepts.test.cpp
+        qube/maths/random.test.cpp
 )
