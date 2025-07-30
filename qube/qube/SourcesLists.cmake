@@ -12,6 +12,7 @@ target_sources(qube
             qube/maths/compare.hpp
             qube/maths/concepts.hpp
             qube/maths/gtest_macros.hpp
+            qube/maths/norm.hpp
             qube/maths/random.hpp
 )
 
