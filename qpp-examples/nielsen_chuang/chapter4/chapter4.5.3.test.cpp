@@ -73,3 +73,30 @@ TEST(chapter4_5_2, probability_error_bound)
     }
 
 }
+
+//! @brief Equation 4.63, and equations 4.69 through 4.73
+TEST(chapter4_5, operator_error_composition)
+{
+    qube::maths::seed();
+
+    auto constexpr nq = 3ul;
+    auto constexpr n = qube::maths::pow(2ul, nq);
+    auto constexpr m = 5;
+
+    auto composed_error = 0.;
+    auto U = Eigen::MatrixXcd::Identity(n, n).eval();
+    auto V = Eigen::MatrixXcd::Identity(n, n).eval();
+
+    for ([[maybe_unused]] auto&& i: std::views::iota(0, m))
+    {
+        auto const U_i = qpp::randU(n);
+        auto const V_i = qpp::randU(n);
+        composed_error += qube::maths::operator_norm_2(U_i - V_i);
+        U = U_i * U;
+        V = V_i * V;
+    }
+
+    auto const error = qube::maths::operator_norm_2(U - V);
+    auto constexpr epsilon = 1e-12;
+    EXPECT_LT(error, composed_error + epsilon);
+}
