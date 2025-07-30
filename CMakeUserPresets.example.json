@@ -4,16 +4,13 @@
     {
       "name": "limit-jobs",
       "inherits": "ninja",
-      "environment": {
-        "CMAKE_BUILD_PARALLEL_LEVEL": "6"
-      },
       "hidden": true
     },
     {
       "name": "user-base",
       "inherits": ["ninja", "limit-jobs", "pixi"],
       "cacheVariables": {
-        "DEBUG_STREAM": "OFF"
+        "QUBE_DEBUG_STREAM": "OFF"
       },
       "hidden": true
     },
