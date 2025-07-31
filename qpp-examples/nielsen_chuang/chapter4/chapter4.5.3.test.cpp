@@ -127,3 +127,25 @@ TEST(chapter4_5, H_T_phase_CNOT_universality)
     auto const Rn_theta = qpp::gt.Rn(theta, n).eval();
     EXPECT_MATRIX_CLOSE(Rn_theta, THTH, 1e-12);
 }
+
+//! @brief Exercise 4.40
+TEST(chapter4_5, H_T_phase_CNOT_universality_2)
+{
+    using namespace std::complex_literals;
+
+    qube::maths::seed();
+
+    auto constexpr pi = std::numbers::pi;
+    auto constexpr c = std::cos(pi / 8.);
+    auto constexpr s = std::sin(pi / 8.);
+
+    auto n = std::array{c, s, c};
+    Eigen::Vector3d::Map(n.data()).normalize();
+
+    auto const alpha = qpp::rand(0., 2. * pi);
+    auto const beta = qpp::rand(0., 2. * pi);
+
+    auto const error = qube::maths::operator_norm_2(qpp::gt.Rn(alpha, n) - qpp::gt.Rn(alpha + beta, n));
+    auto const expected_error = std::abs(1. - std::exp(0.5i * beta));
+    EXPECT_NEAR(error, expected_error, 1e-12);
+}
