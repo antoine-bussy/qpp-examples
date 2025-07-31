@@ -6,6 +6,7 @@
 #include <qpp/qpp.hpp>
 #include <qube/debug.hpp>
 #include <qube/maths/arithmetic.hpp>
+#include <qube/maths/gtest_macros.hpp>
 #include <qube/maths/norm.hpp>
 #include <qube/maths/random.hpp>
 
@@ -99,4 +100,30 @@ TEST(chapter4_5, operator_error_composition)
     auto const error = qube::maths::operator_norm_2(U - V);
     auto constexpr epsilon = 1e-12;
     EXPECT_LT(error, composed_error + epsilon);
+}
+
+//! @brief Equations 4.74 and 4.75
+TEST(chapter4_5, H_T_phase_CNOT_universality)
+{
+    using namespace std::complex_literals;
+
+    qube::maths::seed();
+
+    auto constexpr pi = std::numbers::pi;
+    auto constexpr c = std::cos(pi / 8.);
+    auto constexpr s = std::sin(pi / 8.);
+
+    auto const T = (c * qpp::gt.Id2 - 1.i * s * qpp::gt.Z).eval();
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(T, qpp::gt.T, 1e-12);
+    auto const HTH = (c * qpp::gt.Id2 - 1.i * s * qpp::gt.X).eval();
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(HTH, qpp::gt.H * qpp::gt.T * qpp::gt.H, 1e-12);
+
+    auto const THTH = (c * c * qpp::gt.Id2 - 1.i * s * (c * (qpp::gt.X + qpp::gt.Z) + s * qpp::gt.Y)).eval();
+    EXPECT_MATRIX_CLOSE(T * HTH, THTH, 1e-12);
+
+    auto n = std::array{c, s, c};
+    Eigen::Vector3d::Map(n.data()).normalize();
+    auto constexpr theta = 2. * std::acos(c*c);
+    auto const Rn_theta = qpp::gt.Rn(theta, n).eval();
+    EXPECT_MATRIX_CLOSE(Rn_theta, THTH, 1e-12);
 }
