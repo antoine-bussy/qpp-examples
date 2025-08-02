@@ -110,6 +110,28 @@ namespace qube
         return res;
     }
 
+    //! @brief Verify whether the Euler generalized decomposition of a rotation matrix R exists.
+    //! @details The unit axis of rotation are not necessarily orthogonal
+    //! Computed from "On Coordinate-Free Rotation Decomposition: Euler Angles about Arbitrary Axes" by Giulia Piovan and Francesco Bullo
+    //! @see Theorem 4
+    auto generalized_euler_decomposition_exists(
+        qube::maths::Matrix auto const& R
+        , qube::maths::Matrix auto const& r1
+        , qube::maths::Matrix auto const& r2
+        , qube::maths::Matrix auto const& r3)
+    {
+        auto const condition_left = std::abs(r1.dot((R - r2 * r2.transpose()) * r3));
+        auto const condition_right = std::sqrt((1. - std::pow(r1.dot(r2), 2)) * (1. - std::pow(r3.dot(r2), 2)));
+
+        auto const exists = (condition_left <= condition_right);
+
+        debug() << ">> condition_left : " << condition_left << "\n";
+        debug() << ">> condition_right : " << condition_right << "\n";
+        debug() << ">> condition met : " << std::boolalpha << exists << "\n";
+
+        return exists;
+    }
+
     //! @brief Compute Euler generalized decomposition of a rotation matrix R
     //! @details The unit axis of rotation are not necessarily orthogonal
     //! Such a decomposition does not always exist (see necessary and sufficient condition in the code)
@@ -155,14 +177,9 @@ namespace qube
             theta[2] = -std::atan2(w3.dot(r3.cross(v3)), v3.dot(w3) - v3.dot(r3) * w3.dot(r3));
         }
 
-        auto const condition_left = std::abs(r1.dot((R - r2 * r2.transpose()) * r3));
-        auto const condition_right = std::sqrt((1. - std::pow(r1.dot(r2), 2)) * (1. - std::pow(r3.dot(r2), 2)));
+        auto const exists = generalized_euler_decomposition_exists(R, r1, r2, r3);
+        EXPECT_EQ(!exists, theta.hasNaN());
 
-        EXPECT_EQ((condition_left > condition_right), theta.hasNaN());
-
-        debug() << ">> condition_left : " << condition_left << "\n";
-        debug() << ">> condition_right : " << condition_right << "\n";
-        debug() << ">> condition met : " << std::boolalpha << (condition_left <= condition_right) << "\n";
         debug() << ">> theta : " << qpp::disp(theta.transpose()) << "\n";
 
         return theta;
