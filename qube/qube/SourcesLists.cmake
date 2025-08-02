@@ -4,6 +4,7 @@ target_sources(qube
         FILE_SET interface_headers
         TYPE HEADERS
         FILES
+            qube/approximations.hpp
             qube/debug.hpp
             qube/decompositions.hpp
             qube/introspection.hpp
