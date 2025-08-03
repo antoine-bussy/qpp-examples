@@ -309,3 +309,136 @@ TEST(chapter4_5, H_T_phase_CNOT_universality_5)
     debug() << ">> U_approx:\n" << qpp::disp(U_approx) << "\n\n";
     debug() << ">> error: " << error << "\n";
 }
+
+//! @brief Exercise 4.41 and Figure 4.17
+TEST(chapter4_5, universality_with_toffoli)
+{
+    using namespace qpp::literals;
+    using namespace std::complex_literals;
+
+    qube::maths::seed();
+
+    auto constexpr nq = 3ul;
+
+    auto circuit = qpp::QCircuit{ nq, 2ul }
+        .gate(qpp::gt.H, 0)
+        .gate(qpp::gt.H, 1);
+    auto engine = qpp::QEngine{ circuit };
+
+    auto const psi = qpp::randket();
+    auto const alpha = psi[0];
+    auto const beta = psi[1];
+    auto const psi_0 = qpp::kron(00_ket, psi);
+    debug() << ">> psi:\n" << qpp::disp(psi) << "\n\n";
+    debug() << ">> psi_0:\n" << qpp::disp(psi_0) << "\n\n";
+
+    engine.reset(psi_0).execute();
+    auto const psi_1 = engine.get_state();
+    debug() << ">> psi_1:\n" << qpp::disp(psi_1) << "\n\n";
+    auto const psi_1_expected = (0.5 * (
+        alpha * 000_ket + beta * 001_ket +
+        alpha * 010_ket + beta * 011_ket +
+        alpha * 100_ket + beta * 101_ket +
+        alpha * 110_ket + beta * 111_ket)).eval();
+    EXPECT_MATRIX_CLOSE(psi_1, psi_1_expected, 1e-12);
+
+    circuit.CTRL(qpp::gt.X, { 0, 1 }, 2);
+    engine.reset(psi_0).execute();
+    auto const psi_2 = engine.get_state();
+    debug() << ">> psi_2:\n" << qpp::disp(psi_2) << "\n\n";
+    auto const psi_2_expected = (0.5 * (
+        alpha * 000_ket + beta * 001_ket +
+        alpha * 010_ket + beta * 011_ket +
+        alpha * 100_ket + beta * 101_ket +
+        beta * 110_ket + alpha * 111_ket)).eval();
+    EXPECT_MATRIX_CLOSE(psi_2, psi_2_expected, 1e-12);
+
+    circuit.gate(qpp::gt.S, 2);
+    engine.reset(psi_0).execute();
+    auto const psi_3 = engine.get_state();
+    debug() << ">> psi_3:\n" << qpp::disp(psi_3) << "\n\n";
+    auto const psi_3_expected = (0.5 * (
+        alpha * 000_ket + beta * 1.i * 001_ket +
+        alpha * 010_ket + beta * 1.i * 011_ket +
+        alpha * 100_ket + beta * 1.i * 101_ket +
+        beta * 110_ket + alpha * 1.i * 111_ket)).eval();
+    EXPECT_MATRIX_CLOSE(psi_3, psi_3_expected, 1e-12);
+
+    circuit.CTRL(qpp::gt.X, { 0, 1 }, 2);
+    engine.reset(psi_0).execute();
+    auto const psi_4 = engine.get_state();
+    debug() << ">> psi_4:\n" << qpp::disp(psi_4) << "\n\n";
+    auto const psi_4_expected = (0.5 * (
+        alpha * 000_ket + beta * 1.i * 001_ket +
+        alpha * 010_ket + beta * 1.i * 011_ket +
+        alpha * 100_ket + beta * 1.i * 101_ket +
+        alpha * 1.i * 110_ket + beta * 111_ket)).eval();
+    EXPECT_MATRIX_CLOSE(psi_4, psi_4_expected, 1e-12);
+
+    circuit
+        .gate(qpp::gt.H, 0)
+        .gate(qpp::gt.H, 1);
+    engine.reset(psi_0).execute();
+    auto const psi_5 = engine.get_state();
+    debug() << ">> psi_5:\n" << qpp::disp(psi_5) << "\n\n";
+    auto const psi_5_expected = (0.25 * (
+        alpha * ( 3. + 1.i) * 000_ket + beta * ( 1. + 3.i) * 001_ket +
+        alpha * ( 1. - 1.i) * 010_ket + beta * (-1. + 1.i) * 011_ket +
+        alpha * ( 1. - 1.i) * 100_ket + beta * (-1. + 1.i) * 101_ket +
+        alpha * (-1. + 1.i) * 110_ket + beta * ( 1. - 1.i) * 111_ket)).eval();
+    EXPECT_MATRIX_CLOSE(psi_5, psi_5_expected, 1e-12);
+
+    auto const U = (0.25 * Eigen::Vector2cd{3. + 1.i,  1. + 3.i}).asDiagonal().toDenseMatrix().eval();
+    auto const V = (0.25 * Eigen::Vector2cd{1. - 1.i, -1. + 1.i}).asDiagonal().toDenseMatrix().eval();
+    auto psi_5_factorized = (qpp::kron(00_ket, U * psi) + qpp::kron(01_ket + 10_ket - 11_ket, V * psi)).eval();
+    EXPECT_MATRIX_CLOSE(psi_5, psi_5_factorized, 1e-12);
+
+    auto constexpr pi = std::numbers::pi;
+    auto constexpr sqrt2 = std::numbers::sqrt2;
+    auto constexpr sqrt5 = std::sqrt(5.);
+    auto constexpr sqrt10 = std::sqrt(10.);
+
+    auto const U_factorized = (0.25 * sqrt2 * std::exp(1.i * pi / 4.)
+        * Eigen::Vector2cd{2. - 1.i, 2. + 1.i}).asDiagonal().toDenseMatrix().eval();
+    EXPECT_MATRIX_CLOSE(U, U_factorized, 1e-12);
+    auto const Rz = (2./sqrt5 * qpp::gt.Id2 - 1.i / sqrt5 * qpp::gt.Z).eval();
+    auto const U_factorized_2 = (0.25 * sqrt10 * std::exp(1.i * pi / 4.) * Rz).eval();
+    auto const U_norm2 = qube::maths::pow(0.25 * sqrt10, 2);
+    EXPECT_MATRIX_CLOSE(U, U_factorized_2, 1e-12);
+    auto constexpr theta = std::acos(3./5.);
+    auto const expected_Rz = qpp::gt.RZ(theta).eval();
+    EXPECT_MATRIX_CLOSE(Rz, expected_Rz, 1e-12);
+
+    auto const V_factorized = (0.25 * sqrt2 * std::exp(-1.i * pi / 4.) * qpp::gt.Z).eval();
+    auto const V_norm2 = qube::maths::pow(0.25 * sqrt2, 2);
+    EXPECT_MATRIX_CLOSE(V, V_factorized, 1e-12);
+
+    // We want probabilities and all states after measurements, which is not available in QEngine
+    // So we use qpp::measure() instead
+    auto const [result, probabilities, resulting_state] = qpp::measure(psi_5, Eigen::Matrix4cd::Identity(), { 0, 1 });
+
+    debug() << ">> Measurement result: " << result << '\n';
+    debug() << ">> Probabilities: ";
+    debug() << qpp::disp(probabilities, {", "}) << '\n';
+    debug() << ">> Resulting states:\n";
+    for (auto&& state : resulting_state)
+        debug() << qpp::disp(state) << "\n\n";
+
+    auto const U_psi = (U * psi).normalized().eval();
+    EXPECT_MATRIX_CLOSE(resulting_state[0], U_psi, 1e-12);
+    auto const Rz_psi = (Rz * psi).eval();
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(U_psi, Rz_psi, 1e-12);
+    EXPECT_NEAR(U_norm2, 0.625, 1e-12);
+    EXPECT_NEAR(probabilities[0], 0.625, 1e-12);
+
+    auto const V_psi = (V * psi).normalized().eval();
+    EXPECT_MATRIX_CLOSE(resulting_state[1], V_psi, 1e-12);
+    EXPECT_MATRIX_CLOSE(resulting_state[2], V_psi, 1e-12);
+    EXPECT_MATRIX_CLOSE(resulting_state[3],-V_psi, 1e-12);
+    auto const Z_psi = (qpp::gt.Z * psi).eval();
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(V_psi, Z_psi, 1e-12);
+    EXPECT_NEAR(V_norm2, 0.125, 1e-12);
+    EXPECT_NEAR(probabilities[1], 0.125, 1e-12);
+    EXPECT_NEAR(probabilities[2], 0.125, 1e-12);
+    EXPECT_NEAR(probabilities[3], 0.125, 1e-12);
+}
