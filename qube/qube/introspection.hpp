@@ -144,7 +144,7 @@ namespace qube
         for(auto&& i : indices)
         {
             auto const psi = Eigen::VectorXcd::Unit(total_dim, i);
-            engine.reset().set_state(psi).execute();
+            engine.reset(psi).execute();
             matrix.col(j) = engine.get_state()(indices, Eigen::all);
             ++j;
         }

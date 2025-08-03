@@ -40,18 +40,18 @@ TEST(chapter4_3, cnot_circuit)
     auto const t = qpp::randket();
 
     auto const in = qpp::kron(c,t);
-    engine.reset().set_state(in).execute();
+    engine.reset(in).execute();
     auto const out = engine.get_state();
 
     auto const expected_out = (cnot * in).eval();
     EXPECT_MATRIX_CLOSE(out, expected_out, 1e-12);
 
     /* |0>|t> input */
-    engine.reset().set_state(qpp::kron(0_ket,t)).execute();
+    engine.reset(qpp::kron(0_ket,t)).execute();
     EXPECT_MATRIX_CLOSE(engine.get_state(), qpp::kron(0_ket,t), 1e-12);
 
     /* |1>|t> input */
-    engine.reset().set_state(qpp::kron(1_ket,t)).execute();
+    engine.reset(qpp::kron(1_ket,t)).execute();
     EXPECT_MATRIX_CLOSE(engine.get_state(), qpp::kron(1_ket,t.reverse()), 1e-12);
 
     debug() << ">> Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
@@ -91,18 +91,18 @@ TEST(chapter4_3, controlled_u)
     auto const t = qpp::randket();
 
     auto const in = qpp::kron(c,t);
-    engine.reset().set_state(in).execute();
+    engine.reset(in).execute();
     auto const out = engine.get_state();
 
     auto const expected_out = (cU * in).eval();
     EXPECT_MATRIX_CLOSE(out, expected_out, 1e-12);
 
     /* |0>|t> input */
-    engine.reset().set_state(qpp::kron(0_ket,t)).execute();
+    engine.reset(qpp::kron(0_ket,t)).execute();
     EXPECT_MATRIX_CLOSE(engine.get_state(), qpp::kron(0_ket,t), 1e-12);
 
     /* |1>|t> input */
-    engine.reset().set_state(qpp::kron(1_ket,t)).execute();
+    engine.reset(qpp::kron(1_ket,t)).execute();
     EXPECT_MATRIX_CLOSE(engine.get_state(), qpp::kron(1_ket, (U*t).eval()), 1e-12);
 
     debug() << ">> Circuit:\n" << circuit << "\n\n" << circuit.get_resources() << "\n\n";
@@ -449,7 +449,7 @@ TEST(chapter4_3, n_controlled_k_operation_circuit)
     {
         auto const x = Eigen::Vector<bool, n>::Random().cast<qpp::idx>().eval();
         auto const x_ket = qpp::mket({ x.cbegin(), x.cend() });
-        engine.reset().set_state(qpp::kron(x_ket, psi)).execute();
+        engine.reset(qpp::kron(x_ket, psi)).execute();
 
         auto const expected_out = qpp::kron(x_ket, psi);
         EXPECT_MATRIX_CLOSE(engine.get_state(), expected_out, 1e-12);
@@ -457,7 +457,7 @@ TEST(chapter4_3, n_controlled_k_operation_circuit)
     {
         auto const x = Eigen::Vector<bool, n>::Ones().cast<qpp::idx>().eval();
         auto const x_ket = qpp::mket({ x.cbegin(), x.cend() });
-        engine.reset().set_state(qpp::kron(x_ket, psi)).execute();
+        engine.reset(qpp::kron(x_ket, psi)).execute();
 
         auto const expected_out = qpp::kron(x_ket, (U * psi).eval());
         EXPECT_MATRIX_CLOSE(engine.get_state(), expected_out, 1e-12);
@@ -937,7 +937,7 @@ TEST(chapter4_3, toffoli_up_to_phase)
             for (auto&& t : { 0u, 1u })
             {
                 auto const ket_in = qpp::mket({ c1, c2, t });
-                engine.reset().set_state(ket_in).execute();
+                engine.reset(ket_in).execute();
                 auto const expected_ket_out = engine.get_state();
 
                 auto const phase = relative_phase(c1, c2, t);

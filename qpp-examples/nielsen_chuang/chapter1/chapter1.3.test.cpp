@@ -392,17 +392,17 @@ TEST(chapter1_3, quantum_teleportation_circuit)
 
     auto circuit = qpp::QCircuit{ 3, 2 };
     auto engine = qpp::QEngine{ circuit };
-    engine.reset().set_state(psi_init).execute();
+    engine.reset(psi_init).execute();
     auto const psi0 = engine.get_state();
     EXPECT_MATRIX_CLOSE(psi0, inv_sqrt2 * (alpha * (000_ket + 011_ket) + beta * (100_ket + 111_ket)), 1e-12);
 
     circuit.gate(qpp::gt.CNOT, { 0, 1 });
-    engine.reset().set_state(psi_init).execute();
+    engine.reset(psi_init).execute();
     auto const psi1 = engine.get_state();
     EXPECT_MATRIX_CLOSE(psi1, inv_sqrt2 * (alpha * (000_ket + 011_ket) + beta * (110_ket + 101_ket)), 1e-12);
 
     circuit.gate(qpp::gt.H, 0);
-    engine.reset().set_state(psi_init).execute();
+    engine.reset(psi_init).execute();
     auto const psi2 = engine.get_state();
     EXPECT_MATRIX_CLOSE(psi2, 0.5 * (alpha * qpp::kron(0_ket + 1_ket, 00_ket + 11_ket)  + beta * qpp::kron(0_ket - 1_ket, 10_ket + 01_ket)), 1e-12);
     EXPECT_MATRIX_CLOSE(psi2, 0.5 * (qpp::kron(00_ket, alpha * 0_ket + beta * 1_ket)
@@ -412,7 +412,7 @@ TEST(chapter1_3, quantum_teleportation_circuit)
 
     circuit.measureV(qpp::gt.Id2, 0, 0);
     circuit.measureV(qpp::gt.Id2, 1, 1);
-    engine.reset().set_state(psi_init).execute();
+    engine.reset(psi_init).execute();
     auto const psi3 = engine.get_state();
     auto const m1 = engine.get_dit(0);
     auto const m2 = engine.get_dit(1);
@@ -431,7 +431,7 @@ TEST(chapter1_3, quantum_teleportation_circuit)
 
     circuit.cCTRL(qpp::gt.X, 1, 2);
     circuit.cCTRL(qpp::gt.Z, 0, 2);
-    engine.reset().set_state(psi_init).execute();
+    engine.reset(psi_init).execute();
     auto const psi4 = engine.get_state();
     EXPECT_MATRIX_CLOSE(psi4, psi, 1e-12);
 

@@ -82,11 +82,11 @@ TEST(chapter4_4, quantum_teleportation_with_deferred_measurement)
     auto const psi = qpp::randket();
 
     auto engine = qpp::QEngine{ circuit };
-    engine.reset().set_state(qpp::kron(psi, b00)).execute();
+    engine.reset(qpp::kron(psi, b00)).execute();
     EXPECT_MATRIX_CLOSE(engine.get_state(), psi, 1e-12);
 
     auto deferred_engine = qpp::QEngine{ deferred_circuit };
-    deferred_engine.reset().set_state(qpp::kron(psi, b00)).execute();
+    deferred_engine.reset(qpp::kron(psi, b00)).execute();
     EXPECT_MATRIX_CLOSE(deferred_engine.get_state(), psi, 1e-12);
 
     auto const d = engine.get_dits();
@@ -146,7 +146,7 @@ TEST(chapter4_4, implicit_measurement_circuit)
 
     auto const psi = qpp::randket(4);
 
-    engine.reset().set_state(psi).execute();
+    engine.reset(psi).execute();
     auto const p1 = engine.get_probs();
     auto const probs1 = Eigen::VectorXd::Map(p1.data(), p1.size());
     auto const dits1 = engine.get_dits();
@@ -156,7 +156,7 @@ TEST(chapter4_4, implicit_measurement_circuit)
 
     circuit.measure(1, 1);
 
-    engine.reset().set_state(psi).execute();
+    engine.reset(psi).execute();
     auto const p2 = engine.get_probs();
     auto const probs2 = Eigen::VectorXd::Map(p2.data(), p2.size());
     auto const dits2 = engine.get_dits();
@@ -255,7 +255,7 @@ TEST(chapter4_4, measuring_an_operator)
 
     auto const psi = qpp::randket();
 
-    engine.reset().set_state(qpp::kron(0_ket, psi)).execute();
+    engine.reset(qpp::kron(0_ket, psi)).execute();
     auto const p = engine.get_probs();
     auto const probs = Eigen::VectorXd::Map(p.data(), p.size());
     auto const dits = engine.get_dits();
@@ -291,8 +291,8 @@ TEST(chapter4_4, measurement_commutes_with_controls)
 
     auto const phi_psi = qpp::kron(phi, psi);
 
-    ctrl_engine.reset().set_state(phi_psi).execute();
-    cctrl_engine.reset().set_state(phi_psi).execute();
+    ctrl_engine.reset(phi_psi).execute();
+    cctrl_engine.reset(phi_psi).execute();
 
     auto const ctrl_dit = ctrl_engine.get_dit(0);
     auto const ctrl_prob = ctrl_engine.get_probs()[0];

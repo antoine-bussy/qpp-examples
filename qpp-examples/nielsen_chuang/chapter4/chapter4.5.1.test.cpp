@@ -40,7 +40,7 @@ TEST(chapter4_5, addition_mod_4)
             auto const xy_bin = qpp::n2multiidx(xy, { 2, 2, 2, 2 });
             auto const psi = qpp::mket(xy_bin);
 
-            engine.reset().set_state(psi).execute();
+            engine.reset(psi).execute();
 
             auto const psi_out = engine.get_state();
             auto const xy_bin_out = *qpp::zket2dits(psi_out);
