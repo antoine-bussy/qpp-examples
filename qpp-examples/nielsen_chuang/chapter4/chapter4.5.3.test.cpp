@@ -5,12 +5,14 @@
 
 #include <qpp/qpp.hpp>
 #include <qube/debug.hpp>
+#include <qube/gates.hpp>
 #include <qube/maths/arithmetic.hpp>
 #include <qube/maths/gtest_macros.hpp>
 #include <qube/maths/norm.hpp>
 #include <qube/maths/random.hpp>
 #include <qube/approximations.hpp>
 #include <qube/decompositions.hpp>
+#include <qube/introspection.hpp>
 
 using namespace qube::stream;
 
@@ -441,4 +443,117 @@ TEST(chapter4_5, universality_with_toffoli)
     EXPECT_NEAR(probabilities[1], 0.125, 1e-12);
     EXPECT_NEAR(probabilities[2], 0.125, 1e-12);
     EXPECT_NEAR(probabilities[3], 0.125, 1e-12);
+}
+
+//! @brief Exercise 4.41 and Figure 4.17
+//! @details Instead of applying the subcircuit iteratively (using a "classical" iteration), we build a big circuit
+//! that applies the subcircuit multiple times, and then we measure the state using deferred measurement and qpp::measure().
+//! This allows us to get the probabilities from qpp::measure() and to check the resulting states.
+TEST(chapter4_5, universality_with_toffoli_2)
+{
+    using namespace std::complex_literals;
+    using namespace qpp::literals;
+
+    qube::maths::seed();
+
+    auto constexpr pi = std::numbers::pi;
+
+    auto subcircuit = qpp::QCircuit{ 3ul }
+        .gate(qpp::gt.H, 1)
+        .gate(qpp::gt.H, 2)
+        .CTRL(qpp::gt.X, { 1, 2 }, 0)
+        .gate(qpp::gt.S, 0)
+        .CTRL(qpp::gt.X, { 1, 2 }, 0)
+        .gate(qpp::gt.H, 1)
+        .gate(qpp::gt.H, 2);
+    // Use matrix instead of circuit instead of compose_CTRL_circuit from qpp::QCircuit.
+    // It seems simpler to me.
+    // Also apply a global phase, so that the 3 last resulting states are equal to the initial state
+    auto const U = (std::exp(1.i * pi / 4.) * qube::extract_matrix<8>(subcircuit)).eval();
+
+    auto const psi = qpp::randket();
+    auto const Rz = qpp::gt.RZ(std::acos(3./5.)).eval();
+    auto const Rz_psi = (Rz * psi).eval();
+
+    {
+        auto const psi_out = (U * qpp::kron(psi, 00_ket)).eval();
+        auto const [result, probabilities, resulting_state] = qpp::measure(psi_out, Eigen::Matrix4cd::Identity(), { 1, 2 });
+        EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(resulting_state[0], Rz_psi, 1e-12);
+        EXPECT_NEAR(probabilities[0], 0.625, 1e-12);
+    }
+
+    auto const or_CTRL_Z = qube::or_CTRL(qpp::gt.Z);
+    auto const or_CTRL_U = qube::or_CTRL(U);
+
+    for (auto&& i: std::views::iota(1ul, 7ul))
+    {
+        debug() << ">> Number of iterations: " << i << "\n";
+        auto const nq = 1ul + 2ul * i;
+
+        // We use deferred measurement, so we can measure the state after applying all gates.
+        auto circuit = qpp::QCircuit{ nq }
+            .gate(U, { 0, 1, 2 })
+            .gate(or_CTRL_Z, { 1, 2, 0 });
+
+        for (auto&& j: std::views::iota(1ul, i))
+        {
+            auto const current_qbit_1 = 1 + 2 * j;
+            auto const current_qbit_2 = current_qbit_1 + 1;
+            auto const previous_qbit_1 = current_qbit_1 - 2;
+            auto const previous_qbit_2 = previous_qbit_1 + 1;
+            circuit
+                .gate(or_CTRL_U, { previous_qbit_1, previous_qbit_2, 0, current_qbit_1, current_qbit_2 })
+                .gate(or_CTRL_Z, { current_qbit_1, current_qbit_2, 0 });
+        }
+
+        auto engine = qpp::QEngine{ circuit };
+        auto const ket_0 = Eigen::VectorXcd::Unit(qube::maths::pow(2ul, nq - 1), 0);
+        auto const psi_0 = qpp::kron(psi, ket_0).eval();
+        engine.reset(psi_0).execute();
+        auto const psi_out = engine.get_state();
+
+        auto target = std::vector<qpp::idx>(2 * i);
+        std::ranges::iota(target, 1ul);
+        auto const D = qube::maths::pow(2ul, target.size());
+        auto const [result, probabilities, resulting_state] = qpp::measure(psi_out, Eigen::MatrixXcd::Identity(D, D), target);
+
+        ASSERT_EQ(probabilities.size(), resulting_state.size());
+
+        auto p = 0.;
+        auto p_bar = 0.;
+
+        for (auto&& i: std::views::iota(0ul, probabilities.size()))
+        {
+            auto constexpr precision = 1e-9;
+
+            auto const& state = resulting_state[i];
+            auto const& prob = probabilities[i];
+
+            if (state.isZero(precision))
+            {
+                EXPECT_NEAR(prob, 0., precision);
+                continue;
+            }
+
+            if (qube::maths::matrix_close_up_to_phase_factor_l(state, Rz_psi, precision))
+            {
+                p += prob;
+                continue;
+            }
+
+            if (qube::maths::matrix_close_up_to_phase_factor_l(state, psi, precision))
+            {
+                p_bar += prob;
+                continue;
+            }
+
+            ADD_FAILURE() << "Unexpected state of probability " << prob << ":\n" << qpp::disp(state) << "\n";
+        }
+
+        EXPECT_NEAR(p, 1. - p_bar, 1e-12);
+        EXPECT_NEAR(p_bar, qube::maths::pow(0.375, i), 1e-12);
+
+        debug() << ">> p: " << p << "\n";
+        debug() << ">> p_bar: " << p_bar << "\n";
+    }
 }
