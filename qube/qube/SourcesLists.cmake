@@ -7,6 +7,7 @@ target_sources(qube
             qube/approximations.hpp
             qube/debug.hpp
             qube/decompositions.hpp
+            qube/gates.hpp
             qube/introspection.hpp
 
             qube/maths/arithmetic.hpp
@@ -20,6 +21,8 @@ target_sources(qube
 # qube unit test
 target_sources(qube.test
     PRIVATE
+        qube/gates.test.cpp
+
         qube/maths/arithmetic.test.cpp
         qube/maths/compare.test.cpp
         qube/maths/concepts.test.cpp
