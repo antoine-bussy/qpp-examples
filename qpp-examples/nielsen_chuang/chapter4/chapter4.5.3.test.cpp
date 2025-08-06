@@ -557,3 +557,26 @@ TEST(chapter4_5, universality_with_toffoli_2)
         debug() << ">> p_bar: " << p_bar << "\n";
     }
 }
+
+//! @brief This is not an exercise from Nielsen & Chuang, but it is a simple example of how to reset the state of a qubit to |0>.
+TEST(chapter4_5, reset_circuit)
+{
+    using namespace qpp::literals;
+
+    qube::maths::seed();
+
+    auto circuit = qpp::QCircuit{ 1ul, 1ul }
+        .measure(0, 0, false)
+        .cCTRL(qpp::gt.X, { 0 }, 0);
+
+    auto const U = qube::extract_matrix<2>(circuit);
+    debug() << ">> U:\n" << qpp::disp(U) << "\n\n";
+    EXPECT_MATRIX_CLOSE(U, (Eigen::Matrix2cd{ { 1., 1. }, { 0., 0. } }), 1e-12);
+
+    auto const psi = qpp::randket();
+    auto engine = qpp::QEngine{ circuit };
+    engine.reset(psi).execute();
+    auto const psi_out = engine.get_state();
+    debug() << ">> psi_out:\n" << qpp::disp(psi_out) << "\n\n";
+    EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(psi_out, 0_ket, 1e-12);
+}
