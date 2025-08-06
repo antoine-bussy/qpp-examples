@@ -28,4 +28,11 @@ namespace qube::maths
     template < class T >
     concept arithmetic = std::is_arithmetic_v<T>;
 
+    template < typename T >
+    concept EigenIndexer = requires(T t)
+    {
+        requires std::convertible_to<decltype(t[Eigen::Index{0}]), Eigen::Index>;
+        requires std::convertible_to<decltype(t.size()), Eigen::Index>;
+    };
+
 } /* namespace qube::maths */

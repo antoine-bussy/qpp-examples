@@ -8,6 +8,7 @@ Introspection functions.
 
 #include <qpp/qpp.hpp>
 #include "maths/arithmetic.hpp"
+#include "maths/concepts.hpp"
 #include "maths/gtest_macros.hpp"
 
 
@@ -133,7 +134,7 @@ namespace qube
 
     //! @brief Extract circuit matrix from engine
     template < int Dim = Eigen::Dynamic >
-    auto extract_matrix(qpp::QEngine& engine, qube::maths::Matrix auto const& indices)
+    auto extract_matrix(qpp::QEngine& engine, maths::EigenIndexer auto const& indices)
     {
         auto const total_dim = qube::maths::pow(2u, engine.get_circuit().get_nq());
         auto const dim = indices.size();
@@ -141,9 +142,10 @@ namespace qube
 
         auto matrix = Eigen::Matrix<Eigen::dcomplex, Dim, Dim>::Zero(dim, dim).eval();
         auto j = 0u;
-        for(auto&& i : indices)
+        // Use simple loop to accomodate more indices types
+        for(auto i = 0u; i < dim; ++i)
         {
-            auto const psi = Eigen::VectorXcd::Unit(total_dim, i);
+            auto const psi = Eigen::VectorXcd::Unit(total_dim, indices[i]);
             engine.reset(psi).execute();
             matrix.col(j) = engine.get_state()(indices, Eigen::all);
             ++j;
@@ -156,12 +158,12 @@ namespace qube
     auto extract_matrix(qpp::QEngine& engine, unsigned int dim = Dim)
     {
         EXPECT_GT(dim, 0);
-        return extract_matrix<Dim>(engine, Eigen::Vector<unsigned int, Dim>::LinSpaced(dim, 0u, dim));
+        return extract_matrix<Dim>(engine, Eigen::seqN(0, dim));
     }
 
     //! @brief Extract circuit matrix from circuit
     template < int Dim = Eigen::Dynamic >
-    auto extract_matrix(qpp::QCircuit const& circuit, qube::maths::Matrix auto const& indices)
+    auto extract_matrix(qpp::QCircuit const& circuit, maths::EigenIndexer auto const& indices)
     {
         auto engine = qpp::QEngine{ circuit };
         return extract_matrix<Dim>(engine, indices);
@@ -172,7 +174,7 @@ namespace qube
     auto extract_matrix(qpp::QCircuit const& circuit, unsigned int dim = Dim)
     {
         EXPECT_NE(dim, static_cast<unsigned int>(Eigen::Dynamic));
-        return extract_matrix<Dim>(circuit, Eigen::Vector<unsigned int, Dim>::LinSpaced(dim, 0u, dim));
+        return extract_matrix<Dim>(circuit, Eigen::seqN(0, dim));
     }
 
 } /* namespace qube */
