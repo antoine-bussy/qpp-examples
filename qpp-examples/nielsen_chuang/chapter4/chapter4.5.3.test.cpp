@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
+#include <execution>
 #include <ranges>
 
 #include <qpp/qpp.hpp>
@@ -579,4 +580,105 @@ TEST(chapter4_5, reset_circuit)
     auto const psi_out = engine.get_state();
     debug() << ">> psi_out:\n" << qpp::disp(psi_out) << "\n\n";
     EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(psi_out, 0_ket, 1e-12);
+}
+
+//! @brief Exercise 4.41 and Figure 4.17
+//! @details Same as universality_with_toffoli_2, but with reusing qubits,
+//! thus using less memory.
+TEST(chapter4_5, universality_with_toffoli_3)
+{
+    using namespace std::complex_literals;
+    using namespace qpp::literals;
+
+    qube::maths::seed();
+
+    auto constexpr pi = std::numbers::pi;
+
+    auto subcircuit = qpp::QCircuit{ 3ul }
+        .gate(qpp::gt.H, 1)
+        .gate(qpp::gt.H, 2)
+        .CTRL(qpp::gt.X, { 1, 2 }, 0)
+        .gate(qpp::gt.S, 0)
+        .CTRL(qpp::gt.X, { 1, 2 }, 0)
+        .gate(qpp::gt.H, 1)
+        .gate(qpp::gt.H, 2);
+    // Use matrix instead of circuit instead of compose_CTRL_circuit from qpp::QCircuit.
+    // It seems simpler to me.
+    // Also apply a global phase, so that the 3 last resulting states are equal to the initial state
+    auto const U = (std::exp(1.i * pi / 4.) * qube::extract_matrix<8>(subcircuit)).eval();
+
+    auto const psi = qpp::randket();
+    auto const Rz = qpp::gt.RZ(std::acos(3./5.)).eval();
+    auto const Rz_psi = (Rz * psi).eval();
+
+    auto const or_CNOT = qube::or_CNOT();
+
+    auto constexpr max_iterations = 9ul;
+    auto constexpr engine_repetitions = 100ul;
+    auto rotation_probabilities = Eigen::VectorXd::Zero(max_iterations).eval();
+    auto logs = std::vector<std::stringstream>(max_iterations);
+
+    auto constexpr range = std::views::iota(1ul, max_iterations + 1ul);
+    std::for_each(std::execution::seq, range.begin(), range.end(),
+        [&](auto&& i)
+    {
+        auto const debug = [&logs, i]() -> std::stringstream&
+        {
+            return logs[i - 1];
+        };
+        debug() << ">> Number of iterations: " << i << "\n";
+        auto const nq = 4ul;
+
+        // Trick to fill dit with 1.
+        auto circuit = qpp::QCircuit{ nq, 1ul }
+            .gate(qpp::gt.X, 3)
+            .measure(3, 0, false)
+            .gate(qpp::gt.X, 3);
+
+        for ([[maybe_unused]] auto&& j: std::views::iota(0ul, i))
+        {
+            circuit
+                .cCTRL(U, 0, { 0, 1, 2 })
+                .gate(or_CNOT, { 1, 2, 3 })
+                .measure(3, 0, false)
+                .cCTRL(qpp::gt.Z, 0, 0)
+                .reset({ 1, 2 })
+                .cCTRL(qpp::gt.X, 0, 3) // Reset qubit 3 to |0> without new measurement
+            ;
+        }
+        // Last cCTRL reset qubit 3 to |0>. We revert this last cCTRL by applying it again (involution).
+        // Thus we get (after measurement) whether the rotation was applied or not.
+        circuit.cCTRL(qpp::gt.X, 0, 3);
+
+        auto engine = qpp::QEngine{ circuit };
+        auto const psi_0 = qpp::kron(psi, 000_ket).eval();
+        engine.reset(psi_0).execute(engine_repetitions);
+        debug() << engine.get_stats() << "\n";
+        auto const& stats = engine.get_stats();
+        rotation_probabilities[i - 1] = stats.data().at({0}) / static_cast<double>(stats.get_num_reps());
+
+        auto const [result, probabilities, resulting_state] = qpp::measure(engine.get_state(), Eigen::MatrixXcd::Identity(8, 8), {1, 2, 3});
+        auto const& psi_out = resulting_state[result];
+        auto const probabilities_eigen = Eigen::VectorXd::Map(probabilities.data(), probabilities.size());
+        EXPECT_THAT(result, ::testing::AnyOf(0, 1));
+        EXPECT_MATRIX_EQ(probabilities_eigen, Eigen::VectorXd::Unit(8, result));
+
+        auto const measured_ket = qpp::n2multiidx(result, std::vector<qpp::idx>(3, 2));
+
+        debug() << ">> Measurement result: " << qpp::disp(measured_ket, { "", "|", ">" }) << '\n';
+        debug() << ">> Probabilities: " << qpp::disp(probabilities, {", "}) << '\n';
+        debug() << ">> Resulting state:\n" << qpp::disp(resulting_state[result]) << "\n\n";
+
+        debug() << ">> psi:\n" << qpp::disp(psi) << "\n\n";
+        debug() << ">> Rz_psi:\n" << qpp::disp(Rz_psi) << "\n\n";
+        debug() << ">> psi_out:\n" << qpp::disp(psi_out) << "\n\n";
+
+        auto const& expected_psi_out = (result == 0 ? Rz_psi : psi).eval();
+        EXPECT_MATRIX_CLOSE_UP_TO_PHASE_FACTOR(psi_out, expected_psi_out, 1e-12);
+    });
+
+    for (auto&& ss : logs)
+        debug() << ss.rdbuf();
+
+    debug() << ">> Rotation probabilities:\n" << qpp::disp(rotation_probabilities.transpose(), {", "}) << "\n\n";
 }
