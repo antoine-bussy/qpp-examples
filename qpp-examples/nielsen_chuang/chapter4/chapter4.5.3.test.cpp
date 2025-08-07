@@ -619,7 +619,7 @@ TEST(chapter4_5, universality_with_toffoli_3)
     auto logs = std::vector<std::stringstream>(max_iterations);
 
     auto constexpr range = std::views::iota(1ul, max_iterations + 1ul);
-    std::for_each(std::execution::seq, range.begin(), range.end(),
+    std::for_each(std::execution::par, range.begin(), range.end(),
         [&](auto&& i)
     {
         auto const debug = [&logs, i]() -> std::stringstream&
@@ -661,7 +661,7 @@ TEST(chapter4_5, universality_with_toffoli_3)
         auto const& psi_out = resulting_state[result];
         auto const probabilities_eigen = Eigen::VectorXd::Map(probabilities.data(), probabilities.size());
         EXPECT_THAT(result, ::testing::AnyOf(0, 1));
-        EXPECT_MATRIX_EQ(probabilities_eigen, Eigen::VectorXd::Unit(8, result));
+        EXPECT_MATRIX_CLOSE(probabilities_eigen, Eigen::VectorXd::Unit(8, result), 1e-12);
 
         auto const measured_ket = qpp::n2multiidx(result, std::vector<qpp::idx>(3, 2));
 
@@ -681,4 +681,56 @@ TEST(chapter4_5, universality_with_toffoli_3)
         debug() << ss.rdbuf();
 
     debug() << ">> Rotation probabilities:\n" << qpp::disp(rotation_probabilities.transpose(), {", "}) << "\n\n";
+}
+
+//! @brief Exercise 4.43
+//! @details Approximate the T gate using the RZ(theta) gate, with theta = acos(3/5),
+//! using the same method as in H_T_phase_CNOT_universality_3.
+//! T is an universal gate (plus phase, H, and CNOT), and RZ(theta) is constructed with Toffoli (plus phase, H, and CNOT),
+//! proving the universality of Toffoli (plus phase, H, and CNOT).
+TEST(chapter4_5, universality_with_toffoli_4)
+{
+    using namespace std::complex_literals;
+
+    auto constexpr pi = std::numbers::pi;
+    auto constexpr theta = 2. * std::acos(3./5.);
+
+    // Don't ask for too high a precision, otherwise the test will reach floating-point precision limits
+    auto constexpr epsilon = 1e-4;
+
+    auto constexpr beta = 4. * std::asin(epsilon / 6.);
+    auto constexpr delta = beta;
+    auto constexpr N = static_cast<unsigned long int>(std::ceil(2. * pi / delta)) + 2ul;
+
+    auto const R = std::views::iota(1ul, N) |
+        std::views::transform([&](auto&& k)
+        {
+            return std::abs(std::fmod(k * theta, 2. * pi));
+        });
+    auto const k = 1ul + static_cast<unsigned long int>(std::ranges::distance(R.cbegin(), std::ranges::min_element(R)));
+    auto const theta_k = std::fmod(k * theta, 2. * pi);
+
+    EXPECT_LT(std::abs(theta_k), delta);
+    EXPECT_NE(theta_k, 0.);
+
+    auto const alpha = (theta_k >= 0. ? 1. : -7) * pi / 4.;
+
+    auto const m = static_cast<unsigned long int>(std::floor(alpha/theta_k));
+    EXPECT_GE(m, 0ul);
+
+    auto const alpha_approx = std::fmod(m * k * theta, 2. * pi);
+    // Add global phase to the approximation
+    auto const T_approx = (std::exp(1.i * pi / 8.) * qpp::gt.RZ(alpha_approx)).eval();
+    auto const error = qube::maths::operator_norm_2(T_approx - qpp::gt.T);
+
+    debug() << ">> k: " << k << "\n";
+    debug() << ">> theta_k: " << theta_k << "\n";
+    debug() << ">> alpha: " << alpha << "\n";
+    debug() << ">> m: " << m << "\n";
+    debug() << ">> alpha_approx: " << alpha_approx << "\n";
+    debug() << ">> T_approx:\n" << qpp::disp(T_approx) << "\n\n";
+    debug() << ">> T:\n" << qpp::disp(qpp::gt.T) << "\n\n";
+    debug() << ">> error: " << error << "\n";
+
+    EXPECT_LT(error, epsilon / 3.);
 }
