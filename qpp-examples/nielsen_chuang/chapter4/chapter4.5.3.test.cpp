@@ -734,3 +734,189 @@ TEST(chapter4_5, universality_with_toffoli_4)
 
     EXPECT_LT(error, epsilon / 3.);
 }
+
+//! @brief Exercise 4.44
+//! @details Deutsch gate universality.
+//! @see Deutsch David Elieser. 1989, Quantum computational networks. Proc. R. Soc. Lond. A. 42573–90
+//! @see https://quantumcomputing.stackexchange.com/questions/10216/why-is-deutschs-gate-universal
+TEST(chapter4_5, deutsch_gate_universality)
+{
+    using namespace std::complex_literals;
+    using namespace qpp::literals;
+    auto constexpr pi = std::numbers::pi;
+    qube::maths::seed();
+
+    // The Deutsch gate with |11> as control qubit applies a rotation to the target qubit
+    // and a factor i.
+    {
+        auto const theta = qpp::rand(0., 2. * pi);
+        auto circuit = qpp::QCircuit{ 3ul }
+            .CTRL(1.i * qpp::gt.RX(theta), { 0, 1 }, 2);
+        auto const psi = qpp::randket();
+        auto const psi_0 = qpp::kron(11_ket, psi).eval();
+        auto engine = qpp::QEngine{ circuit };
+        engine.reset(psi_0).execute();
+        auto const psi_out = engine.get_state();
+        auto const expected_psi_out = qpp::kron(11_ket, (1.i * qpp::gt.RX(theta) * psi)).eval();
+        EXPECT_MATRIX_CLOSE(psi_out, expected_psi_out, 1e-12);
+    }
+
+    // With the Deutsch gate, with a unique angle alpha which is not a rational multiple of 2*pi,
+    // we can approximate any rotation gate RX(theta).
+    auto const alpha = std::acos(3./5.) * pi;
+    {
+        auto constexpr epsilon = 1e-4;
+        auto const beta = 4. * std::asin(epsilon / 6.);
+        auto const delta = beta;
+
+        auto const theta = qpp::rand(0., 2. * pi);
+        auto const [theta_approx, mk, theta_k] = qube::angle_approximation(theta, alpha, delta);
+        EXPECT_NEAR(theta_approx, theta, delta);
+        auto const error = qube::maths::operator_norm_2(qpp::gt.RX(theta) - qpp::gt.RX(theta_approx));
+        EXPECT_LT(error, epsilon / 3.);
+    }
+
+    // This is not quite true, as powers of i can remain. So we need to prove that we can get rid of them.
+    // With i*Id for example.
+    {
+        auto constexpr epsilon = 1e-4;
+        auto const beta = 4. * std::asin(epsilon / 6.);
+        auto const delta = beta;
+
+        auto const theta = 0.;
+        auto const [theta_approx, mk, theta_k] = qube::angle_approximation(theta, alpha, delta);
+        EXPECT_NEAR(theta_approx, theta, delta);
+        // In the special case where theta = 0, theta_k is a good approximation of theta, i.e. m = 1.
+        auto const k = mk;
+        EXPECT_NEAR(theta_k, theta, delta);
+        // i^k = i^(k % 4) since i^4 = 1
+        auto const factor_i = std::pow(1.i, k % 4);
+        EXPECT_COMPLEX_CLOSE(factor_i, 1., 1e-12);
+        auto const I_approx = (factor_i * qpp::gt.RX(theta_approx)).eval();
+        debug() << ">> I_approx:\n" << qpp::disp(I_approx) << "\n\n";
+        EXPECT_MATRIX_CLOSE(I_approx, qpp::gt.Id2, epsilon);
+        EXPECT_EQ(k % 2, 0ul);
+        // We didn't get i*I or -i*I ! Because k is even. We need to find another way.
+        // For now, we have 0 ~ k*alpha % 2pi. If k is odd, i^k = +/-i which gives us i*I or -i*I.
+        // With -i*I, can get i*I = (-i*I)^3.
+        if (k % 2 == 0)
+        {
+            auto const p = static_cast<unsigned long int>(std::ceil(alpha / theta_k));
+            EXPECT_GT(theta_k, 0.);
+            EXPECT_GT(alpha, 0.);
+            EXPECT_NEAR(alpha, p * theta_k, delta);
+            // We have alpha ~ p * theta_k and theta_k = k * alpha % 2pi.
+            // Thus alpha ~ p*k * alpha % 2pi, and then 0 ~ (p*k-1) * alpha) % 2pi.
+            // Since k is even, p*k-1 is odd, thus we can get rid of the factor i.
+            auto const new_mk = p * k - 1;
+            EXPECT_EQ(new_mk % 2, 1ul);
+            auto const new_theta_approx = std::fmod(new_mk * alpha, 2. * pi);
+            EXPECT_NEAR(new_theta_approx, 0., delta);
+            auto const new_factor_i = std::pow(1.i, new_mk % 4);
+            EXPECT_COMPLEX_CLOSE(new_factor_i, -1.i, 1e-12);
+            auto const new_I_approx = (new_factor_i * qpp::gt.RX(new_theta_approx)).eval();
+            debug() << ">> new_I_approx:\n" << qpp::disp(new_I_approx) << "\n\n";
+            EXPECT_MATRIX_CLOSE(new_I_approx, -1.i * qpp::gt.Id2, epsilon);
+        }
+    }
+
+    // In particular, with theta = pi, we can approximate the X gate.
+    EXPECT_MATRIX_CLOSE(1.i * qpp::gt.RX(pi), qpp::gt.X, 1e-12);
+    // And the Toffoli gate
+    {
+        auto circuit = qpp::QCircuit{ 3ul }
+            .CTRL(1.i * qpp::gt.RX(pi), { 0, 1 }, 2);
+        auto const toffoli = qube::extract_matrix<8>(circuit);
+        EXPECT_MATRIX_CLOSE(toffoli, qpp::gt.TOF, 1e-12);
+    }
+    // And the CNOT gate, by setting the first control qubit to |1>.
+    {
+        auto circuit = qpp::QCircuit{ 3ul }
+            .CTRL(1.i * qpp::gt.RX(pi), { 0, 1 }, 2);
+        auto const psi = qpp::randket(4);
+        auto const psi_0 = qpp::kron(1_ket, psi).eval();
+        auto engine = qpp::QEngine{ circuit };
+        engine.reset(psi_0).execute();
+        auto const psi_out = engine.get_state();
+        auto const expected_psi_out = qpp::kron(1_ket, (qpp::gt.CNOT * psi)).eval();
+        EXPECT_MATRIX_CLOSE(psi_out, expected_psi_out, 1e-12);
+    }
+
+    // Tricky part: we can create the |-> state.
+    // @see https://quantumcomputing.stackexchange.com/questions/10216/why-is-deutschs-gate-universal
+    // Adapted to get the right phase.
+    {
+        auto circuit = qpp::QCircuit{ 2ul }
+            .gate(qpp::gt.RX(pi/2), 0)
+            .CTRL(qpp::gt.RX(pi), 0, 1)
+            .gate(qpp::gt.RX(-pi/2), 0)
+            .CTRL(-1.i * qpp::gt.Id2, 1, 0)
+        ;
+        auto engine = qpp::QEngine{ circuit };
+
+        for ([[maybe_unused]] auto&& i: std::views::iota(0ul, 50ul))
+        {
+            engine.reset(00_ket).execute();
+            auto const psi_out = engine.get_state();
+
+            auto const [result, probabilities, resulting_state] = qpp::measure(psi_out, Eigen::Matrix2cd::Identity(), { 0 });
+
+            EXPECT_MATRIX_CLOSE(Eigen::Vector2d::Map(probabilities.data()), Eigen::Vector2d::Constant(0.5), 1e-12);
+
+            auto const& state = resulting_state[0];
+            EXPECT_MATRIX_CLOSE(state, qpp::st.minus(), 1e-12);
+
+            if (result == 1)
+                continue;
+
+            debug() << "|-> obtained after " << i + 1 << " iterations:\n";
+            debug() << ">> Measurement result: " << result << '\n';
+            debug() << ">> Probabilities: " << qpp::disp(probabilities, {", "}) << '\n';
+            debug() << ">> Resulting states:\n";
+            for (auto&& state : resulting_state)
+                debug() << qpp::disp(state) << "\n\n";
+            break;
+        }
+    }
+
+    // We use this |-> state to create any Rz gate, or rather any diagonal matrix
+    // with (1, exp(i * theta / 2)) as diagonal.
+    {
+        qube::maths::seed();
+        auto const theta = qpp::rand(0., 2. * pi);
+        auto circuit = qpp::QCircuit{ 3ul }
+            .CTRL(qpp::gt.RX(theta), { 0, 1 }, 2)
+        ;
+        auto engine = qpp::QEngine{ circuit };
+        auto const psi = qpp::randket();
+        auto const psi_0 = qpp::kron(psi, 1_ket, qpp::st.minus()).eval();
+        engine.reset(psi_0).execute();
+        auto const Rz = Eigen::Vector2cd{ 1., std::exp(1.i * theta / 2.) }.asDiagonal().toDenseMatrix().eval();
+        auto const expected_psi_out = qpp::kron(Rz * psi, 1_ket, qpp::st.minus()).eval();
+        EXPECT_MATRIX_CLOSE(engine.get_state(), expected_psi_out, 1e-12);
+    }
+
+    // With theta = pi/2, we can create the T gate, then S and Z.
+    {
+        auto const theta = pi / 2.;
+        auto circuit = qpp::QCircuit{ 3ul }
+            .CTRL(qpp::gt.RX(theta), { 0, 1 }, 2)
+        ;
+        auto engine = qpp::QEngine{ circuit };
+        auto const psi = qpp::randket();
+        auto const psi_0 = qpp::kron(psi, 1_ket, qpp::st.minus()).eval();
+        engine.reset(psi_0).execute();
+        auto const expected_psi_out = qpp::kron(qpp::gt.T * psi, 1_ket, qpp::st.minus()).eval();
+        EXPECT_MATRIX_CLOSE(engine.get_state(), expected_psi_out, 1e-12);
+
+        // We can also create the S gate, which is T^2
+        EXPECT_MATRIX_CLOSE(qpp::gt.S, qpp::gt.T * qpp::gt.T, 1e-12);
+        // And the Z gate, which is S^2
+        EXPECT_MATRIX_CLOSE(qpp::gt.Z, qpp::gt.S * qpp::gt.S, 1e-12);
+    }
+
+    // Finally, we can create the H gate, with S*RX(pi/2)*S
+    EXPECT_MATRIX_CLOSE(qpp::gt.H, qpp::gt.S * qpp::gt.RX(pi/2) * qpp::gt.S, 1e-12);
+
+    // We completed the Clifford set ! i.e. (CNOT, H, S, T) which is universal.
+}

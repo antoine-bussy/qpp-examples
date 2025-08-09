@@ -54,13 +54,19 @@ namespace qube
         if (theta_k < 0.)
             alpha -= 2. * pi;
 
-        auto const m = check_and_cast(std::floor(alpha/theta_k), "m");
-        EXPECT_GE(m, 0ul);
+        auto m = check_and_cast(std::floor(alpha/theta_k), "m");
+        // If alpha is too small, m can be zero, which is not useful for approximation.
+        // Choose m = 1 means that we approximate alpha as theta_k.
+        if (m == 0ul)
+            m = 1ul;
+
         auto const mk = check_and_cast(m * k, "m * k");
         auto const approx = std::fmod(mk * theta, 2. * pi);
 
         debug() << ">> alpha: " << alpha << "\n";
         debug() << ">> approx: " << approx << "\n";
+        debug() << ">> k: " << k << "\n";
+        debug() << ">> m: " << m << "\n";
         debug() << ">> mk: " << mk << "\n";
         debug() << ">> theta_k: " << theta_k << "\n";
 
