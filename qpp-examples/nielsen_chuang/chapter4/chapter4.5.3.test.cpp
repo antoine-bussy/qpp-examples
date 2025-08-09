@@ -920,3 +920,98 @@ TEST(chapter4_5, deutsch_gate_universality)
 
     // We completed the Clifford set ! i.e. (CNOT, H, S, T) which is universal.
 }
+
+//! @brief Exercise 4.44
+//! @details Build the Hadamard gate using the Deutsch gate, based on the previous example.
+TEST(chapter4_5, hadamard_with_deutsch_gate)
+{
+    using namespace std::complex_literals;
+    using namespace qpp::literals;
+
+    qube::maths::seed();
+
+    auto constexpr pi = std::numbers::pi;
+
+    auto constexpr alpha = std::acos(3./5.);
+
+    auto constexpr epsilon = 1e-4;
+    auto constexpr beta = 4. * std::asin(epsilon / 6.);
+    auto constexpr delta = beta;
+
+    auto const [half_pi_approx, mk, theta_k_] = qube::angle_approximation(pi / 2., alpha * pi, delta);
+    // We're lucky, mk = 0 mod 4, so that (i*RX(alpha*pi))^mk = RX(alpha*pi)^mk = RX(alpha*mk*pi) ~ RX(pi/2).
+    // We don't need to apply i*Id2 to get rid of the factor i.
+    EXPECT_EQ(mk % 4, 0ul);
+    debug() << ">> mk mod 4: " << mk % 4 << "\n";
+
+    auto const [zero_approx_, mk_, theta_k] = qube::angle_approximation(0., alpha * pi, delta);
+    // For the approxtimation of zero, m = 1, i.e. k = mk, which is even in our case.
+    // We need to find another factor (@see deutsch_gate_universality).
+    auto const k = mk_;
+    EXPECT_EQ(k % 2, 0ul);
+    auto const p = static_cast<unsigned long int>(std::ceil(alpha * pi / theta_k));
+    auto const new_mk = p * k - 1;
+    // We are able to construct -i*Id2.
+    EXPECT_EQ(new_mk % 4, 3ul);
+    debug() << ">> new_mk mod 4: " << new_mk % 4 << "\n";
+    auto const zero_approx = std::fmod(new_mk * alpha * pi, 2. * pi);
+    debug() << ">> zero_approx: " << zero_approx << "\n";
+
+    // The circuit is surprisingly simple, using all but one controlled RX(pi/2) gate.
+    // Working qubits can be reused, so we can use only 5 qubits.
+    auto circuit = qpp::QCircuit{ 5ul, 1ul }
+    // Compute the |-> state
+        .CTRL(qpp::gt.RX(half_pi_approx), { 3, 4 }, 1)
+        // Rx(pi) using 2 Rx(pi/2) gates
+        .CTRL(qpp::gt.RX(half_pi_approx), { 1, 3 }, 2)
+        .CTRL(qpp::gt.RX(half_pi_approx), { 1, 3 }, 2)
+        // Rx(-pi/2) using 3 Rx(pi/2) gates
+        .CTRL(qpp::gt.RX(half_pi_approx), { 3, 4 }, 1)
+        .CTRL(qpp::gt.RX(half_pi_approx), { 3, 4 }, 1)
+        .CTRL(qpp::gt.RX(half_pi_approx), { 3, 4 }, 1)
+        // Correct the factor i
+        .CTRL(-1.i * qpp::gt.RX(zero_approx), { 2, 3 }, 1)
+        //.measure(1, 0) --> deferred measurement
+    // S = T^2
+        .CTRL(qpp::gt.RX(half_pi_approx), { 0, 3 }, 2)
+        .CTRL(qpp::gt.RX(half_pi_approx), { 0, 3 }, 2)
+    // T
+        .CTRL(qpp::gt.RX(half_pi_approx), { 3, 4 }, 0)
+    // S = T^2
+        .CTRL(qpp::gt.RX(half_pi_approx), { 0, 3 }, 2)
+        .CTRL(qpp::gt.RX(half_pi_approx), { 0, 3 }, 2)
+    ;
+    auto engine = qpp::QEngine{ circuit };
+    {
+        debug() << "\n>> Running circuit with |0> state\n";
+        engine.reset(00011_ket).execute();
+        auto psi_out = engine.get_state();
+        {
+            auto const [result, probabilities, resulting_state] = qpp::measure(psi_out, qpp::gt.Id2, { 1 });
+            debug() << ">> Measurement result of the 2nd qubit, that must yield the |-> state: " << result << '\n';
+            EXPECT_NEAR(probabilities[0], 0.5, 1.e-5);
+            EXPECT_NEAR(probabilities[1], 0.5, 1.e-5);
+            psi_out = resulting_state[0]; // We keep the |-> state
+        }
+        auto const [result, probabilities, resulting_state] = qpp::measure(psi_out, qpp::gt.H, { 0 });
+        debug() << ">> Measurement result (in the Hadamard basis): " << result << '\n';
+        debug() << ">> Probabilities: " << qpp::disp(probabilities, {", "}) << '\n';
+        EXPECT_NEAR(probabilities[0], 1., 1.e-6);
+    }
+    {
+        debug() << "\n>> Running circuit with |1> state\n";
+        engine.reset(10011_ket).execute();
+        auto psi_out = engine.get_state();
+        {
+            auto const [result, probabilities, resulting_state] = qpp::measure(psi_out, qpp::gt.Id2, { 1 });
+            debug() << ">> Measurement result of the 2nd qubit, that must yield the |-> state: " << result << '\n';
+            EXPECT_NEAR(probabilities[0], 0.5, 1.e-5);
+            EXPECT_NEAR(probabilities[1], 0.5, 1.e-5);
+            psi_out = resulting_state[0]; // We keep the |-> state
+        }
+        auto const [result, probabilities, resulting_state] = qpp::measure(psi_out, qpp::gt.H, { 0 });
+        debug() << ">> Measurement result (in the Hadamard basis): " << result << '\n';
+        debug() << ">> Probabilities: " << qpp::disp(probabilities, {", "}) << '\n';
+        EXPECT_NEAR(probabilities[1], 1., 1.e-6);
+    }
+}
