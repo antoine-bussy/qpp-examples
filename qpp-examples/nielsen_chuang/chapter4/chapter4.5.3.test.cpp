@@ -1017,6 +1017,9 @@ TEST(chapter4_5, hadamard_with_deutsch_gate)
 }
 
 //! @brief Exercise 4.45
+//! @note The second part of the exercise is clearly wrong. Consider the 1 qubit case, with U = T.
+//! T is a diagonal gate, with 1 and (1+i)/sqrt(2) on the diagonal. Clearly, no multiplication by a
+//! power of sqrt(2) can make both an integer at the same time.
 TEST(chapter4_5, power_of_invsqrt2_toffoli)
 {
     using namespace std::complex_literals;
