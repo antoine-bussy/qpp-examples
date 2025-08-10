@@ -1015,3 +1015,56 @@ TEST(chapter4_5, hadamard_with_deutsch_gate)
         EXPECT_NEAR(probabilities[1], 1., 1.e-6);
     }
 }
+
+//! @brief Exercise 4.45
+TEST(chapter4_5, power_of_invsqrt2_toffoli)
+{
+    using namespace std::complex_literals;
+
+    auto constexpr nq = 5ul;
+    auto circuit = qpp::QCircuit{ nq };
+
+    auto rd = std::random_device{};
+    auto gen = std::mt19937{ rd() }; // mersenne_twister_engine seeded with rd()
+    auto gate = std::uniform_int_distribution(0, 3);
+    auto qubit = std::vector<qpp::idx>(nq);
+    std::ranges::iota(qubit, 0ul);
+
+    auto H_count = 0ul;
+    for ([[maybe_unused]] auto&& i: std::views::iota(0ul, 100ul))
+    {
+        // Get qubits without repetition
+        std::ranges::shuffle(qubit, gen);
+        switch (gate(gen))
+        {
+        case 0:
+            circuit.gate(qpp::gt.H, qubit[0]);
+            ++H_count;
+            break;
+        case 1:
+            circuit.gate(qpp::gt.S, qubit[0]);
+            break;
+        case 2:
+            circuit.gate(qpp::gt.CNOT, qubit[0], qubit[1]);
+            break;
+        case 3:
+            circuit.gate(qpp::gt.TOF, qubit[0], qubit[1], qubit[2]);
+            break;
+        default:
+            ADD_FAILURE() << "Unexpected gate index";
+            break;
+        }
+    }
+
+    debug() << ">> Number of H gates: " << H_count << "\n";
+    auto const U = qube::extract_matrix(circuit, qube::maths::pow(2, nq)).eval();
+    auto const M = (qube::maths::pow(std::numbers::sqrt2, H_count) * U).eval();
+
+    auto constexpr round = [](auto const& x)
+    {
+        return std::round(x.real()) + 1.i * std::round(x.imag());
+    };
+    auto const M_round = M.unaryExpr(round).eval();
+
+    EXPECT_MATRIX_CLOSE(M_round, M, 1e-12);
+}
