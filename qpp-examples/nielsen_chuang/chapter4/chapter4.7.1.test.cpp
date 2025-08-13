@@ -43,6 +43,6 @@ TEST(chapter4_7, exponential_complexity_growth)
 
     // Another way to see this is to consider that an Hermitian matrix is self-adjoint,
     // The lower triangular part being equal to the upper triangular part yields N(N-1)/2 constraints.
-    // The eigenvalues are real, hence N constraints.
+    // The diagonal elements are real, hence N constraints.
     // In the case of a density matrix, the trace is 1, hence 1 constraint.
 }
