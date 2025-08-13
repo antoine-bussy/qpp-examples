@@ -7,6 +7,8 @@
 #include <qube/maths/gtest_macros.hpp>
 #include <qube/maths/random.hpp>
 
+#include <ranges>
+
 using namespace qube::stream;
 
 //! @brief Exercise 4.47
@@ -44,4 +46,61 @@ TEST(chapter4_7, exponential_commutation)
     auto const U_expected = qpp::expm(-1.i * H);
     auto const U = (qpp::expm(-1.i * H1) * qpp::expm(-1.i * H2) * qpp::expm(-1.i * H3)).eval();
     EXPECT_MATRIX_CLOSE(U, U_expected, 1e-12);
+}
+
+//! @brief Theorem 4.3 and Equations 4.98 through 4.102
+TEST(chapter4_7, trotter_formula)
+{
+    using namespace std::complex_literals;
+    qube::maths::seed(1755073394);
+
+    auto constexpr nq = 3ul;
+    auto constexpr N = qube::maths::pow(2ul, nq);
+    auto constexpr n = 100ul;
+    auto constexpr n_ = static_cast<double>(n);
+    auto const t = qpp::rand(0.1, 1.);
+
+    auto const A = qpp::randH(N);
+    auto const B = qpp::randH(N);
+
+    auto const expA_n = qpp::expm(1.i * t * A / n_);
+    auto const expA_n_approx = (Eigen::MatrixXcd::Identity(N, N) + 1.i * t / n_ * A).eval();
+    EXPECT_MATRIX_CLOSE(expA_n, expA_n_approx, 1. / qube::maths::pow(n_, 2));
+
+    auto const expB_n = qpp::expm(1.i * t * B / n_);
+    auto const expB_n_approx = (Eigen::MatrixXcd::Identity(N, N) + 1.i * t / n_ * B).eval();
+    EXPECT_MATRIX_CLOSE(expB_n, expB_n_approx, 1. / qube::maths::pow(n_, 2));
+
+    auto const eq_4_100 = (expA_n * expB_n).eval();
+    auto const eq_4_100_approx = (Eigen::MatrixXcd::Identity(N, N) + 1.i * t / n_ * (A + B)).eval();
+    EXPECT_MATRIX_CLOSE(eq_4_100, eq_4_100_approx, 1. / qube::maths::pow(n_, 2));
+
+    auto const eq_4_101 = qpp::powm(eq_4_100, n);
+    auto eq_4_101_approx = Eigen::MatrixXcd::Identity(N, N).eval();
+
+    auto n_choose_k = 1.;
+    auto nk_inv = 1.;
+    auto term = Eigen::MatrixXcd::Identity(N, N).eval();
+    auto const i_A_plus_Bt = (1.i * t * (A + B)).eval();
+    for(auto&& k: std::views::iota(1ul, n + 1ul))
+    {
+        n_choose_k *= (n_ - k + 1.) / k;
+        nk_inv /= n_;
+        term = term * i_A_plus_Bt;
+        eq_4_101_approx.noalias() = eq_4_101_approx + n_choose_k * nk_inv * term;
+    }
+    EXPECT_MATRIX_CLOSE(eq_4_101, eq_4_101_approx, 1. / n_);
+
+    term.setIdentity(N, N);
+    auto eq_4_102_approx = Eigen::MatrixXcd::Identity(N, N).eval();
+    auto inv_k_factorial = 1.;
+    for(auto&& k: std::views::iota(1ul, n + 1ul))
+    {
+        inv_k_factorial /= k;
+        term = term * i_A_plus_Bt;
+        eq_4_102_approx.noalias() = eq_4_102_approx + inv_k_factorial * term;
+    }
+    EXPECT_MATRIX_CLOSE(eq_4_101, eq_4_102_approx, 1. / n_);
+    auto const exp_A_plus_Bt = qpp::expm(1.i * t * (A + B));
+    EXPECT_MATRIX_CLOSE(eq_4_102_approx, exp_A_plus_Bt, 1. / n_);
 }
