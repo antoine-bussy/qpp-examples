@@ -14,4 +14,5 @@ target_sources(chapter4.test
         chapter4.5.3.test.cpp
 
         chapter4.7.1.test.cpp
+        chapter4.7.2.test.cpp
 )
