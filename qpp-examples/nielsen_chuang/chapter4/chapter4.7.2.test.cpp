@@ -104,3 +104,41 @@ TEST(chapter4_7, trotter_formula)
     auto const exp_A_plus_Bt = qpp::expm(1.i * t * (A + B));
     EXPECT_MATRIX_CLOSE(eq_4_102_approx, exp_A_plus_Bt, 1. / n_);
 }
+
+//! @brief Exercise 4.49 and Equations 4.103 through 4.105
+TEST(chapter4_7, bch_formula)
+{
+    qube::maths::seed(1755076482);
+
+    auto constexpr nq = 3ul;
+    auto constexpr N = qube::maths::pow(2ul, nq);
+    auto const Dt = 0.001;
+
+    auto const A = qpp::randH(N);
+    auto const B = qpp::randH(N);
+
+    auto const expA_Dt = qpp::expm(A * Dt);
+    auto const expB_Dt = qpp::expm(B * Dt);
+
+    auto const expA_plus_B_Dt = qpp::expm((A + B) * Dt);
+    auto const eq_4_103_approx = (expA_Dt * expB_Dt).eval();
+    EXPECT_MATRIX_CLOSE(expA_plus_B_Dt, eq_4_103_approx, 10. * qube::maths::pow(Dt, 2));
+
+    debug() << ">> expA_plus_B_Dt:\n" << qpp::disp(expA_plus_B_Dt) << "\n\n";
+    debug() << ">> eq_4_103_approx:\n" << qpp::disp(eq_4_103_approx) << "\n\n";
+
+    auto const exp_halfA_Dt = qpp::expm(0.5 * A * Dt);
+    auto const eq_4_104_approx = (exp_halfA_Dt * expB_Dt * exp_halfA_Dt).eval();
+    EXPECT_MATRIX_CLOSE(expA_plus_B_Dt, eq_4_104_approx, 10. * qube::maths::pow(Dt, 3));
+
+    debug() << ">> expA_plus_B_Dt:\n" << qpp::disp(expA_plus_B_Dt) << "\n\n";
+    debug() << ">> eq_4_104_approx:\n" << qpp::disp(eq_4_104_approx) << "\n\n";
+
+    auto const exp_commutator_Dt = qpp::expm(-0.5 * (A * B - B * A) * Dt * Dt);
+    auto const eq_4_105_approx = (expA_Dt * expB_Dt * exp_commutator_Dt).eval();
+    EXPECT_MATRIX_CLOSE(expA_plus_B_Dt, eq_4_105_approx, 50. * qube::maths::pow(Dt, 3));
+
+    debug() << ">> expA_plus_B_Dt:\n" << qpp::disp(expA_plus_B_Dt) << "\n\n";
+    debug() << ">> eq_4_105_approx:\n" << qpp::disp(eq_4_105_approx) << "\n\n";
+
+}
